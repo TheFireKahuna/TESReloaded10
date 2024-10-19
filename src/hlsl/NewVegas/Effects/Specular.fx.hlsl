@@ -111,7 +111,7 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	float invLuma = saturate(1 - sunLuma);
 	float sunSetFade = 1 - TESR_ShadowFade.x;
 
-	float shadows = tex2D(TESR_PointShadowBuffer, IN.UVCoord); // fade shadows to light when sun is low
+	float shadows = tex2D(TESR_PointShadowBuffer, IN.UVCoord).r; // fade shadows to light when sun is low
 	shadows = lerp(TESR_ShadowFade.x, 1.0f, shadows); // fade shadows to light when sun is low
 
 	// skylight

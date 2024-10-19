@@ -57,7 +57,7 @@ float4 BoxBlur (VSOUT IN, uniform sampler2D buffer, uniform float2 offsetMask, u
 	color += tex2D(buffer, min(IN.UVCoord + offsetMask * 2 * TESR_ReciprocalResolution.xy, maxuv));
 
 	// return color;
-	return float4(color.rgb/= 5, 1);
+	return float4(color.rgb/= 5, 1.0);
 }
 
 float4 Blur(VSOUT IN, uniform sampler2D buffer,  uniform float2 OffsetMask, uniform float blurRadius, uniform float scale) : COLOR0

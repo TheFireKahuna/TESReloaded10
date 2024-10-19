@@ -107,7 +107,7 @@ float4 Flashlight(VSOUT IN) : COLOR0
 	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
 	float4 lightSpaceCoord = ScreenCoordToTexCoord(mul(float4(worldPos, 1), TESR_FlashLightViewProjTransform));
-	float isShadow = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	float isShadow = tex2D(TESR_RenderedBuffer, IN.UVCoord).x;
 
 	float lightTexture = tex2D(TESR_SpotLightTexture, lightSpaceCoord.xy).r;
 

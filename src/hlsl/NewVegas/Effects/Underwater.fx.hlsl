@@ -198,7 +198,7 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	float2 shadows = tex2D(TESR_PointShadowBuffer, IN.UVCoord).rg;// * (1 - invlerp(0, fogDepth); // only sample point light shadows
 	float caustics = getCaustics(worldPos) * shadows.r;
 
-	color.rgb += color * pows(caustics, 2.0) * sunColor * depthFade * floorAngle * distanceFade * sunLuma * causticsStrength * 100;
+	color.rgb += color.rgb * pows(caustics, 2.0) * sunColor * depthFade * floorAngle * distanceFade * sunLuma * causticsStrength * 100;
 
 	color.rgb = lerp(color.rgb, fogColor, saturate(pow(invlerp(0, 5000, fogDepth), 10))); // lod hiding
 
