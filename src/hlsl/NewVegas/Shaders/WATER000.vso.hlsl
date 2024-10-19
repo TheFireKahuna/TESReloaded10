@@ -51,7 +51,7 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-#define	weight(v)		dot(v, 1)
+#define	weight(v)		dot(v, 1.0)
 #define	sqr(v)			((v) * (v))
 
     const float4 const_7 = {0.5, 0.001, 1, 0};

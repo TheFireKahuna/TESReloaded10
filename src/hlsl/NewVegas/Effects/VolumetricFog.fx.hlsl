@@ -135,7 +135,8 @@ float3 mixHeightFog(float3 color, float3 fogColor, float3 extinctionColor, float
 
 
 float getSky(float2 uv) {
-	float4 color = linearize(tex2D(TESR_SourceBuffer, uv));
+	float4 color = tex2D(TESR_SourceBuffer, uv);
+	color = linearize(color);
 
 	float distance = 0.5 * TESR_ReciprocalResolution.xy;
 	distance *= 1;
@@ -163,7 +164,8 @@ float4 fogColor (float4 skyColor, float4 pureFogColor, float fogStrength, float 
 
 float4 VolumetricFog(VSOUT IN) : COLOR0 
 {
-	float4 color = linearize(tex2D(TESR_SourceBuffer, IN.UVCoord));
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	color = linearize(color);
 	float4 pureFogColor = linearize(TESR_FogColor);
 
     float depth = readDepth(IN.UVCoord);
@@ -201,7 +203,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 		float sunHeight = shade(TESR_SunPosition.xyz, up);
 		float sunDir = dot(eyeDirection, TESR_SunPosition.xyz);
 		float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
-		float4 sunColor = float4(GetSunColor(sunHeight, 1, TESR_SunAmount.x, TESR_SunDiskColor.rgb, TESR_SunsetColor.rgb), 1);
+		float4 sunColor = float4(GetSunColor(sunHeight, 1, TESR_SunAmount.x, TESR_SunDiskColor.rgb, TESR_SunsetColor.rgb), 1.0);
 		sunColor *= isDayTime * isExterior; // set nighttime sun color
 
 		skyColor.rgb = GetSkyColor(0.5, 1, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, black.rgb) * TESR_SunsetColor.w; // remove the sun influence as we add it in the scattering
@@ -227,13 +229,13 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 
 	float4 simpleFogColor = fogColor(skyColor, pureFogColor, strength, SimpleFogSkyColor, black, FogSaturation);
 	float3 simpleFog = mixFog(finalColor.rgb, simpleFogColor.rgb, extinction, inScattering, fogDepth, strength * heightFade);
-	finalColor = lerp(finalColor, float4(simpleFog, 1), saturate(SimpleFogBlend) * (1 - isSky));
+	finalColor = lerp(finalColor, float4(simpleFog, 1.0), saturate(SimpleFogBlend) * (1 - isSky));
 
 	finalColor = lerp (finalColor, skyColor, distantFog * saturate(DistantFogBlend) * distantHeightFade * isExterior);
 
 	float4 heightFogColor = fogColor(skyColor, pureFogColor, strength, HeightFogSkyColor, sun, FogSaturation);
 	float3 heightFog = mixHeightFog(finalColor.rgb, heightFogColor.rgb, extinction, inScattering, fogDepth, strength * HeightFogDensity, 1.5 / (fogPower * HeightFogFalloff), worldPos, HeightFogHeight);
-	finalColor = lerp(finalColor, float4(heightFog, 1), saturate(HeightFogBlend));
+	finalColor = lerp(finalColor, float4(heightFog, 1.0), saturate(HeightFogBlend));
 
 	finalColor = lerp(color, finalColor, FogAmount);
 

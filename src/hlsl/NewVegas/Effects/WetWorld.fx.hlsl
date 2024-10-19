@@ -114,7 +114,7 @@ float3 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 	float s = saturate(distance * distance); 
 	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
-	// return pows(shades(H, surfaceNormal), glossiness) * linearize(float4(specColor, 1)) * specularBoost * atten;
+	// return pows(shades(H, surfaceNormal), glossiness) * linearize(specColor) * specularBoost * atten;
     lightDir = normalize(lightDir);
 	float3 H = normalize(lightDir + eyeDirection);
 
@@ -232,7 +232,8 @@ float4 Wet( VSOUT IN ) : COLOR0
 
 	// refract image through ripple normals
 	float2 refractionUV = expand(projectPosition(combinedNormals)).xy * TESR_ReciprocalResolution.xy * (refractionScale);
-	float4 rippleColor = linearize(tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord)); 
+	float4 rippleColor = tex2D(TESR_SourceBuffer, refractionUV + IN.UVCoord);
+	rippleColor = linearize(rippleColor);
 
 	// sample and strenghten the shadow map
 	float sunAmbient = luma(linearize(TESR_SunAmbient));

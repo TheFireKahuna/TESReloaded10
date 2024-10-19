@@ -136,7 +136,7 @@ float3 agxEotf(float3 val)
   // sRGB IEC 61966-2-1 2.2 Exponent Reference EOTF Display
   // NOTE: We're linearizing the output here. Comment/adjust when
   // *not* using a sRGB render target
-    val = pows(val, 2.2); //linearise
+	val = linearize(val); // delinearise
 
     return val;
 }
@@ -172,7 +172,7 @@ float3 agxLook(float3 val)
 
 float3 agx(float3 val)
 {
-    //val = pows(val, 1.0 / 2.2);
+    //val = delinearize(val);
     
     float min_ev = -12.47393f;
     float max_ev = 4.026069f;

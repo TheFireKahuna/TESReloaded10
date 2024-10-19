@@ -29,7 +29,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 	
 #define	PI			3.14159274
 #define	angler(v)		(((v) * (2 * PI)) - PI)
-#define	weight(v)		dot(v, 1)
+#define	weight(v)		dot(v, 1.0)
 #define	sqr(v)			((v) * (v))
 
 	const float4 const_0 = {1.0f, 765.01001f, 0.0f, 0.0f};

@@ -6,6 +6,6 @@ float3 GetNormal( float2 uv)
 
 float3 GetWorldNormal( float2 uv)
 {
-	float4 normal = float4(GetNormal(uv), 1);
+	float4 normal = float4(GetNormal(uv), 1.0);
 	return mul(TESR_ViewTransform, normal).xyz;
 }

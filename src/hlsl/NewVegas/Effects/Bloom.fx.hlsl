@@ -94,14 +94,15 @@ float4 ScaleUp(VSOUT IN, uniform sampler2D buffer, uniform sampler2D addBuffer) 
 	float4 color = sampleBox(uv, buffer, 0.5);
 
 	float4 addColor = tex2D(addBuffer, IN.UVCoord);
-	return float4(color.rgb + addColor.rgb, 1);
+	return float4(color.rgb + addColor.rgb, 1.0);
 }
 
 
 float4 Bloom(VSOUT IN ):COLOR0
 {
 	// quick average lum with 4 samples at corner pixels
-	float4 color = linearize(sampleBox(IN.UVCoord, TESR_RenderedBuffer, 1.0f));
+	float4 color = sampleBox(IN.UVCoord, TESR_RenderedBuffer, 1.0f);
+	color = linearize(color);
 
 	float threshold = TESR_BloomData.x;
 	if (threshold == 0) {
@@ -113,7 +114,7 @@ float4 Bloom(VSOUT IN ):COLOR0
 
 	float bloom = bloomScale * (brightness > 0.0 ? (sqr(max(0.0, brightness - threshold)) / brightness) : 0.0);
 
-	return float4(bloom * color.rgb, 1);
+	return float4(bloom * color.rgb, 1.0);
 }
 
 

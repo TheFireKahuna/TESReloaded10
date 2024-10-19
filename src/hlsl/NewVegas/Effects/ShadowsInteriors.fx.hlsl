@@ -40,7 +40,7 @@ VSOUT FrameVS(VSIN IN)
 float4 CombineShadow( VSOUT IN ) : COLOR0 {
 	// combine Shadow pass and source using an overlay mode + alpha blending
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
-    color.rgb = pows(color.rgb, 2.2); // linearise
+    color.rgb = linearize(color.rgb); // linearise
 	float depth = readDepth(IN.UVCoord);
 	float3 eyeDir = toWorld(IN.UVCoord);
 	float uniformDepth = length(depth * eyeDir);
@@ -59,9 +59,9 @@ float4 CombineShadow( VSOUT IN ) : COLOR0 {
 
 	// readd values above 1
 	finalColor += max(color - 1, 0.0);
-    finalColor.rgb = pows(finalColor.rgb, 1.0/2.2); // delinearise
+    finalColor.rgb = delinearize(finalColor.rgb); // delinearise
 
-	return float4(finalColor.rgb, 1);
+	return float4(finalColor.rgb, 1.0);
 }
 
 technique {

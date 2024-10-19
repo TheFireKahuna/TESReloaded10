@@ -36,11 +36,11 @@ float4 ImageAdjust(VSOUT IN) : COLOR0
 	// saturation
 	color = lerp(luma(color).rrrr, color, TESR_ImageAdjustData.z);
 	
-	color.rgb = pows(color.rgb, 2.2); // linearise
+	color.rgb = linearize(color.rgb); // delinearise
 	float2 io = float2(1, 0);
 
-	float3 darks = smoothstep(1, 0, color.rgb) * color.rgb * pows(TESR_DarkAdjustColor.rgb,2.2); // linearise
-	float3 lights = smoothstep(0, 1, color.rgb) * color.rgb * pows(TESR_LightAdjustColor.rgb,2.2); // linearise
+	float3 darks = smoothstep(1, 0, color.rgb) * color.rgb * linearize(TESR_DarkAdjustColor.rgb); // linearise
+	float3 lights = smoothstep(0, 1, color.rgb) * color.rgb * linearize(TESR_LightAdjustColor.rgb); // linearise
 
 	float3 newColor = darks.rgb + lights.rgb;
 
@@ -49,14 +49,14 @@ float4 ImageAdjust(VSOUT IN) : COLOR0
 
 	color.rgb = lerp(color.rgb, newColor, TESR_ImageAdjustData.w); // strength of the effect
 
-	color.rgb = pows(color.rgb, 1.0/2.2); // delinearise
+	color.rgb = delinearize(color.rgb); // delinearise
 
 	// contrast
 	//0.5^2.2=0.21764
 	newColor = (color.rgb - float(0.5).rrr) * TESR_ImageAdjustData.y + float(0.5).rrr;
 
 	color.rgb = lerp(color.rgb, newColor, TESR_ImageAdjustData.w); // strength of the effect
-	return float4(color.rgb, 1);
+	return float4(color.rgb, 1.0);
 }
 
 technique

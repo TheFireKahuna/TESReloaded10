@@ -70,7 +70,8 @@ float GetOrtho(float4 OrthoPos) {
 
 float4 Rain( VSOUT IN ) : COLOR0
 {
-	float4 color = linearize(tex2D(TESR_SourceBuffer, IN.UVCoord));
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	color = linearize(color);
 	int iterations = RainLayers;
 
 	// calculating the ray along which the  volumetric rain will be calculated
@@ -117,10 +118,12 @@ float4 Rain( VSOUT IN ) : COLOR0
 
 	// sample the bloom buffer and the source buffer with refracted UV to shade the rain with
 	float2 refractedUV = IN.UVCoord + float2(totalRain * TESR_RainAspect.x, -totalRain * TESR_RainAspect.x);
-	float4 refractedColor = linearize(tex2D(TESR_SourceBuffer, refractedUV));
+	float4 refractedColor = tex2D(TESR_SourceBuffer, refractedUV);
+	refractedColor = linearize(refractedColor);
 	refractedColor += tex2D(TESR_BloomBuffer, refractedUV);
 
-	return delinearize(lerp(color, refractedColor + rainColor * TESR_RainAspect.y * 0.02, totalRain* TESR_RainData.w));
+	color = lerp(color, refractedColor + rainColor * TESR_RainAspect.y * 0.02, totalRain* TESR_RainData.w);
+	return delinearize(color);
 }
 
 

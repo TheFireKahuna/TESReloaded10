@@ -84,7 +84,7 @@ float4 BloomPass(VSOUT IN) : COLOR0
     Color -= 5;
     Color /= (10 + max(Color, 0));
 
-    return float4(Color, 1);
+    return float4(Color, 1.0);
 }
 
 float4 BlurPass(VSOUT IN, uniform float2 OffsetMask) : COLOR0
@@ -106,7 +106,7 @@ float4 CombinePass(VSOUT IN) : COLOR0
 	
 	bloomColor = AdjustSaturation(bloomColor, TESR_BloomLegacyValues.z) * TESR_BloomLegacyValues.x;
 	originalColor = AdjustSaturation(originalColor, TESR_BloomLegacyValues.w) * TESR_BloomLegacyValues.y;
-	originalColor *= max((max(originalColor, 1) - bloomColor), 0); // darken the background by the inverse bloom channel value (relative to the background max, to support HDR backgrounds beyond 1)
+	originalColor *= max((max(originalColor, 1.0) - bloomColor), 0); // darken the background by the inverse bloom channel value (relative to the background max, to support HDR backgrounds beyond 1)
 	
 	#if viewbloom
 		return float4(bloomColor, 1.0f);

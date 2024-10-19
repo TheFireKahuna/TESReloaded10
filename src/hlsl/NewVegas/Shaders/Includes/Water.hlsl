@@ -113,7 +113,7 @@ float4 getLightTravel(float3 refractedDepth, float4 shallowColor, float4 deepCol
     //float4 waterColor = shallowColor; 
     float depthDarknessPower = saturate(pows((1 - waterSettings.y), 3)); // high darkness means low values
     float3 result = color.rgb * lerp(0.7, lerp(waterColor.rgb * depthDarknessPower, 1, depthDarknessPower) , refractedDepth.x) ; //never reach 1 so that water is always absorbing some light
-    return float4(result, 1);
+    return float4(result, 1.0);
 }
 
 float4 getTurbidityFog(float3 refractedDepth, float4 shallowColor, float4 waterVolume, float sunLuma, float4 color){
@@ -126,17 +126,17 @@ float4 getTurbidityFog(float3 refractedDepth, float4 shallowColor, float4 waterV
 
     float3 result = lerp(color.rgb, fog.rgb, saturate(fogCoeff * FogColor.a * turbidity));
 
-    // return float4(1 - refractedDepth.yyy, 1);
-    return float4(result, 1);
+    // return float4(1 - refractedDepth.yyy, 1.0);
+    return float4(result, 1.0);
 }
 
 float4 getDiffuse(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, float distance, float4 diffuseColor, float4 color){
-    float verticalityFade =  (1 - shades(eyeDirection, float3(0, 0, 1)));
+    float verticalityFade =  (1 - shades(eyeDirection, float3(0, 0, 1.0)));
     float distanceFade = smoothstep(0, 1, distance * 0.001);
     float diffuse = shades(lightDir, surfaceNormal) * verticalityFade * distanceFade; // increase intensity with distance
     float3 result = lerp(color.rgb, diffuseColor.rgb, saturate(diffuse));
 
-    return float4(result, 1);
+    return float4(result, 1.0);
 }
 
 float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, float reflectivity, float4 color){
@@ -149,7 +149,7 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
     float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma) * 0.7;
 	float3 result = lerp(color.rgb, reflection.rgb , saturate((fresnelCoeff * 0.8 + 0.2 * lumaDiff) * reflectivity));
 
-    return float4(result, 1);
+    return float4(result, 1.0);
 }
 
 float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, float3 specColor, float4 color){
@@ -173,7 +173,7 @@ float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, f
         result = color.rgb + specular * specColor.rgb * specularBoost;
     }
 
-    return float4(result, 1);
+    return float4(result, 1.0);
 }
 
 float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 worldPosition, float3 eyeDirection, float3 specColor, float4 color){
@@ -198,7 +198,7 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 
     float3 Ks = FresnelShlick(0.08, H, eyeDirection);
     color.rgb += BRDF(0.02, Ks, NdotV, NdotL, NdotH) * specColor * atten * NdotL;
-    // color.rgb += pows(shades(H, surfaceNormal), glossiness) * linearize(float4(specColor, 1)).rgb * specularBoost * atten;
+    // color.rgb += pows(shades(H, surfaceNormal), glossiness) * linearize(specColor) * specularBoost * atten;
 
     // color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
     return color;

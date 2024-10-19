@@ -171,7 +171,7 @@ float4 SnowCoverage( VSOUT IN ) : COLOR0
 	ortho = lerp(ortho, 1, smoothstep(0.6 * TESR_OrthoData.x, TESR_OrthoData.x, length(camera_vector))); // fade out ortho with distance
 
 
-	return float4(ortho.xxx, 1);
+	return float4(ortho.xxx, 1.0);
 }
 
 
@@ -194,7 +194,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	if (isWaterSurface || !(ortho > 0)) return color;
 	
     color = linearize(color);
-	float3 sunColor = linearize(TESR_SunColor).rgb;
+	float3 sunColor = linearize(TESR_SunColor.rgb);
 
 	float2 uv = worldPos.xy / 200.0f;
 	float3 localNorm = expand(tex2D(TESR_SnowNormSampler, uv).xyz);
@@ -206,7 +206,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float fresnelCoeff = saturate(pow(1 - shade(eyeDirection, surfaceNormal), 5));
 	float3 snowSpec = pows(shades(normalize(TESR_SunDirection.xyz + eyeDirection), surfaceNormal), 20) * fresnelCoeff;
 
-	float3 ambient = snow_tex * pows(TESR_SunAmbient.rgb,2.2); // linearise
+	float3 ambient = snow_tex * linearize(TESR_SunAmbient.rgb); // linearise
 	float2 shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).rg;
 	shadow.r = lerp(1.0f, shadow.r, useShadows); // disable shadow sampling if shadows are disabled in game
 	shadow.r = lerp(shadow.r, 1.0f, TESR_ShadowFade.x);	// fade shadows to light when sun is low
@@ -223,8 +223,8 @@ float4 Snow( VSOUT IN ) : COLOR0
 	shadow.g = 1; // disable point light shadows for debug
 
 	for (int i = 0; i<12; i++){
-		snowColor.rgb += GetPointLightContribution(worldPos, TESR_ShadowLightPosition[i], normal) * linearize(float4(TESR_LightColor[i].rgb * TESR_LightColor[i].a, 1)) * pointLightsPower * shadow.g;
-		snowColor.rgb += GetPointLightContribution(worldPos, TESR_LightPosition[i], normal) * linearize(float4(TESR_LightColor[12 + i].rgb * TESR_LightColor[12 + i].a, 1)) * pointLightsPower * shadow.g;
+		snowColor.rgb += GetPointLightContribution(worldPos, TESR_ShadowLightPosition[i], normal) * float4(linearize(TESR_LightColor[i].rgb) * TESR_LightColor[i].a, 1) * pointLightsPower * shadow.g;
+		snowColor.rgb += GetPointLightContribution(worldPos, TESR_LightPosition[i], normal) * float4(linearize(TESR_LightColor[12 + i].rgb) * TESR_LightColor[12 + i].a, 1) * pointLightsPower * shadow.g;
 	}
 
 	// create a noisy pattern of accumulation over time

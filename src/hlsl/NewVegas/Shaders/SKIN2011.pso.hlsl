@@ -56,7 +56,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 #define	compress(v)		(((v) * 0.5) + 0.5)
 #define	shade(n, l)		max(dot(n, l), 0)
 #define	shades(n, l)		saturate(dot(n, l))
-#define	weight(v)		dot(v, 1)
+#define	weight(v)		dot(v, 1.0)
 #define	sqr(v)			((v) * (v))
 
     const float4 const_0 = {-0.5, 2, 1, 0.3};

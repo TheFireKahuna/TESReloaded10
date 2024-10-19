@@ -43,7 +43,7 @@ static const float scattCoeff = TESR_WaterCoefficients.w;// * turbidity;
 static const float waveWidth = TESR_WaveParams.y;
 static const float depthDarkness = TESR_WaterSettings.y;
 static const float3 up = float3(0, 0, 1);
-static const float sunLuma = luma(pows(TESR_SunColor.rgb,2.2)); // linearise
+static const float sunLuma = luma(linearize(TESR_SunColor.rgb)); // linearise
 
 struct VSOUT {
 	float4 vertPos : POSITION;
@@ -217,7 +217,7 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	color = delinearize(color);
 	color.rgb += ditherMat[ (uv.x)%4 ][ (uv.y)%4 ] / 255;
 
-    return float4(color.rgb, 1);
+    return float4(color.rgb, 1.0);
 }
 
 float4 WaterDistortion( VSOUT IN ) : COLOR0 {

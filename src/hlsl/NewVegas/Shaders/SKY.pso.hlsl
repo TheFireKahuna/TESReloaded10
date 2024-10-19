@@ -72,7 +72,10 @@ VS_OUTPUT main(VS_INPUT IN) {
     //skyColor += white * saturate(sunDisk); // add sun disk and boost brightness during sunrise/sunset
     // skyColor += sunColor * saturate(sunDisk) * TESR_SunAmount.z; // add sun disk and boost brightness during sunrise/sunset
 
-    OUT.color_0 = delinearize(float4(skyColor * TESR_SunsetColor.w, 1)) ; // multiply sky strength for HDR
+    skyColor *= TESR_SunsetColor.w;
+
+    OUT.color_0.rgb = delinearize(skyColor); // multiply sky strength for HDR
+    OUT.color_0.a = IN.color_0.a;
 
     // dithering
 	OUT.color_0.rgb += ditherMat[ (IN.screen.x)%4 ][ (IN.screen.y)%4 ] / 255;

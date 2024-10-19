@@ -41,7 +41,7 @@ float4 BloodLensPS (VSOUT IN) : COLOR
 	
 	float3 resultColor = (sColor - scaledNoise) + (scaledNoise * TESR_BloodLensColor.rgb);
 	float3 refColor = pow(normals.x, Shininess) * (TESR_BloodLensColor.rgb * 0.5);
-	return float4(resultColor + refColor, 1);
+	return float4(resultColor + refColor, 1.0);
 }
 
 technique

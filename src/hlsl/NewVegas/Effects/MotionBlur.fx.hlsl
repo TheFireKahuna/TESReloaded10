@@ -57,7 +57,7 @@ float4 MotionBlurPS(VSOUT IN) : COLOR0
     }
  
 	blurredColor = blurredColor / gaussianSum;
-	return float4(blurredColor, 1);
+	return float4(blurredColor, 1.0);
 }
 
 technique

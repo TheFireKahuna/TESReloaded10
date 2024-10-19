@@ -65,7 +65,8 @@ float noise( float3 x )
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float4 stars = linearize(tex2D(TexMap, IN.TexUV.xy));
+	float4 stars = tex2D(TexMap, IN.TexUV);
+	stars = linearize(stars);
     float4 skytint = linearize(IN.color_0);
 
     float starFlicker = 0.05;

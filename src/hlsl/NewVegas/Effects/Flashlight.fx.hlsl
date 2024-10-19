@@ -161,13 +161,14 @@ float4 BoxBlurAvg (VSOUT IN, uniform sampler2D buffer, uniform float scaleFactor
 	color += tex2D(buffer, min(IN.UVCoord + io.yy * TESR_ReciprocalResolution.xy, maxuv));
 
 	// return color;
-	return float4(color.rgb/= 5, 1);
+	return float4(color.rgb/= 5, 1.0);
 }
 
 
 float4 Combine (VSOUT IN) : COLOR0
 {
-	float4 color = linearize(tex2D(TESR_SourceBuffer, IN.UVCoord));
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
+	color = linearize(color);
 	float4 light = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 
 	color.rgb += color.rgb * max(0.0, luma(exp(-color.rgb * 3.5)) * light.rgb); // modulate light with base color brightness to compensate for the post process aspect

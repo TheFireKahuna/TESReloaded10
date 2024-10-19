@@ -21,7 +21,7 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-#define	weight(v)		dot(v, 1)
+#define	weight(v)		dot(v, 1.0)
 
 	const float4 const_0 = {1.0f, 765.01001f, 0.0f, 0.0f};
 	

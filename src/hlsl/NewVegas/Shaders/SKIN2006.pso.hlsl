@@ -110,7 +110,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     r1.yzw = (saturate((1 - att3.x) - att4.x) * q40.xyz) + ((SunLightColor.xyzw * shades(q6.xyz, IN.texcoord_1.xyz)) + r5.yzw);			// partial precision
     r6.xyz = ((r2.w * ((q19.x * r4.yzw) + r0.yzw)) + r1.yzw) + AmbientColor.rgb;			// partial precision
 
-    OUT.color_0.rgba = selectColor(TESR_DebugVar.x, float4(r6, 1), PSLightColor[0], PSLightColor[1], PSLightColor[2], PSLightColor[3], PSLightColor[4], PSLightColor[5], PSLightColor[6], PSLightColor[7], PSLightColor[8]);
+    OUT.color_0.rgba = selectColor(TESR_DebugVar.x, float4(r6, 1.0), PSLightColor[0], PSLightColor[1], PSLightColor[2], PSLightColor[3], PSLightColor[4], PSLightColor[5], PSLightColor[6], PSLightColor[7], PSLightColor[8]);
     return OUT;
 };
 

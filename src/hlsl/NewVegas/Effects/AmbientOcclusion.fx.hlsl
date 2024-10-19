@@ -99,7 +99,7 @@ float4 SSAO(VSOUT IN, uniform float2 OffsetMask) : COLOR0
 	for (int i = 0; i < kernelSize; ++i) {
 		// generate random samples in a unit sphere (random vector coordinates from -1 to 1);
 		float3 rand = random(uv + i * TESR_ReciprocalResolution.x);
-		float3 sampleVector = float3 (expand(rand.xy), rand.z) * float3(OffsetMask, 1); // separate kernel
+		float3 sampleVector = float3 (expand(rand.xy), rand.z) * float3(OffsetMask, 1.0); // separate kernel
 		sampleVector = mul(normalize(sampleVector), tbn);
 
 		//randomize points distance to sphere center, making them more concentrated towards the center
@@ -146,7 +146,7 @@ float4 Expand(VSOUT IN) : COLOR0
 float4 Combine(VSOUT IN) : COLOR0
 {
 	float3 color = tex2D(TESR_SourceBuffer, IN.UVCoord).rgb;
-	color = pows(color,2.2); // linearise
+	color = linearize(color); // linearise
 	float ao = lerp(AOclamp, 1.0, tex2D(TESR_RenderedBuffer, IN.UVCoord).r);
 
 	float luminance = luma(color);
@@ -159,7 +159,7 @@ float4 Combine(VSOUT IN) : COLOR0
 		return float4(ao, ao, ao, 1.0f);
 	#endif
 	
-	color.rgb = pows(color.rgb,1.0/2.2); // delinearise
+	color.rgb = delinearize(color.rgb); // delinearise
 	return float4(color.rgb, 1.0f);
 }
  
@@ -176,7 +176,7 @@ float4 NormalBlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blu
 	clip(endFade - depth1);
 
 	// coeff for blurring to increase blur depthDrop on surfaces facing away from the camera
-	float normalCoeff = (0.5 + 2 * compress(dot(normal, float3(0, 0, 1))));
+	float normalCoeff = (0.5 + 2 * compress(dot(normal, float3(0.0, 0.0, 1.0))));
 
     for (int i = 0; i < cKernelSize; i++)
     {
@@ -193,7 +193,7 @@ float4 NormalBlurRChannel(VSOUT IN, uniform float2 OffsetMask, uniform float blu
     }
 	
 	color1.r /= WeightSum;
-    return float4(color1.rgb, 1);
+    return float4(color1.rgb, 1.0);
 }
 
 

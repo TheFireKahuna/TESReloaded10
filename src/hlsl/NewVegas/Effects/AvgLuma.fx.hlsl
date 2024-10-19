@@ -91,18 +91,21 @@ float getFocalDistance() {
 float4 AvgLuma(VSOUT IN) : COLOR0
 {	
 	float2 oldLuma = tex2D(TESR_AvgLumaBuffer, center).rg;
+	float3 renderColor = 0;
 
 	// samples 100 different locations around the screen to calculate an average
 	float4 color = float4(0, 0, 0, 0);
 	float total = 0;
 	for (float i = 0.05; i < 1; i+= 0.1){
 		for (float j = 0.05; j < 1; j+= 0.1){
-			color += linearize(tex2D(TESR_RenderedBuffer, float2(i, j)));
+			renderColor = tex2D(TESR_RenderedBuffer, float2(i, j)).rgb;
+			color += linearize(renderColor);
 			total++;
 		}
 	}
 	for (i= 0 ; i < 12; i++){
-		color += linearize(tex2D(TESR_RenderedBuffer, center + taps[i]));
+		renderColor = tex2D(TESR_RenderedBuffer, center + taps[i]).rgb;
+		color += linearize(renderColor);
 		total++;
 	}
 	color /= total;
@@ -112,7 +115,7 @@ float4 AvgLuma(VSOUT IN) : COLOR0
 	float animatedLuma = stepTo(oldLuma.g, newLuma, TESR_GameTime.w * decreaseRate, TESR_GameTime.w * increaseRate);
 
 	// texture will store the actual current luma, the animated current luma, and the animated focal distance for DoF.
-	return float4(newLuma, animatedLuma, getFocalDistance(), 1);
+	return float4(newLuma, animatedLuma, getFocalDistance(), 1.0);
 }
  
 technique

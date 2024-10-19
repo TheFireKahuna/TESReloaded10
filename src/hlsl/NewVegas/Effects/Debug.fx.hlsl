@@ -66,7 +66,8 @@ float4 displayShadows(float4 color, float2 uv, float2 bufferPosition, float2 buf
 float4 displayBloom(float4 color, float2 uv, float2 bufferPosition, float2 bufferSize, sampler2D buffer){
 	float2 lowerCorner = bufferPosition + bufferSize;
 	if ((uv.x < bufferPosition.x || uv.y < bufferPosition.y) || (uv.x > lowerCorner.x || uv.y > lowerCorner.y )) return color;
-	return delinearize(tex2D(buffer, float2(invlerp(bufferPosition, lowerCorner, uv))));
+	color = tex2D(buffer, float2(invlerp(bufferPosition, lowerCorner, uv)));
+	return delinearize(color);
 }
 
 float4 showLightInfluence(float4 color, float2 uv, float3 position, float4 lightPos, float4 tint){
@@ -128,7 +129,7 @@ float4 DebugShader( VSOUT IN) : COLOR0 {
 	color = displayShadows(color, IN.UVCoord, float2(0.5, 0.05), float2(0.15, 0.15));
 	color = displayBloom(color, IN.UVCoord, float2(0.7, 0.05), float2(0.15, 0.15), TESR_BloomBuffer);
 
-    return float4(color.rgb, 1);
+    return float4(color.rgb, 1.0);
 }
 
 technique
