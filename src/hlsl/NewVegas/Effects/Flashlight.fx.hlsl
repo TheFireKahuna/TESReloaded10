@@ -111,8 +111,8 @@ float4 Flashlight(VSOUT IN) : COLOR0
 
 	float lightTexture = tex2D(TESR_SpotLightTexture, lightSpaceCoord.xy).r;
 
-	float sunLuma = 1 / max(0.05, luma(TESR_SunColor));
-    float3 lightColor = TESR_SpotLightColor.rgb * TESR_SpotLightColor.w * sunLuma;
+	float sunLuma = 1 / max(0.05, luma(linearizeGameVal(TESR_SunColor)));
+    float3 lightColor = linearizeGameVal(TESR_SpotLightColor.rgb) * TESR_SpotLightColor.w * sunLuma;
 	
 	float angleCosMax = cos(radians(TESR_SpotLightDirection.w));
 	float angleCosMin = cos(radians(TESR_SpotLightDirection.w * 0.5));
@@ -124,7 +124,7 @@ float4 Flashlight(VSOUT IN) : COLOR0
 	// if (lightSpaceCoord.x > 0.0 && lightSpaceCoord.x < 1.0 && lightSpaceCoord.y > 0.0 && lightSpaceCoord.y < 1.0) return float4(light.xxx, 1);
 	// color = displayBuffer(color, IN.UVCoord, float2(0.7, 0.15), float2(0.2, 0.2), TESR_ShadowSpotlightBuffer0);
 
-    // return delinearize(color);
+    // return delinearizeRenderedBuffer(color);
     return float4(light, 1);
 }
 
@@ -168,12 +168,13 @@ float4 BoxBlurAvg (VSOUT IN, uniform sampler2D buffer, uniform float scaleFactor
 float4 Combine (VSOUT IN) : COLOR0
 {
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
-	color = linearize(color);
+	color = linearizeSourceBuffer(color);
 	float4 light = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	//color = linearizeRenderedBuffer(color);
 
 	color.rgb += color.rgb * max(0.0, luma(exp(-color.rgb * 3.5)) * light.rgb); // modulate light with base color brightness to compensate for the post process aspect
 
-    return delinearize(color);
+    return delinearizeRenderedBuffer(color);
 }
 
 technique {

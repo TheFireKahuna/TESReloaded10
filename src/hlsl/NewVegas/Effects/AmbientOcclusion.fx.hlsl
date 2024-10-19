@@ -58,7 +58,8 @@ VSOUT FrameVS(VSIN IN)
 // tailored to return a different value for each uv coord of the screen.
 float3 random(float2 seed)
 {
-	return tex2D(TESR_BlueNoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
+	float3 color = tex2D(TESR_BlueNoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
+	return linearizeNoise(color);
 }
 
 float fogCoeff(float depth){
@@ -129,7 +130,7 @@ float4 SSAO(VSOUT IN, uniform float2 OffsetMask) : COLOR0
 	
 	occlusion = 1.0 - occlusion/kernelSize * AOstrength;
 
-	float fogColor = luma(TESR_FogColor.rgb);
+	float fogColor = luma(linearizeGameVal(TESR_FogColor.rgb));
 	float darkness = clamp(lerp(occlusion, fogColor, fogCoeff(origin.z)), occlusion, 1.0);
 
 	darkness = lerp(darkness, 1.0, saturate(invlerp(startFade, endFade, origin.z))) * color.x;
@@ -146,7 +147,7 @@ float4 Expand(VSOUT IN) : COLOR0
 float4 Combine(VSOUT IN) : COLOR0
 {
 	float3 color = tex2D(TESR_SourceBuffer, IN.UVCoord).rgb;
-	color = linearize(color); // linearise
+	color = linearizeSourceBuffer(color); // linearise
 	float ao = lerp(AOclamp, 1.0, tex2D(TESR_RenderedBuffer, IN.UVCoord).r);
 
 	float luminance = luma(color);
@@ -159,7 +160,7 @@ float4 Combine(VSOUT IN) : COLOR0
 		return float4(ao, ao, ao, 1.0f);
 	#endif
 	
-	color.rgb = delinearize(color.rgb); // delinearise
+	color.rgb = delinearizeRenderedBuffer(color.rgb); // delinearise
 	return float4(color.rgb, 1.0f);
 }
  

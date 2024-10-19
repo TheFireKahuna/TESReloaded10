@@ -308,7 +308,7 @@ technique
         VertexShader = compile vs_3_0 DX9_SMAANeighborhoodBlendingVS();
         PixelShader = compile ps_3_0 DX9_SMAANeighborhoodBlendingPS(TESR_SourceBuffer, TESR_RenderedBuffer);
 		
-        SRGBWriteEnable = true;
+        SRGBWriteEnable = false;
         StencilEnable = false;
     }	
 }

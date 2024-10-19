@@ -53,10 +53,10 @@ sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\water_
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 
-    float4 linSunColor = linearize(SunColor); //linearise
-    float4 linShallowColor = linearize(ShallowColor); //linearise
-    //float4 linShallowColor = linearize(TESR_WaterShallowColor); //linearise
-    float4 linHorizonColor = linearize(TESR_HorizonColor); //linearise
+    float4 linSunColor = linearizeGameVal(SunColor); //linearise
+    float4 linShallowColor = linearizeGameVal(ShallowColor); //linearise
+    //float4 linShallowColor = linearizeGameVal(TESR_WaterShallowColor); //linearise
+    float4 linHorizonColor = linearizeGameVal(TESR_HorizonColor); //linearise
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
@@ -72,7 +72,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float refractionCoeff = ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff);
 	float4 reflection = tex2Dproj(ReflectionMap, reflectionPos);
-	reflection = linearize(reflection);
+	reflection = linearizeTex(reflection);
 
     float4 color = linShallowColor * sunLuma;
     // color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
@@ -80,7 +80,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
     color.a = 1;
 
-    color = delinearize(color); //delinearise
+    color = delinearizeSourceBuffer(color); //delinearise
     OUT.color_0 = color;
 
     return OUT;	

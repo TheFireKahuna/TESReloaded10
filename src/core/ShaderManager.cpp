@@ -53,6 +53,10 @@ void ShaderManager::Initialize() {
 	TheShaderManager->RegisterEffect<VolumetricFogEffect>(&TheShaderManager->Effects.VolumetricFog);
 	TheShaderManager->RegisterEffect<WaterLensEffect>(&TheShaderManager->Effects.WaterLens);
 	TheShaderManager->RegisterEffect<WetWorldEffect>(&TheShaderManager->Effects.WetWorld);
+	TheShaderManager->RegisterEffect<LinearizePTEffect>(&TheShaderManager->Effects.LinearizePT);
+	TheShaderManager->RegisterEffect<LinearizeISEffect>(&TheShaderManager->Effects.LinearizeIS);
+	TheShaderManager->RegisterEffect<DelinearizePTEffect>(&TheShaderManager->Effects.DelinearizePT);
+	TheShaderManager->RegisterEffect<DelinearizeISEffect>(&TheShaderManager->Effects.DelinearizeIS);
 
 	TheShaderManager->RegisterShaderCollection<TonemappingShaders>(&TheShaderManager->Shaders.Tonemapping);
 	TheShaderManager->RegisterShaderCollection<POMShaders>(&TheShaderManager->Shaders.POM);
@@ -336,6 +340,30 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.fogDistance.y = ShaderConst.fogData.y;
 	ShaderConst.fogDistance.z = 1.0f;
 	ShaderConst.fogDistance.w = ShaderConst.sunGlare;
+
+	if (Effects.LinearizePT->linearizeGameColors) {
+		ShaderConst.sunDiskColor.x = linearize(ShaderConst.sunDiskColor.x);
+		ShaderConst.sunDiskColor.y = linearize(ShaderConst.sunDiskColor.y);
+		ShaderConst.sunDiskColor.z = linearize(ShaderConst.sunDiskColor.z);
+		ShaderConst.skyColor.x = linearize(ShaderConst.skyColor.x);
+		ShaderConst.skyColor.y = linearize(ShaderConst.skyColor.y);
+		ShaderConst.skyColor.z = linearize(ShaderConst.skyColor.z);
+		ShaderConst.skyLowColor.x = linearize(ShaderConst.skyLowColor.x);
+		ShaderConst.skyLowColor.y = linearize(ShaderConst.skyLowColor.y);
+		ShaderConst.skyLowColor.z = linearize(ShaderConst.skyLowColor.z);
+		ShaderConst.sunAmbient.x = linearize(ShaderConst.sunAmbient.x);
+		ShaderConst.sunAmbient.y = linearize(ShaderConst.sunAmbient.y);
+		ShaderConst.sunAmbient.z = linearize(ShaderConst.sunAmbient.z);
+		ShaderConst.horizonColor.x = linearize(ShaderConst.horizonColor.x);
+		ShaderConst.horizonColor.y = linearize(ShaderConst.horizonColor.y);
+		ShaderConst.horizonColor.z = linearize(ShaderConst.horizonColor.z);
+		ShaderConst.fogColor.x = linearize(ShaderConst.fogColor.x);
+		ShaderConst.fogColor.y = linearize(ShaderConst.fogColor.y);
+		ShaderConst.fogColor.z = linearize(ShaderConst.fogColor.z);
+		ShaderConst.sunColor.x = linearize(ShaderConst.sunColor.x);
+		ShaderConst.sunColor.y = linearize(ShaderConst.sunColor.y);
+		ShaderConst.sunColor.z = linearize(ShaderConst.sunColor.z);
+	}
 
 	timer.LogTime("ShaderManager::UpdateConstants for generic constants");
 
@@ -667,6 +695,8 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
+	Effects.LinearizePT->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
 	if (GameState.isExterior) 
 		Effects.ShadowsExteriors->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	else 
@@ -691,6 +721,8 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Effects.Bloom->RenderBloomBuffer(RenderTarget);
 
 	Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
+	Effects.DelinearizePT->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	timer.LogTime("ShaderManager::RenderEffectsPreTonemapping");
 }
@@ -724,6 +756,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 	Device->StretchRect(RenderTarget, NULL, RenderedSurface, NULL, D3DTEXF_NONE);
 	Device->StretchRect(RenderTarget, NULL, SourceSurface, NULL, D3DTEXF_NONE);
 
+	Effects.LinearizeIS->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
 	Effects.Rain->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.Snow->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
@@ -746,6 +780,8 @@ void ShaderManager::RenderEffects(IDirect3DSurface9* RenderTarget) {
 
 	// final adjustments
 	Effects.ImageAdjust->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
+	Effects.DelinearizeIS->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	// debug shader allows to display some of the buffers
 	Effects.Debug->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);

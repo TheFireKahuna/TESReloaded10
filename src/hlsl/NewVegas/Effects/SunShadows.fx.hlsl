@@ -135,7 +135,8 @@ float GetLightAmount(float4 coord, float depth)
 // tailored to return a different value for each uv coord of the screen.
 float3 random(float2 seed)
 {
-	return tex2D(TESR_NoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
+	float3 color = tex2D(TESR_NoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
+	return linearizeNoise(color);
 }
 
 float4 ScreenSpaceShadow(VSOUT IN) : COLOR0

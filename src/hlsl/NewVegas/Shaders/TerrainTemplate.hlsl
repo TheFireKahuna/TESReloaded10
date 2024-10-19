@@ -99,9 +99,13 @@ float4 AmbientColor : register(c1);
 float4 PSLightColor[13] : register(c3);
 float4 PSLightDir : register(c18);
 float4 PSLightPosition[12] : register(c19);
+float4 TESR_LinearTex : register(c40);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
+
+    float3 sunColor = linearizeTex(PSLightColor[0].rgb, TESR_LinearTex.y);
+    float3 ambientColor = linearizeTex(AmbientColor.rgb, TESR_LinearTex.y);
     
     int texCount = TEX_COUNT;  // Macro.
     float3 tangent = normalize(IN.tangent.xyz);
@@ -121,20 +125,20 @@ PS_OUTPUT main(PS_INPUT IN) {
     float2 offsetUV = getParallaxCoords(dist, IN.uv.xy, dx, dy, eyeDir, texCount, BaseMap, blends, weights);
 
     float roughness = 1.f;
-    float3 baseColor = blendDiffuseMaps(IN.vertex_color, offsetUV, texCount, BaseMap, weights);
+    float3 baseColor = blendDiffuseMaps(linearizeTex(IN.vertex_color, TESR_LinearTex.z), offsetUV, texCount, BaseMap, weights, TESR_LinearTex.z);
     float3 combinedNormal = blendNormalMaps(offsetUV, texCount, NormalMap, weights, roughness);
 
     float3 lightTS = mul(tbn, PSLightDir.xyz);
     float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, offsetUV, dx, dy, lightTS, texCount, blends, BaseMap);
     
-    float3 lighting = getSunLighting(lightTS, PSLightColor[0].rgb, eyeDir, combinedNormal, AmbientColor.rgb, baseColor, roughness, 1.0, parallaxShadowMultiplier);
+    float3 lighting = getSunLighting(lightTS, sunColor, eyeDir, combinedNormal, ambientColor, baseColor, roughness, 1.0, parallaxShadowMultiplier);
 
     #if defined(POINTLIGHT)
         int lightCount = 12;
         float3 pointlightDir;
         [unroll] for (int i = 0; i < lightCount; i++) {
             pointlightDir = mul(tbn, PSLightPosition[i].xyz - IN.lPosition.xyz);
-            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, PSLightColor[i + 1].rgb, eyeDir, combinedNormal, baseColor, roughness, 1.0);
+            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, linearizeTex(PSLightColor[i + 1].rgb, TESR_LinearTex.y), eyeDir, combinedNormal, baseColor, roughness, 1.0);
         }
     #endif
     

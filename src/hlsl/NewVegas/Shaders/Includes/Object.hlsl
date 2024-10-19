@@ -13,7 +13,7 @@ float getRoughness(float glossmap, float meshgloss){
 
 float3 getSunLighting(float3 albedo, float roughness, float3 normal, float3 eyeDirection, float3 lightDirection, float3 lightColor, float3 ambient){
     // return roughness.rrr;
-    return PBR(0, roughness, albedo, normal.xyz, eyeDirection, normalize(lightDirection), linearize(lightColor)) + albedo * linearize(ambient);
+    return PBR(0, roughness, albedo, normal.xyz, eyeDirection, normalize(lightDirection), lightColor) + albedo * ambient;
 }
 
 float3 getPointLightLighting(float3 albedo, float roughness, float3 normal, float3 eyeDirection, float3 lightDirection, float distance, float3 lightColor){
@@ -21,11 +21,11 @@ float3 getPointLightLighting(float3 albedo, float roughness, float3 normal, floa
     float s = saturate(sqr(atten)); 
     atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
     // return float(0).rrr;
-    return PBR(0, roughness, albedo, normal.xyz, eyeDirection, normalize(lightDirection), linearize(lightColor) * atten);
+    return PBR(0, roughness, albedo, normal.xyz, eyeDirection, normalize(lightDirection), lightColor * atten);
 }
 
 float3 getFinalColor(float3 finalColor){
     // return finalColor;
-    return delinearize(finalColor);
-    // return delinearize(finalColor) * tint;
+    return delinearizeSourceBuffer(finalColor);
+    // return delinearizeSourceBuffer(finalColor) * tint;
 }

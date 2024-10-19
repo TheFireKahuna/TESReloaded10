@@ -36,11 +36,11 @@ float4 ImageAdjust(VSOUT IN) : COLOR0
 	// saturation
 	color = lerp(luma(color).rrrr, color, TESR_ImageAdjustData.z);
 	
-	color.rgb = linearize(color.rgb); // delinearise
+	color.rgb = linearizeRenderedBuffer(color.rgb); // delinearise
 	float2 io = float2(1, 0);
 
-	float3 darks = smoothstep(1, 0, color.rgb) * color.rgb * linearize(TESR_DarkAdjustColor.rgb); // linearise
-	float3 lights = smoothstep(0, 1, color.rgb) * color.rgb * linearize(TESR_LightAdjustColor.rgb); // linearise
+	float3 darks = smoothstep(1, 0, color.rgb) * color.rgb * linearizeGameVal(TESR_DarkAdjustColor.rgb); // linearise
+	float3 lights = smoothstep(0, 1, color.rgb) * color.rgb * linearizeGameVal(TESR_LightAdjustColor.rgb); // linearise
 
 	float3 newColor = darks.rgb + lights.rgb;
 
@@ -49,7 +49,7 @@ float4 ImageAdjust(VSOUT IN) : COLOR0
 
 	color.rgb = lerp(color.rgb, newColor, TESR_ImageAdjustData.w); // strength of the effect
 
-	color.rgb = delinearize(color.rgb); // delinearise
+	color.rgb = delinearizeRenderedBuffer(color.rgb); // delinearise
 
 	// contrast
 	//0.5^2.2=0.21764

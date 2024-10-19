@@ -136,7 +136,7 @@ float3 mixHeightFog(float3 color, float3 fogColor, float3 extinctionColor, float
 
 float getSky(float2 uv) {
 	float4 color = tex2D(TESR_SourceBuffer, uv);
-	color = linearize(color);
+	color = linearizeSourceBuffer(color);
 
 	float distance = 0.5 * TESR_ReciprocalResolution.xy;
 	distance *= 1;
@@ -165,8 +165,8 @@ float4 fogColor (float4 skyColor, float4 pureFogColor, float fogStrength, float 
 float4 VolumetricFog(VSOUT IN) : COLOR0 
 {
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
-	color = linearize(color);
-	float4 pureFogColor = linearize(TESR_FogColor);
+	color = linearizeSourceBuffer(color);
+	float4 pureFogColor = linearizeGameVal(TESR_FogColor);
 
     float depth = readDepth(IN.UVCoord);
     float isDayTime = smoothstep(0.4, 0.8, TESR_SunAmount.x);
@@ -239,7 +239,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 
 	finalColor = lerp(color, finalColor, FogAmount);
 
-	return delinearize(finalColor);
+	return delinearizeRenderedBuffer(finalColor);
 }
 
 technique

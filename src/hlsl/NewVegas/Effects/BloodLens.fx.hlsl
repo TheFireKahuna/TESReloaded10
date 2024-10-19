@@ -6,6 +6,8 @@ float4 TESR_BloodLensColor;
 sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_BloodLensSampler : register(s1) < string ResourceName = "Effects\bloodlens.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
+#include "Includes/Helpers.hlsl"
+
 static const float Shininess = 2.5;
 
 struct VSOUT
@@ -39,8 +41,8 @@ float4 BloodLensPS (VSOUT IN) : COLOR
 	float3 normals = normalize(float3(ddx(scaledNoise), ddy(scaledNoise), 0.1));
 	normals = pow(abs(normals),3);
 	
-	float3 resultColor = (sColor - scaledNoise) + (scaledNoise * TESR_BloodLensColor.rgb);
-	float3 refColor = pow(normals.x, Shininess) * (TESR_BloodLensColor.rgb * 0.5);
+	float3 resultColor = (sColor - scaledNoise) + (scaledNoise * linearizeGameVal(TESR_BloodLensColor.rgb));
+	float3 refColor = pow(normals.x, Shininess) * (linearizeGameVal(TESR_BloodLensColor.rgb) * 0.5);
 	return float4(resultColor + refColor, 1.0);
 }
 

@@ -86,11 +86,15 @@ public:
 		ExposureEffect*			Exposure;
 		FlashlightEffect*		Flashlight;
 		CombineDepthEffect*		CombineDepth;
+		DelinearizeISEffect*	DelinearizeIS;
+		DelinearizePTEffect*	DelinearizePT;
 		DepthOfFieldEffect*		DepthOfField;
 		DebugEffect*			Debug;
 		GodRaysEffect*			GodRays;
 		ImageAdjustEffect*		ImageAdjust;
 		LensEffect*				Lens;
+		LinearizeISEffect*		LinearizeIS;
+		LinearizePTEffect*		LinearizePT;
 		LowHFEffect*			LowHF;
 		MotionBlurEffect*		MotionBlur;
 		NormalsEffect*			Normals;

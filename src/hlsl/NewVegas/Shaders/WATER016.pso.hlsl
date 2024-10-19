@@ -46,7 +46,7 @@ float4 getFresnelBelowWater(float3 surfaceNormal, float3 eyeDirection, float4 re
 }
 
 float4 skyColor(float3 eyeDirection, float4 sunColor){
-    float3 skyColor = lerp(linearize(TESR_HorizonColor), linearize(TESR_SkyLowColor), pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb; //linearise
+    float3 skyColor = lerp(linearizeGameVal(TESR_HorizonColor), linearizeGameVal(TESR_SkyLowColor), pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb; //linearise
     skyColor += sunColor.rgb * 5 * pow(shades(eyeDirection, -TESR_SunDirection.xyz), 20);
     return float4(skyColor, 1.0);
 }
@@ -54,8 +54,8 @@ float4 skyColor(float3 eyeDirection, float4 sunColor){
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 
-    float4 linSunColor = linearize(TESR_SunColor);
-    float4 linShallowColor = linearize(ShallowColor);
+    float4 linSunColor = linearizeGameVal(TESR_SunColor);
+    float4 linShallowColor = linearizeGameVal(ShallowColor);
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
@@ -76,13 +76,13 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 sky = skyColor(eyeDirection, linSunColor);
     float depth = TESR_WaterSettings.x - TESR_CameraPosition.z;
 	float4 refractions = tex2Dproj(RefractionMap, refractionPos);
-	refractions = linearize(refractions) * smoothstep(200, 0, depth) + sky;
+	refractions = linearizeTex(refractions) * smoothstep(200, 0, depth) + sky;
 
     float4 color = sky;
     color = getFresnelBelowWater(surfaceNormal, eyeDirection, linShallowColor * sunLuma, color);
     color +=  2 * pow(dot(surfaceNormal, eyeDirection), 2) * (refractions); // highlight
 
-    color = delinearize(color); //delinearise
+    color = delinearizeSourceBuffer(color); //delinearise
     OUT.color_0 = float4(color.rgb, 1.0);
     return OUT;
 };

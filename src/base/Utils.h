@@ -52,3 +52,13 @@ template <typename T> inline static int sgn(T val) {
 inline static  float pows(float a, float b) {
 	return (pow(abs(a), b) * sgn(a));
 }
+inline static  float linearize(float color) {
+	float linearRGBLo = color / 12.92f;
+	float linearRGBHi = pows((color + 0.055f) / 1.055f, 2.4f);
+	return (color <= 0.04045f) ? linearRGBLo : linearRGBHi;
+}
+inline static  float delinearize(float color) {
+	float sRGBLo = color * 12.92f;
+	float sRGBHi = (pows(fabs(color), 1.0f / 2.4f) * 1.055f) - 0.055f;
+	return (color <= 0.0031308f) ? sRGBLo : sRGBHi;
+}

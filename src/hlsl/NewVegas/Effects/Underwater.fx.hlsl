@@ -43,7 +43,7 @@ static const float scattCoeff = TESR_WaterCoefficients.w;// * turbidity;
 static const float waveWidth = TESR_WaveParams.y;
 static const float depthDarkness = TESR_WaterSettings.y;
 static const float3 up = float3(0, 0, 1);
-static const float sunLuma = luma(linearize(TESR_SunColor.rgb)); // linearise
+static const float sunLuma = luma(linearizeGameVal(TESR_SunColor.rgb)); // linearise
 
 struct VSOUT {
 	float4 vertPos : POSITION;
@@ -69,12 +69,13 @@ VSOUT FrameVS(VSIN IN) {
 
 float3 random(float2 seed)
 {
-	return tex2D(TESR_BlueNoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
+	float3 color = tex2D(TESR_BlueNoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
+	return linearizeNoise(color);
 }
 
 // lerp between sky colors to recreate the sky for refractions as vanilla buffer is tinted
 float3 getSkyColor(float3 eyeDirection, float3 sunColor){
-    float3 skyColor = lerp(linearize(TESR_HorizonColor).rgb, linearize(TESR_SkyColor).rgb, pow(shade(eyeDirection, float3(0, 0, 1)), 0.5));
+    float3 skyColor = lerp(linearizeGameVal(TESR_HorizonColor).rgb, linearizeGameVal(TESR_SkyColor).rgb, pow(shade(eyeDirection, float3(0, 0, 1)), 0.5));
     skyColor += sunColor * pows(shades(eyeDirection, TESR_SunDirection.xyz), 12);
     return skyColor;
 }
@@ -164,17 +165,17 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
  	if (aboveWater(TESR_CameraPosition.z, worldPos.z, TESR_WaterSettings.x, depth)) return color;
 
-	color = linearize(color); //linearise
+	color = linearizeSourceBuffer(color); //linearise
 
 	//vertical exponential depth fog used to darken bottom
 	float density = 0.08;
 	float falloff = 0.00225; // tie to darkness setting?
 	float fogAmount = saturate((density/falloff) * exp(-TESR_CameraPosition.z*falloff) * (1.0 - exp( -fogDepth*eyeDirection.z*falloff ))/eyeDirection.z);
 
-	float3 waterDeepColor = linearize(TESR_WaterDeepColor).rgb;
-	float3 waterShallowColor = linearize(TESR_WaterShallowColor).rgb;
-	float3 sunColor = linearize(TESR_SunColor).rgb;
-	float3 fogColor_t = linearize(TESR_FogColor).rgb;
+	float3 waterDeepColor = linearizeGameVal(TESR_WaterDeepColor).rgb;
+	float3 waterShallowColor = linearizeGameVal(TESR_WaterShallowColor).rgb;
+	float3 sunColor = linearizeGameVal(TESR_SunColor).rgb;
+	float3 fogColor_t = linearizeGameVal(TESR_FogColor).rgb;
 
 
 	// horizontal scattering
@@ -214,7 +215,7 @@ float4 Water( VSOUT IN ) : COLOR0 {
 
 	// reduce banding
 	float2 uv = IN.UVCoord.xy / TESR_ReciprocalResolution.xy;
-	color = delinearize(color);
+	color = delinearizeRenderedBuffer(color);
 	color.rgb += ditherMat[ (uv.x)%4 ][ (uv.y)%4 ] / 255;
 
     return float4(color.rgb, 1.0);

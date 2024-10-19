@@ -145,8 +145,8 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
     float reflectionLuma = luma(reflection);
     float lumaDiff = saturate(reflectionLuma - luma(color));
 
-    //float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma * VarAmounts.y) * 0.7;
-    float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma) * 0.7;
+    //float4 reflectionColor = lerp (reflectionLuma * ReflectionColor, reflection, reflectionLuma * VarAmounts.y) * 0.7;
+    float4 reflectionColor = lerp (reflectionLuma * ReflectionColor, reflection, reflectionLuma) * 0.7;
 	float3 result = lerp(color.rgb, reflection.rgb , saturate((fresnelCoeff * 0.8 + 0.2 * lumaDiff) * reflectivity));
 
     return float4(result, 1.0);
@@ -198,7 +198,7 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 
     float3 Ks = FresnelShlick(0.08, H, eyeDirection);
     color.rgb += BRDF(0.02, Ks, NdotV, NdotL, NdotH) * specColor * atten * NdotL;
-    // color.rgb += pows(shades(H, surfaceNormal), glossiness) * linearize(specColor) * specularBoost * atten;
+    // color.rgb += pows(shades(H, surfaceNormal), glossiness) * specColor * specularBoost * atten;
 
     // color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
     return color;

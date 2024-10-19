@@ -42,10 +42,10 @@ sampler2D TESR_RippleSampler : register(s6) < string ResourceName = "Precipitati
 PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     PS_OUTPUT OUT;
 
-    float4 linSunColor = linearize(SunColor);
-    float4 linShallowColor = linearize(ShallowColor);
-    float4 linDeepColor = linearize(DeepColor);
-    float4 linHorizonColor = linearize(TESR_HorizonColor);
+    float4 linSunColor = linearizeGameVal(SunColor);
+    float4 linShallowColor = linearizeGameVal(ShallowColor);
+    float4 linDeepColor = linearizeGameVal(DeepColor);
+    float4 linHorizonColor = linearizeGameVal(TESR_HorizonColor);
 
     float alpha = IN.LTEXCOORD_6.w; // color alpha?
 
@@ -73,20 +73,20 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float refractionCoeff = (waterDepth.y * depthFog) * ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff * placedWaterRefractionModifier );
 	//float4 reflection = tex2Dproj(ReflectionMap, reflectionPos);
-	//reflection = linearize(reflection);
+	//reflection = linearizeTex(reflection);
     float4 refractionPos = reflectionPos;
     refractionPos.y = refractionPos.w - reflectionPos.y;
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb * placedWaterDepthModifier;
 
 	float4 color = tex2Dproj(RefractionMap, refractionPos);
-	color = linearize(color);
+	color = linearizeTex(color);
     color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, TESR_PlacedWaterSettings, color);
     color = getTurbidityFog(refractedDepth, ShallowColor, TESR_PlacedWaterVolume, sunLuma, color);
     //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linShallowColor, color);
     color = getFresnel(surfaceNormal, eyeDirection, linHorizonColor, TESR_PlacedWaveParams.w, color);
     color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
 
-    color = delinearize(color);
+    color = delinearizeSourceBuffer(color);
     OUT.color_0 = color;
     OUT.color_0.a = 1;
     return OUT;
