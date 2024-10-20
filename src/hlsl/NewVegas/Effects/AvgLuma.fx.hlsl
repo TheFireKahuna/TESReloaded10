@@ -98,14 +98,12 @@ float4 AvgLuma(VSOUT IN) : COLOR0
 	float total = 0;
 	for (float i = 0.05; i < 1; i+= 0.1){
 		for (float j = 0.05; j < 1; j+= 0.1){
-			renderColor = tex2D(TESR_RenderedBuffer, float2(i, j)).rgb;
-			color.rgb += linearizeRenderedBuffer(renderColor);
+			color.rgb += tex2D(TESR_RenderedBuffer, float2(i, j)).rgb;
 			total++;
 		}
 	}
 	for (i= 0 ; i < 12; i++){
-		renderColor = tex2D(TESR_RenderedBuffer, center + taps[i]).rgb;
-		color.rgb += linearizeRenderedBuffer(renderColor);
+		color.rgb += tex2D(TESR_RenderedBuffer, center + taps[i]).rgb;
 		total++;
 	}
 	color /= total;

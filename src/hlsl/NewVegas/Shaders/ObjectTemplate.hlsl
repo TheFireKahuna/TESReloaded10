@@ -253,7 +253,10 @@ float4 LightData[10] : register(c25);
     float4 ShadowProjData : register(c22);
     float4 ShadowProjTransform : register(c23);
 #endif
-float4 TESR_LinearTex : register(c28);
+float4 TESR_LinearObject : register(c28);
+float4 TESR_PBRData : register(c29);
+float4 TESR_LinearObjectColor : register(c30);
+float4 TESR_ShaderBaseColors : register(c31);
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
@@ -600,21 +603,25 @@ float4 PSLightColor[10] : register(c3);
 #ifndef OPT
     float4 Toggles : register(c27);
 #endif
-float4 TESR_LinearTex : register(c28);
+float4 TESR_LinearObject : register(c28);
+float4 TESR_PBRData : register(c29);
+float4 TESR_LinearObjectColor : register(c30);
+float4 TESR_ShaderBaseColors : register(c31);
+float4 TESR_ShaderExtraColors : register(c33);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
-    float3 sunColor = linearizeTex(PSLightColor[0].rgb, TESR_LinearTex.y);
+    float3 sunColor = linearCheck(PSLightColor[0].rgb, TESR_LinearObjectColor.x)  * TESR_ShaderBaseColors.x;
     #if !defined(DIFFUSE) && !defined(ONLY_SPECULAR)
-        float3 ambientColor = linearizeTex(AmbientColor.rgb, TESR_LinearTex.y);
+        float3 ambientColor = linearCheck(AmbientColor.rgb, TESR_LinearObjectColor.x)  * TESR_ShaderBaseColors.y;
     #endif
     #if (defined(SI) || defined(HAIR)) && !defined(ONLY_SPECULAR)
-        float3 emittanceColor = linearizeTex(EmittanceColor.rgb, TESR_LinearTex.y);
+        float3 emittanceColor = linearCheck(EmittanceColor.rgb, TESR_LinearObjectColor.y) * TESR_ShaderBaseColors.w;
     #endif
     
     #if !defined(DIFFUSE) && !defined(ONLY_SPECULAR)
         float4 baseColor = tex2D(BaseMap, IN.uv.xy);
-        baseColor = linearizeTex(baseColor, TESR_LinearTex.z);
+        baseColor = linearCheck(baseColor, TESR_LinearObject.y);
     #endif
     
     #if !defined(OPT) && !defined(ONLY_SPECULAR)
@@ -627,11 +634,12 @@ PS_OUTPUT main(PS_INPUT IN) {
     #ifndef NO_VERTEX_COLOR
         #if defined(HAIR)
             float4 glow = tex2D(GlowMap, IN.uv.xy);
-            baseColor.rgb = (2 * ((linearizeTex(IN.vertexColor, TESR_LinearTex.w).g * (emittanceColor - 0.5)) + 0.5)) * lerp(baseColor.rgb, glow.rgb, glow.a);
+            glow = linearCheck(glow, TESR_LinearObjectColor.y) * TESR_ShaderExtraColors.y;
+            baseColor.rgb = (2 * ((linearCheck(IN.vertexColor, TESR_LinearObject.z).g * (emittanceColor - 0.5)) + 0.5)) * lerp(baseColor.rgb, glow.rgb, glow.a);
         #elif !defined(OPT)
-            baseColor.rgb = useVertexColor <= 0 ? baseColor.rgb : (baseColor.rgb * linearizeTex(IN.vertexColor.rgb, TESR_LinearTex.w));
+            baseColor.rgb = useVertexColor <= 0 ? baseColor.rgb : (baseColor.rgb * linearCheck(IN.vertexColor.rgb, TESR_LinearObject.z));
         #else
-            baseColor.rgb = baseColor.rgb * linearizeTex(IN.vertexColor.rgb, TESR_LinearTex.w);
+            baseColor.rgb = baseColor.rgb * linearCheck(IN.vertexColor.rgb, TESR_LinearObject.z);
         #endif
     #endif
     
@@ -669,6 +677,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     // Self emmitance.
     #ifdef SI
         float3 glow = tex2D(GlowMap, IN.uv.xy).rgb;
+        glow = linearCheck(glow, TESR_LinearObjectColor.y) * TESR_ShaderExtraColors.y;
         lighting += glow.rgb * emittanceColor;
     #endif
     
@@ -681,14 +690,14 @@ PS_OUTPUT main(PS_INPUT IN) {
         att1 = tex2D(AttenuationMap, IN.light2Att.xy).x;
         att2 = tex2D(AttenuationMap, IN.light2Att.zw).x;
         finalAtt = saturate(1 - att1 - att2);
-        lighting += (finalAtt * (shades(normal.xyz, normalize(IN.light2Dir.xyz)) * linearizeTex(PSLightColor[1].rgb, TESR_LinearTex.y)));
+        lighting += (finalAtt * (shades(normal.xyz, normalize(IN.light2Dir.xyz)) * linearCheck(PSLightColor[1].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z));
     #endif
     
     #if LIGHTS > 2
         att1 = tex2D(AttenuationMap, IN.light3Att.xy).x;
         att2 = tex2D(AttenuationMap, IN.light3Att.zw).x;
         finalAtt = saturate(1 - att1 - att2);
-        lighting += (finalAtt * (shades(normal.xyz, normalize(IN.light3Dir.xyz)) * linearizeTex(PSLightColor[2].rgb, TESR_LinearTex.y)));
+        lighting += (finalAtt * (shades(normal.xyz, normalize(IN.light3Dir.xyz)) * linearCheck(PSLightColor[2].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z));
     #endif
     
     #ifdef ONLY_LIGHT
@@ -722,7 +731,7 @@ PS_OUTPUT main(PS_INPUT IN) {
         #if LIGHTS > 1
             NdotL = shades(normal.xyz, IN.light2Dir.xyz);
             specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfway2Dir.xyz))), glossPower);
-            specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearizeTex(PSLightColor[1].rgb, TESR_LinearTex.y)) * finalAtt;
+            specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearCheck(PSLightColor[1].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z) * finalAtt;
             finalColor.rgb += saturate(specular);
         #endif
     
@@ -736,7 +745,7 @@ PS_OUTPUT main(PS_INPUT IN) {
             #endif
             falloff = IN.light2Dir.xyz / IN.light2Dir.w;
             att = 1 - shades(falloff, falloff);
-            specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearizeTex(PSLightColor[1].rgb, TESR_LinearTex.y)) * att;
+            specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearCheck(PSLightColor[1].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z) * att;
             finalColor.rgb += saturate(specular);
         #endif
     
@@ -750,17 +759,8 @@ PS_OUTPUT main(PS_INPUT IN) {
             #endif
             falloff = IN.light3Dir.xyz / IN.light3Dir.w;
             att = 1 - shades(falloff, falloff);
-            specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearizeTex(PSLightColor[2].rgb, TESR_LinearTex.y)) * att;
+            specular = ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearCheck(PSLightColor[2].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z) * att;
             finalColor.rgb += saturate(specular);
-        #endif
-    #endif
-    
-    // Fog.
-    #ifndef NO_FOG
-        #ifndef OPT
-            finalColor.rgb = (useFog <= 0.0 ? finalColor.rgb : lerp(finalColor.rgb, IN.fogColor.rgb, IN.fogColor.a));
-        #else
-            finalColor.rgb = lerp(finalColor.rgb, IN.fogColor.rgb, IN.fogColor.a);
         #endif
     #endif
     
@@ -839,24 +839,27 @@ float4 PSLightPosition[8] : register(c19);
     #define lightOffset 1
     #define glossPow PSLightColor[1].w
 #endif
-float4 TESR_LinearTex : register(c28);
+float4 TESR_LinearObject : register(c28);
+float4 TESR_PBRData : register(c29);
+float4 TESR_LinearObjectColor : register(c30);
+float4 TESR_ShaderBaseColors : register(c31);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 
     float4 baseColor = tex2D(BaseMap, IN.uv.xy);
-    baseColor = linearizeTex(baseColor, TESR_LinearTex.z);
-    float3 sunColor = linearizeTex(PSLightColor[0].rgb, TESR_LinearTex.y);
-    float3 ambientColor = linearizeTex(AmbientColor.rgb, TESR_LinearTex.y);
+    baseColor = linearCheck(baseColor, TESR_LinearObject.y);
+    float3 sunColor = linearCheck(PSLightColor[0].rgb, TESR_LinearObjectColor.x)  * TESR_ShaderBaseColors.x;
+    float3 ambientColor = linearCheck(AmbientColor.rgb, TESR_LinearObjectColor.x)  * TESR_ShaderBaseColors.y;
     
     #ifndef OPT
         clip(AmbientColor.a >= 1 ? 0 : (baseColor.a - alphaTestRef));
     #endif
     
     #ifndef OPT
-        baseColor.rgb = useVertexColor <= 0 ? baseColor.rgb : (baseColor.rgb * linearizeTex(IN.vertexColor.rgb, TESR_LinearTex.w));
+        baseColor.rgb = useVertexColor <= 0 ? baseColor.rgb : (baseColor.rgb * linearCheck(IN.vertexColor.rgb, TESR_LinearObject.z));
     #else
-        baseColor.rgb = baseColor.rgb * linearizeTex(IN.vertexColor.rgb, TESR_LinearTex.w);
+        baseColor.rgb = baseColor.rgb * linearCheck(IN.vertexColor.rgb, TESR_LinearObject.z);
     #endif
     
     float4 normal = tex2D(NormalMap, IN.uv.xy);
@@ -897,34 +900,34 @@ PS_OUTPUT main(PS_INPUT IN) {
     light = (PSLightPosition[lightOffset + 0].xyz - IN.lPosition.xyz) / PSLightPosition[lightOffset + 0].w;
     att = 1 - shades(light, light);
     NdotL = shades(normal.xyz, normalize(IN.light2.xyz));
-    diffuse = 1 >= lightsUsed ? diffuse : diffuse + (att * NdotL * linearizeTex(PSLightColor[1].rgb, TESR_LinearTex.y));
+    diffuse = 1 >= lightsUsed ? diffuse : diffuse + (att * NdotL * linearCheck(PSLightColor[1].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z);
     #ifdef SPECULAR
         specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfway2Dir.xyz))), glossPow);
-        specular += (1 >= lightsUsed ? 0.0 : 1.0) * att * ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearizeTex(PSLightColor[1].rgb, TESR_LinearTex.y));
+        specular += (1 >= lightsUsed ? 0.0 : 1.0) * att * ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearCheck(PSLightColor[1].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z);
     #endif
     
     light = (PSLightPosition[lightOffset + 1].xyz - IN.lPosition.xyz) / PSLightPosition[lightOffset + 1].w;
     att = 1 - shades(light, light);
     NdotL = shades(normal.xyz, normalize(IN.light3.xyz));
-    diffuse = 2 >= lightsUsed ? diffuse : diffuse + (att * NdotL * linearizeTex(PSLightColor[2].rgb, TESR_LinearTex.y));
+    diffuse = 2 >= lightsUsed ? diffuse : diffuse + (att * NdotL * linearCheck(PSLightColor[2].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z);
     #ifdef SPECULAR
         specStrength = normal.a * pow(abs(shades(normal.xyz, normalize(IN.halfway3Dir.xyz))), glossPow);
-        specular += (2 >= lightsUsed ? 0.0 : 1.0) * att * ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearizeTex(PSLightColor[2].rgb, TESR_LinearTex.y));
+        specular += (2 >= lightsUsed ? 0.0 : 1.0) * att * ((0.2 >= NdotL ? (specStrength * saturate(NdotL + 0.5)) : specStrength) * linearCheck(PSLightColor[2].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z);
     #endif
     
     #if MAX_LIGHTS > 3
         light = (PSLightPosition[lightOffset + 2].xyz - IN.lPosition.xyz) / PSLightPosition[lightOffset + 2].w;
-        light = (1 - shades(light, light)) * shades(normal.xyz, normalize(IN.light4.xyz)) * linearizeTex(PSLightColor[3].rgb, TESR_LinearTex.y);
+        light = (1 - shades(light, light)) * shades(normal.xyz, normalize(IN.light4.xyz)) * linearCheck(PSLightColor[3].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z;
         diffuse = 3 >= lightsUsed ? diffuse : light + diffuse;
     #endif
     
     #if MAX_LIGHTS > 4
         light = (PSLightPosition[3].xyz - IN.lPosition.xyz) / PSLightPosition[3].w;
-        light = (1 - shades(light, light)) * shades(normal.xyz, normalize(IN.light5.xyz)) * linearizeTex(PSLightColor[4].rgb, TESR_LinearTex.y);
+        light = (1 - shades(light, light)) * shades(normal.xyz, normalize(IN.light5.xyz)) * linearCheck(PSLightColor[4].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z;
         diffuse = 4 >= lightsUsed ? diffuse : light + diffuse;
     
         light = (PSLightPosition[4].xyz - IN.lPosition.xyz) / PSLightPosition[4].w;
-        light = (1 - shades(light, light)) * shades(normal.xyz, normalize(IN.light6.xyz)) * linearizeTex(PSLightColor[5].rgb, TESR_LinearTex.y);
+        light = (1 - shades(light, light)) * shades(normal.xyz, normalize(IN.light6.xyz)) * linearCheck(PSLightColor[5].rgb, TESR_LinearObjectColor.z) * TESR_ShaderBaseColors.z;
         diffuse = 5 >= lightsUsed ? diffuse : light + diffuse;
     #endif
     
@@ -934,12 +937,6 @@ PS_OUTPUT main(PS_INPUT IN) {
         float3 finalColor = baseColor.rgb * max(diffuse, 0);
     #else
         float3 finalColor = baseColor.rgb * max(diffuse, 0) + specular * IN.lPosition.w;
-    #endif
-    
-    #ifndef OPT
-        finalColor.rgb = (useFog <= 0.0 ? finalColor.rgb : lerp(finalColor.rgb, IN.fogColor.rgb, IN.fogColor.a));
-    #else
-        finalColor.rgb = lerp(finalColor.rgb, IN.fogColor.rgb, IN.fogColor.a);
     #endif
     
     OUT.color.rgb = finalColor.rgb;

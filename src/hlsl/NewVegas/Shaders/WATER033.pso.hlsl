@@ -53,11 +53,6 @@ sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\water_
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 
-    float4 linSunColor = linearizeGameVal(SunColor); //linearise
-    float4 linShallowColor = linearizeGameVal(ShallowColor); //linearise
-    //float4 linShallowColor = linearizeGameVal(TESR_WaterShallowColor); //linearise
-    float4 linHorizonColor = linearizeGameVal(TESR_HorizonColor); //linearise
-
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
     float distance = length(eyeVector.xy);              // surface distance to eye
@@ -66,21 +61,20 @@ PS_OUTPUT main(PS_INPUT IN) {
     // calculate fog coeffs
     float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
     float isDayTime = smoothstep(0, 0.5, TESR_SunAmount.x);
-    float sunLuma = luma(linSunColor) * isDayTime;
+    float sunLuma = luma(SunColor) * isDayTime;
 
     float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
     float refractionCoeff = ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff);
 	float4 reflection = tex2Dproj(ReflectionMap, reflectionPos);
-	reflection = linearizeTex(reflection);
+	reflection = linearCheck(reflection);
 
-    float4 color = linShallowColor * sunLuma;
-    // color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linHorizonColor, color);
+    float4 color = ShallowColor * sunLuma;
+    // color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, TESR_HorizonColor, color);
     color = getFresnel(surfaceNormal, eyeDirection, reflection, TESR_WaveParams.w, color);
-    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
+    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, SunColor.rgb, color);
     color.a = 1;
 
-    color = delinearizeSourceBuffer(color); //delinearise
     OUT.color_0 = color;
 
     return OUT;	

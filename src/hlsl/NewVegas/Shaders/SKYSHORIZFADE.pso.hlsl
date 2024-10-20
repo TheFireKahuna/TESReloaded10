@@ -3,13 +3,13 @@
 // Parameters:
 
 sampler2D TexMap : register(s0);
+float4 TESR_LinearSky: register(c38);
 
 float4 TESR_GameTime;
 float4 TESR_DebugVar;
 float4 TESR_SkyData;
 float4 TESR_ReciprocalResolution;
 float4 TESR_CloudData;
-float4 TESR_LinearTex;
 
 // Registers:
 //
@@ -65,10 +65,10 @@ float noise( float3 x )
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
+	float4 skytint = linearCheck(IN.color_0, TESR_LinearSky.y);
 
 	float4 stars = tex2D(TexMap, IN.TexUV);
-	stars = linearizeTex(stars, TESR_LinearTex.x);
-    float4 skytint = linearizeSourceBuffer(IN.color_0);
+	stars = linearCheck(stars, TESR_LinearSky.z);
 
     float starFlicker = 0.05;
     float noiseScale = 4;
@@ -84,7 +84,6 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     OUT.color_0.a = (stars.a * skytint.a) * IN.texcoord_2.x * TESR_SkyData.w ;//* (n * starsLuma + 1);
     stars.rgb = stars.rgb * (n * 100 * starsLuma + 1) * skytint.rgb;
-    stars.rgb = delinearizeSourceBuffer(stars); //delinearise
     OUT.color_0.rgb = stars.rgb;
     return OUT;
 };

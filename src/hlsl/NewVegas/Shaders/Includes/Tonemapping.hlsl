@@ -1,3 +1,27 @@
+
+float3 delinearizeTonemapper(float3 color) {
+    float3 sRGBLo = color * 12.92;
+    float3 sRGBHi = (pows(abs(color), 1.0 / 2.4) * 1.055) - 0.055;
+    return (color <= 0.0031308) ? sRGBLo : sRGBHi;
+}
+float4 delinearizeTonemapper(float4 color) {
+    float3 sRGBLo = color.rgb * 12.92;
+    float3 sRGBHi = (pows(abs(color.rgb), 1.0 / 2.4) * 1.055) - 0.055;
+    color.rgb = (color.rgb <= 0.0031308) ? sRGBLo : sRGBHi;
+    return color;
+}
+float3 linearizeTonemapper(float3 color) {
+    float3 linearRGBLo = color / 12.92;
+    float3 linearRGBHi = pows((color + 0.055) / 1.055, 2.4);
+    return (color <= 0.04045) ? linearRGBLo : linearRGBHi;
+}
+float4 linearizeTonemapper(float4 color) {
+    float3 linearRGBLo = color.rgb / 12.92;
+    float3 linearRGBHi = pows((color.rgb + 0.055) / 1.055, 2.4);
+    color.rgb = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
+    return color;
+}
+
 // ACES tonemapping https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
 float3 ACESFilm(float3 x)
 {

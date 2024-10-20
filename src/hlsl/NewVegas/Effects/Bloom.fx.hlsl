@@ -102,7 +102,6 @@ float4 Bloom(VSOUT IN ):COLOR0
 {
 	// quick average lum with 4 samples at corner pixels
 	float4 color = sampleBox(IN.UVCoord, TESR_RenderedBuffer, 1.0f);
-	color = linearizeRenderedBuffer(color);
 
 	float threshold = TESR_BloomData.x;
 	if (threshold == 0) {

@@ -99,13 +99,15 @@ float4 AmbientColor : register(c1);
 float4 PSLightColor[13] : register(c3);
 float4 PSLightDir : register(c18);
 float4 PSLightPosition[12] : register(c19);
-float4 TESR_LinearTex : register(c40);
+float4 TESR_LinearTerrain : register(c40);
+float4 TESR_LinearTerrainColor : register(c41);
+float4 TESR_ShaderBaseColors : register(c42);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 
-    float3 sunColor = linearizeTex(PSLightColor[0].rgb, TESR_LinearTex.y);
-    float3 ambientColor = linearizeTex(AmbientColor.rgb, TESR_LinearTex.y);
+    float3 sunColor = linearCheck(PSLightColor[0].rgb, TESR_LinearTerrainColor.x) * TESR_ShaderBaseColors.x;
+    float3 ambientColor = linearCheck(AmbientColor.rgb, TESR_LinearTerrainColor.w) * TESR_ShaderBaseColors.y;
     
     int texCount = TEX_COUNT;  // Macro.
     float3 tangent = normalize(IN.tangent.xyz);
@@ -125,7 +127,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float2 offsetUV = getParallaxCoords(dist, IN.uv.xy, dx, dy, eyeDir, texCount, BaseMap, blends, weights);
 
     float roughness = 1.f;
-    float3 baseColor = blendDiffuseMaps(linearizeTex(IN.vertex_color, TESR_LinearTex.z), offsetUV, texCount, BaseMap, weights, TESR_LinearTex.z);
+    float3 baseColor = blendDiffuseMaps(linearCheck(IN.vertex_color, TESR_LinearTerrain.z), offsetUV, texCount, BaseMap, weights, TESR_LinearTerrain.y);
     float3 combinedNormal = blendNormalMaps(offsetUV, texCount, NormalMap, weights, roughness);
 
     float3 lightTS = mul(tbn, PSLightDir.xyz);
@@ -138,7 +140,7 @@ PS_OUTPUT main(PS_INPUT IN) {
         float3 pointlightDir;
         [unroll] for (int i = 0; i < lightCount; i++) {
             pointlightDir = mul(tbn, PSLightPosition[i].xyz - IN.lPosition.xyz);
-            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, linearizeTex(PSLightColor[i + 1].rgb, TESR_LinearTex.y), eyeDir, combinedNormal, baseColor, roughness, 1.0);
+            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, linearCheck(PSLightColor[i + 1].rgb * TESR_ShaderBaseColors.z, TESR_LinearTerrainColor.z), eyeDir, combinedNormal, baseColor, roughness, 1.0);
         }
     #endif
     

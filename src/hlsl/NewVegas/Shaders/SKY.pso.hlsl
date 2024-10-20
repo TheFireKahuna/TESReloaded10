@@ -16,6 +16,7 @@ float4 TESR_SunsetColor: register(c14); // sunsetColor.w is sky strength multipl
 float4 TESR_HDRBloomData: register(c15);
 float4 TESR_SunDiskColor: register(c16);
 float4 TESR_DepthConstants: register(c17);
+float4 TESR_LinearSky: register(c38);
 
 
 static const float4x4 ditherMat = {{0.0588, 0.5294, 0.1765, 0.6471},
@@ -60,15 +61,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     float athmosphere = pows(1 - verticality, 8) * TESR_SkyData.x;
     float sunDir = compress(dot(eyeDir, TESR_SunPosition.xyz));
     float sunInfluence = pows(sunDir, SUNINFLUENCE);
-    
-    float3 sunColor = linearizeGameVal(TESR_SunDiskColor.rgb);
-    float3 sunsetColor = linearizeGameVal(TESR_SunsetColor.rgb);
-    float3 skyColor = linearizeGameVal(TESR_SkyColor.rgb);
-    float3 skyLowColor = linearizeGameVal(TESR_SkyLowColor.rgb);
-    float3 horizonColor = linearizeGameVal(TESR_HorizonColor.rgb);
 
-    sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, sunColor, sunsetColor);
-    skyColor = GetSkyColor(verticality, athmosphere, sunHeight, sunInfluence, TESR_SkyData.z, skyColor, skyLowColor, horizonColor, sunColor);
+    float3 sunColor = GetSunColor(sunHeight, TESR_SkyData.x, TESR_SunAmount.x, TESR_SunDiskColor.rgb, TESR_SunsetColor.rgb);
+    float3 skyColor = GetSkyColor(verticality, athmosphere, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, sunColor);
 
     // draw the sun procedurally
     //float sunDisk = smoothstep(0.9990, 0.9991, sunDir);
@@ -80,7 +75,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     skyColor *= TESR_SunsetColor.w;
 
-    OUT.color_0.rgb = delinearizeSourceBuffer(skyColor); // multiply sky strength for HDR
+    OUT.color_0.rgb = skyColor; // multiply sky strength for HDR
     OUT.color_0.a = IN.color_0.a;
 
     // dithering

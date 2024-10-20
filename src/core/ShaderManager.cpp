@@ -430,7 +430,7 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 	if (strstr(TerrainShadersNames, Name)) return Shaders.Terrain;
 	if (strstr(BloodShaders, Name)) return Shaders.Blood;
 
-	if (Shaders.PBR->GetTemplate(Name).Name != NULL) return Shaders.PBR;
+	if (strstr(ObjectShadersNames, Name) || Shaders.PBR->GetTemplate(Name).Name != NULL) return Shaders.PBR;
 
 	return Shaders.ExtraShaders;
 }
@@ -621,7 +621,10 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 				// add found light to list of lights that cast shadows
 				ShadowLightsList[ShadowIndex] = v->second;
 				ShadowsConstants->ShadowLightPosition[ShadowIndex] = LightPos;
-				LightColor[ShadowIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
+				if (Effects.LinearizePT->linearizeLights)
+					LightColor[ShadowIndex] = D3DXVECTOR4(linearize(Light->Diff.r), linearize(Light->Diff.g), linearize(Light->Diff.b), Light->Dimmer);
+				else
+					LightColor[ShadowIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
 
 				ShadowIndex++;
 				TheShadowManager->PointLightsNum++; // Constant to track number of shadow casting lights are present
@@ -629,7 +632,10 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 			else if (LightIndex < TrackedLightsMax) {
 				LightsList[LightIndex] = Light;
 				LightPosition[LightIndex] = LightPos;
-				LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
+				if (Effects.LinearizePT->linearizeLights)
+					LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(linearize(Light->Diff.r), linearize(Light->Diff.g), linearize(Light->Diff.b), Light->Dimmer);
+				else
+					LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
 				LightIndex++;
 			};
 		}

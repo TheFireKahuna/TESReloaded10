@@ -6,6 +6,9 @@ row_major float4x4 ModelViewProj : register(c0);
 float4 BlendColor[3] : register(c4);
 float4 TESR_DepthConstants : register(c13);
 float4 TESR_DebugVar : register(c14);
+float4 TESR_LinearSky: register(c38);
+
+#include "Includes/Helpers.hlsl"
 
 
 // Registers:
@@ -40,10 +43,13 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 r0;
+    float3 color = linearCheck(IN.color_0.rgb, TESR_LinearSky.y);
+    
+	float3 blendColor0 = linearCheck(BlendColor[0].rgb, TESR_LinearSky.w);
+	float3 blendColor1 = linearCheck(BlendColor[1].rgb, TESR_LinearSky.w);
+	float3 blendColor2 = linearCheck(BlendColor[2].rgb, TESR_LinearSky.w);
 
-    r0.xyz = (IN.color_0.r * BlendColor[0].rgb) + (BlendColor[1].rgb * IN.color_0.g) + (IN.color_0.b * BlendColor[2].rgb);
-    OUT.color_0.rgb = r0.xyz;
+    OUT.color_0.rgb = (color.r * blendColor0) + (color.g * blendColor1) + (color.b * blendColor2);
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
 
 

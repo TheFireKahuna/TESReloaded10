@@ -46,16 +46,13 @@ float4 getFresnelBelowWater(float3 surfaceNormal, float3 eyeDirection, float4 re
 }
 
 float4 skyColor(float3 eyeDirection, float4 sunColor){
-    float3 skyColor = lerp(linearizeGameVal(TESR_HorizonColor), linearizeGameVal(TESR_SkyLowColor), pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb; //linearise
+    float3 skyColor = lerp(TESR_HorizonColor, TESR_SkyLowColor, pow(dot(eyeDirection, float3(0, 0, 1)), 0.5)).rgb;
     skyColor += sunColor.rgb * 5 * pow(shades(eyeDirection, -TESR_SunDirection.xyz), 20);
     return float4(skyColor, 1.0);
 }
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
-
-    float4 linSunColor = linearizeGameVal(TESR_SunColor);
-    float4 linShallowColor = linearizeGameVal(ShallowColor);
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
@@ -64,7 +61,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     // calculate fog coeffs
     //float4 screenPos = getScreenpos(IN);                // point coordinates in screen space for water surface
 
-    float sunLuma = luma(linSunColor.rgb);
+    float sunLuma = luma(SunColor.rgb);
     float exteriorRefractionModifier = TESR_WaterSettings.w;	// reduce refraction because of the way interior depth is encoded
 
     float3 surfaceNormal = getWaveTexture(IN, distance, TESR_WaveParams).xyz;
@@ -73,16 +70,15 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 refractionPos = getReflectionSamplePosition(IN, surfaceNormal, exteriorRefractionModifier);
     refractionPos.y = refractionPos.w - refractionPos.y;
 
-    float4 sky = skyColor(eyeDirection, linSunColor);
+    float4 sky = skyColor(eyeDirection, SunColor);
     float depth = TESR_WaterSettings.x - TESR_CameraPosition.z;
 	float4 refractions = tex2Dproj(RefractionMap, refractionPos);
-	refractions = linearizeTex(refractions) * smoothstep(200, 0, depth) + sky;
+	refractions = linearCheck(refractions) * smoothstep(200, 0, depth) + sky;
 
     float4 color = sky;
-    color = getFresnelBelowWater(surfaceNormal, eyeDirection, linShallowColor * sunLuma, color);
+    color = getFresnelBelowWater(surfaceNormal, eyeDirection, ShallowColor * sunLuma, color);
     color +=  2 * pow(dot(surfaceNormal, eyeDirection), 2) * (refractions); // highlight
 
-    color = delinearizeSourceBuffer(color); //delinearise
     OUT.color_0 = float4(color.rgb, 1.0);
     return OUT;
 };

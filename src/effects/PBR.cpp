@@ -1,6 +1,7 @@
 #include "PBR.h"
 
 void PBRShaders::RegisterConstants() {
+	TheShaderManager->RegisterConstant("TESR_PBRData", &Constants.Data);
 }
 
 

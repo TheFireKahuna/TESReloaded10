@@ -26,6 +26,6 @@ float3 getPointLightLighting(float3 albedo, float roughness, float3 normal, floa
 
 float3 getFinalColor(float3 finalColor){
     // return finalColor;
-    return delinearizeSourceBuffer(finalColor);
-    // return delinearizeSourceBuffer(finalColor) * tint;
+    return finalColor;
+    // return finalColor * tint;
 }

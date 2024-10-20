@@ -37,7 +37,6 @@ VSOUT FrameVS(VSIN IN)
 float4 Exposure(VSOUT IN) : COLOR0
 {
 	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-	color = linearizeRenderedBuffer(color);
 	float averageLuma = tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)).g;
 
 	float negativeLumaDiff = max(log(minBrightness / averageLuma), 0.0) + 1.0;
@@ -55,7 +54,7 @@ float4 Exposure(VSOUT IN) : COLOR0
 
 	// color = pows(color, (1 + lumaDiff));
 	color = float4(lerp(color.rgb, color.rgb / lumaDiff, maxBrightness), 1.0);
-	return delinearizeRenderedBuffer(color);
+	return color;
 }
 
 technique

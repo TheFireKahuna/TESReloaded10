@@ -12,17 +12,15 @@ float4 TESR_TerrainExtraData : register(c33);
 float4 TESR_DebugVar : register(c34);
 
 float3 blendDiffuseMaps(float3 vertexColor, float2 uv, int texCount, sampler2D tex[7], float blends[7], int linearColor) {
-    float3 color = tex2D(tex[0], uv).xyz * blends[0];
-    if (linearColor > 0) {
-        color = linearizeTex(color, 1);
-    }
+    float3 color = tex2D(tex[0], uv).xyz;
+    color = linearCheck(color, linearColor);
+    color *= blends[0];
     float3 blendColor = 0.0;
     
     [unroll] for (int i = 1; i < texCount; i++) {
-        blendColor = tex2D(tex[i], uv).xyz * blends[i];
-        if (linearColor > 0) {
-            blendColor = linearizeTex(blendColor, 1);
-        }
+        blendColor = tex2D(tex[i], uv).xyz;
+        blendColor = linearCheck(blendColor, linearColor);
+        blendColor *=  blends[i];
         color += blendColor;
     }
 

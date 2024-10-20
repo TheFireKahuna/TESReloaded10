@@ -193,8 +193,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float isWaterSurface = (dot(norm, float3(0, 0, 1)) > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
 	if (isWaterSurface || !(ortho > 0)) return color;
 	
-    color = linearizeSourceBuffer(color);
-	float3 sunColor = linearizeGameVal(TESR_SunColor.rgb);
+	float3 sunColor = TESR_SunColor.rgb;
 
 	float2 uv = worldPos.xy / 200.0f;
 	float3 localNorm = expand(tex2D(TESR_SnowNormSampler, uv).xyz);
@@ -206,7 +205,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float fresnelCoeff = saturate(pow(1 - shade(eyeDirection, surfaceNormal), 5));
 	float3 snowSpec = pows(shades(normalize(TESR_SunDirection.xyz + eyeDirection), surfaceNormal), 20) * fresnelCoeff;
 
-	float3 ambient = snow_tex * linearizeGameVal(TESR_SunAmbient.rgb); // linearise
+	float3 ambient = snow_tex * TESR_SunAmbient.rgb;
 	float2 shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).rg;
 	shadow.r = lerp(1.0f, shadow.r, useShadows); // disable shadow sampling if shadows are disabled in game
 	shadow.r = lerp(shadow.r, 1.0f, TESR_ShadowFade.x);	// fade shadows to light when sun is low
@@ -215,7 +214,6 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float3 spec = snowSpec * sunColor * specularPower * shadow.r;
 	float3 fresnel = fresnelCoeff * sunColor * fresnelPower;
 	float3 noiseTex = tex2D(TESR_BlueNoiseSampler,  worldPos.xy / 200).rgb;
-	noiseTex = linearizeNoise(noiseTex);
 	float3 sparkles = pows(shades(eyeDirection, normalize(expand(noiseTex))), 1000) * 0.2 * shadow.r;
 
 	// float4 snowColor = float4(ambient + diffuse + spec + fresnel, 1);
@@ -225,8 +223,8 @@ float4 Snow( VSOUT IN ) : COLOR0
 	shadow.g = 1; // disable point light shadows for debug
 
 	for (int i = 0; i<12; i++){
-		snowColor.rgb += GetPointLightContribution(worldPos, TESR_ShadowLightPosition[i], normal) * linearizeGameVal(TESR_LightColor[i].rgb) * pointLightsPower * shadow.g;
-		snowColor.rgb += GetPointLightContribution(worldPos, TESR_LightPosition[i], normal) * linearizeGameVal(TESR_LightColor[12 + i].rgb) * pointLightsPower * shadow.g;
+		snowColor.rgb += GetPointLightContribution(worldPos, TESR_ShadowLightPosition[i], normal) * TESR_LightColor[i].rgb * pointLightsPower * shadow.g;
+		snowColor.rgb += GetPointLightContribution(worldPos, TESR_LightPosition[i], normal) * TESR_LightColor[12 + i].rgb * pointLightsPower * shadow.g;
 	}
 
 	// create a noisy pattern of accumulation over time
@@ -235,9 +233,8 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float vertical = smoothstep(0.5, 0.8, shade(float3(0, 0, 1), norm));
 
 	color = lerp(color, snowColor, coverage * min(vertical, ortho));
-	color.a = 1;
+	color.a = 1.0;
 
-    color.rgb = delinearizeRenderedBuffer(color);
 	return color;
 }
 

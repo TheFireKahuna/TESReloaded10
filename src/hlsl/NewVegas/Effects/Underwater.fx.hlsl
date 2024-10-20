@@ -43,7 +43,7 @@ static const float scattCoeff = TESR_WaterCoefficients.w;// * turbidity;
 static const float waveWidth = TESR_WaveParams.y;
 static const float depthDarkness = TESR_WaterSettings.y;
 static const float3 up = float3(0, 0, 1);
-static const float sunLuma = luma(linearizeGameVal(TESR_SunColor.rgb)); // linearise
+static const float sunLuma = luma(TESR_SunColor.rgb);
 
 struct VSOUT {
 	float4 vertPos : POSITION;
@@ -69,14 +69,13 @@ VSOUT FrameVS(VSIN IN) {
 
 float3 random(float2 seed)
 {
-	float3 color = tex2D(TESR_BlueNoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
-	return linearizeNoise(color);
+	return tex2D(TESR_BlueNoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
 }
 
 // lerp between sky colors to recreate the sky for refractions as vanilla buffer is tinted
-float3 getSkyColor(float3 eyeDirection, float3 sunColor){
-    float3 skyColor = lerp(linearizeGameVal(TESR_HorizonColor).rgb, linearizeGameVal(TESR_SkyColor).rgb, pow(shade(eyeDirection, float3(0, 0, 1)), 0.5));
-    skyColor += sunColor * pows(shades(eyeDirection, TESR_SunDirection.xyz), 12);
+float3 getSkyColor(float3 eyeDirection){
+    float3 skyColor = lerp(TESR_HorizonColor.rgb, TESR_SkyColor.rgb, pow(shade(eyeDirection, float3(0, 0, 1)), 0.5));
+    skyColor += TESR_SunColor.rgb * pows(shades(eyeDirection, TESR_SunDirection.xyz), 12);
     return skyColor;
 }
 
@@ -165,29 +164,21 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
  	if (aboveWater(TESR_CameraPosition.z, worldPos.z, TESR_WaterSettings.x, depth)) return color;
 
-	color = linearizeSourceBuffer(color); //linearise
-
 	//vertical exponential depth fog used to darken bottom
 	float density = 0.08;
 	float falloff = 0.00225; // tie to darkness setting?
 	float fogAmount = saturate((density/falloff) * exp(-TESR_CameraPosition.z*falloff) * (1.0 - exp( -fogDepth*eyeDirection.z*falloff ))/eyeDirection.z);
 
-	float3 waterDeepColor = linearizeGameVal(TESR_WaterDeepColor).rgb;
-	float3 waterShallowColor = linearizeGameVal(TESR_WaterShallowColor).rgb;
-	float3 sunColor = linearizeGameVal(TESR_SunColor).rgb;
-	float3 fogColor_t = linearizeGameVal(TESR_FogColor).rgb;
-
-
 	// horizontal scattering
-	float3 skyColor = getSkyColor(eyeDirection, sunColor);
+	float3 skyColor = getSkyColor(eyeDirection);
 
 	// interpolate fog color between shallow and deep water based on viewing angle. Shallow waters get tinted with the sky
 	float verticalFade = saturate(compress(dot(eyeDirection, up) * 1.5)); // fade from deep to shallow based on viewing angle
 	float sunDirFade = compress(dot(eyeDirection.xyz, TESR_SunDirection.xyz)); // fade based on proximity to the sun angle
 
-	float3 fogColor = lerp(waterDeepColor, waterShallowColor + skyColor * 0.2, verticalFade); // mix in some sky color into shallow fog
+	float3 fogColor = lerp(TESR_WaterDeepColor, TESR_WaterShallowColor + skyColor * 0.2, verticalFade); // mix in some sky color into shallow fog
 	fogColor *= sunLuma * (0.4 + (1 - 0.4) * sunDirFade) * extCoeff; //scale fog brightness with sunluma/sun direction and apply user setting modifiers
-	// float3 scattering = pows(invlerp(TESR_FogData.x, TESR_FogData.y, fogDepth).xxx, TESR_FogData.w * fogColor_t * scattCoeff); // lerp colors at different speed
+	// float3 scattering = pows(invlerp(TESR_FogData.x, TESR_FogData.y, fogDepth).xxx, TESR_FogData.w * TESR_FogColor * scattCoeff); // lerp colors at different speed
 	float3 scattering = (1 - fogColor) * scattCoeff; // lerp colors at different speed
 	float linearFog = saturate(invlerp(TESR_WaterFog.x, TESR_WaterFog.y, fogDepth));
 
@@ -199,23 +190,22 @@ float4 Water( VSOUT IN ) : COLOR0 {
 	float2 shadows = tex2D(TESR_PointShadowBuffer, IN.UVCoord).rg;// * (1 - invlerp(0, fogDepth); // only sample point light shadows
 	float caustics = getCaustics(worldPos) * shadows.r;
 
-	color.rgb += color.rgb * pows(caustics, 2.0) * sunColor * depthFade * floorAngle * distanceFade * sunLuma * causticsStrength * 100;
+	color.rgb += color.rgb * pows(caustics, 2.0) * TESR_SunColor * depthFade * floorAngle * distanceFade * sunLuma * causticsStrength * 100;
 
 	color.rgb = lerp(color.rgb, fogColor, saturate(pow(invlerp(0, 5000, fogDepth), 10))); // lod hiding
 
 	// blend fog layers colors
-	color.rgb *= lerp(1, waterDeepColor, saturate(fogAmount * pows(depthDarkness, 0.5)) * ((1 - shadows.g * distanceFade))); // surface light absorption
+	color.rgb *= lerp(1, TESR_WaterDeepColor, saturate(fogAmount * pows(depthDarkness, 0.5)) * ((1 - shadows.g * distanceFade))); // surface light absorption
 
 	float fogThickness = saturate( 2 - pows(turbidity, 0.5) * 2);
 	float turbidPower = (turbidity * 3) / (1 +  3 * turbidity);
 	color.rgb = lerp(color.rgb, fogColor, saturate(scattering * pows(linearFog, fogThickness) * turbidPower)); // scattering absorption
 
 	// blend in godrays
-	color.rgb += tex2D(TESR_RenderedBuffer, IN.UVCoord / 2).r * sunColor * godraysStrength * color.rgb;
+	color.rgb += tex2D(TESR_RenderedBuffer, IN.UVCoord / 2).r * TESR_SunColor * godraysStrength * color.rgb;
 
 	// reduce banding
 	float2 uv = IN.UVCoord.xy / TESR_ReciprocalResolution.xy;
-	color = delinearizeRenderedBuffer(color);
 	color.rgb += ditherMat[ (uv.x)%4 ][ (uv.y)%4 ] / 255;
 
     return float4(color.rgb, 1.0);

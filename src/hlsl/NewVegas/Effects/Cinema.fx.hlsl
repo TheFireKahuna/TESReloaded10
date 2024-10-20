@@ -59,8 +59,7 @@ VSOUT FrameVS(VSIN IN)
 
 float3 random(float2 seed)
 {
-	float3 color = tex2D(TESR_BlueNoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
-	return linearizeNoise(color);
+	return tex2D(TESR_BlueNoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
 }
 
 

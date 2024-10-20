@@ -98,17 +98,11 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	float depth = smoothstep(0, farZ / 4, readDepth(IN.UVCoord));
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float4 light = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-    color.rgb = linearizeSourceBuffer(color.rgb); // linearise
-    //light.rgb = linearizeRenderedBuffer(light.rgb); // linearise
 
 	float4 result = color;
 
-	float4 skyColor_t = linearizeGameVal(TESR_SkyColor); // linearise
-	float4 horizonColor = linearizeGameVal(TESR_HorizonColor); // linearise
-	float4 sunColor = linearizeGameVal(TESR_SunColor); // linearise
-
 	float luminance = luma(color);
-	float sunLuma = luma(sunColor);
+	float sunLuma = luma(TESR_SunColor);
 	float invLuma = saturate(1 - sunLuma);
 	float sunSetFade = 1 - TESR_ShadowFade.x;
 
@@ -116,7 +110,7 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	shadows = lerp(TESR_ShadowFade.x, 1.0f, shadows); // fade shadows to light when sun is low
 
 	// skylight
-	float4 skyColor = lerp(skyColor_t, horizonColor, depth);
+	float4 skyColor = lerp(TESR_SkyColor, TESR_HorizonColor, depth);
 	skyColor = lerp(luma(skyColor).rrrr, skyColor, SkySaturation);
 
 	// fresnel
@@ -126,9 +120,8 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	result += SkyStrength * light.g * skyColor * 0.01 * saturate(smoothstep(0.4, 0, luminance)) * max(0.0,invLuma * sunSetFade); // skylight is more pronounced in darker areas
 
 	// specular
-	result += lerp(0, light.r * SpecStrength * 10.0 * sunColor * color * shadows, smoothstep(LumTreshold * 0.8, LumTreshold * 1.2, luminance)); // specular will boost areas above treshold
+	result += lerp(0, light.r * SpecStrength * 10.0 * TESR_SunColor * color * shadows, smoothstep(LumTreshold * 0.8, LumTreshold * 1.2, luminance)); // specular will boost areas above treshold
 
-    result.rgb = delinearizeRenderedBuffer(result.rgb); // delinearise
 	return float4 (result.rgb, 1.0f);
 }
  

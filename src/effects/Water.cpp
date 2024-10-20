@@ -23,6 +23,10 @@ void WaterShaders::UpdateConstants() {
 	TESWaterForm* currentWater = NULL;
 	float height = Tes->GetWaterHeight(Player, WorldSceneGraph, &currentWater);
 
+	bool linearizeGameColors = false;
+	if (TheSettingManager->GetSettingI("Shaders.Linearization.NVR", "LinearWeathers") > 0)
+		linearizeGameColors = true;
+
 	// get water height based on player position
 	Constants.Default.waterSettings.x = height;
 	Constants.Default.waterSettings.z = TheShaderManager->GameState.isUnderwater;
@@ -32,8 +36,14 @@ void WaterShaders::UpdateConstants() {
 	TESWorldSpace* worldSpace = Player->GetWorldSpace();
 	if (worldSpace) {
 		TESWaterForm* LODWater = worldSpace->waterFormLast;
-		if (LODWater)
+		if (LODWater) {
 			Constants.LODColor = LODWater->GetShallowColor()->toD3DXVECTOR4();
+			if (linearizeGameColors) {
+				Constants.LODColor.x = linearize(Constants.LODColor.x);
+				Constants.LODColor.y = linearize(Constants.LODColor.y);
+				Constants.LODColor.z = linearize(Constants.LODColor.z);
+			}
+		}
 	}
 
 	if (currentWater) {
@@ -43,6 +53,15 @@ void WaterShaders::UpdateConstants() {
 		Constants.Fog.y = currentWater->properties.fogFarUW;
 		Constants.Fog.z = currentWater->properties.fogAmountUW;
 		Constants.Fog.z = 1;
+
+		if (linearizeGameColors) {
+			Constants.shallowColor.x = linearize(Constants.shallowColor.x);
+			Constants.shallowColor.y = linearize(Constants.shallowColor.y);
+			Constants.shallowColor.z = linearize(Constants.shallowColor.z);
+			Constants.deepColor.x = linearize(Constants.deepColor.x);
+			Constants.deepColor.y = linearize(Constants.deepColor.y);
+			Constants.deepColor.z = linearize(Constants.deepColor.z);
+		}
 	}
 
 	// caustics strength

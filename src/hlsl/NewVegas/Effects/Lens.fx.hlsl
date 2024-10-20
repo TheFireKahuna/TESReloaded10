@@ -41,9 +41,7 @@ VSOUT FrameVS(VSIN IN)
 float4 Lens(VSOUT IN) : COLOR0 
 {
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
-	color = linearizeSourceBuffer(color);
     float4 dirtColor = pows(tex2D(TESR_LensSampler, IN.UVCoord), max(0, 3 - TESR_LensData.z));
-	color = linearizeTex(dirtColor);
 
     // Get the bloom mask to calculate areas where dirt lens will appear
 	float4 bloom = tex2D(TESR_BloomBuffer, IN.UVCoord);
@@ -51,7 +49,7 @@ float4 Lens(VSOUT IN) : COLOR0
     bloom = pows(bloomLuma, TESR_LensData.y) * (bloom / bloomLuma);
     color += dirtColor.r * bloom * TESR_LensData.x;
 
-    return float4(delinearizeRenderedBuffer(color.rgb), 1.0);
+    return float4(color.rgb, 1.0);
 }
 
 technique

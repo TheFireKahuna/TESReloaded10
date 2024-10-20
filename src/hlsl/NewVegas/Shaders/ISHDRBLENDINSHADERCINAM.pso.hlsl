@@ -104,7 +104,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         // NVR bloom
         float4 NVRbloom = sampleBox(TESR_BloomBuffer, IN.texcoord_1.xy, 0.5); // already linear
 
-        final.rgb = lerp(final.rgb, NVRbloom.rgb * TESR_BloomData.z, TESR_HDRBloomData.x * 0.15); 
+        final.rgb = lerp(final.rgb, NVRbloom.rgb * min(0.0,TESR_BloomData.z), min(0.0,TESR_HDRBloomData.x * 0.15));  //TESR_BloomData.z is BloomStrength, TESR_HDRBloomData.x is BloomExponent
     }else{
         // vanilla bloom
         // scale bloom while maintaining color

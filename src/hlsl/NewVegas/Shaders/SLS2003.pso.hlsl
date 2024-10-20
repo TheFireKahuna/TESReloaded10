@@ -10,7 +10,9 @@ sampler2D LODLandNoise : register(s7);
 float4 AmbientColor : register(c1);
 float4 PSLightColor[10] : register(c3);
 float4 LODTexParams : register(c31);
-float4 TESR_LinearTex : register(c38);
+float4 TESR_LinearTerrain : register(c38);
+float4 TESR_LinearTerrainColor : register(c39);
+float4 TESR_ShaderBaseColors : register(c40);
 
 // float4 TESR_DebugVar;
 
@@ -52,8 +54,8 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 sunColor = linearizeTex(PSLightColor[0].rgb, TESR_LinearTex.y);
-    float3 ambientColor = linearizeTex(AmbientColor.rgb, TESR_LinearTex.y);
+    float3 sunColor = linearCheck(PSLightColor[0].rgb, TESR_LinearTerrainColor.x) * TESR_ShaderBaseColors.x;
+    float3 ambientColor = linearCheck(AmbientColor.rgb, TESR_LinearTerrainColor.x) * TESR_ShaderBaseColors.y;
 
     float3 r0 = LODTexParams.xyw;
 
@@ -68,14 +70,14 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
     float3 blendColor = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128))).rgb;
-    blendColor = linearizeTex(blendColor, TESR_LinearTex.z);
+    blendColor = linearCheck(blendColor, TESR_LinearTerrain.y);
     float3 baseColor = tex2D(BaseMap, uv).rgb;
-    baseColor = linearizeTex(baseColor, TESR_LinearTex.z);
+    baseColor = linearCheck(baseColor, TESR_LinearTerrain.y);
     float3 eyeDir = -normalize(IN.location.xyz);
 
     // blending between parent tex and basemap + apply noise
     baseColor = r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w);
-    //baseColor = linearizeTex(baseColor, TESR_LinearTex.z); // cooks it
+    //baseColor = linearCheck(baseColor, TESR_LinearTerrain.y); // cooks it
     
     float roughness = saturate(TESR_TerrainData.y * (1 - normal.a));
 

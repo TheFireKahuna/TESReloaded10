@@ -58,6 +58,7 @@ public:
 	struct TerrainStruct {
 		D3DXVECTOR4		Data;
 		D3DXVECTOR4		ExtraData;
+		D3DXVECTOR4		ExtraData2;
 	};
 	TerrainStruct	Constants;
 

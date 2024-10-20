@@ -68,7 +68,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 	Shadow.r = lerp(TESR_ShadowFade.x, 1.0f, Shadow.r); // fade shadows to light when sun is low
 
 	// scale shadows strength to ambient before adding attenuation for pointlights (ShadowFade.z means point Lights are on)
-	float ambient = lerp(1, luma(TESR_SunAmbient), DARKNESS * TESR_ShadowFade.z); // linearise
+	float ambient = lerp(1, luma(TESR_SunAmbient), DARKNESS * TESR_ShadowFade.z);
 	Shadow.r = lerp(0, ambient, Shadow.r); //scale brightest areas to the ambient so it can be lit further with attenuation
 	Shadow.r += Shadow.g; // Apply poing light attenuation (includes point light shadows)
 
@@ -79,13 +79,10 @@ float4 Shadow(VSOUT IN) : COLOR0
 #if viewshadows == 1
 	return Shadow;
 #endif
-    color.rgb = linearizeRenderedBuffer(color.rgb); // linearise
-    float4 skyColor = linearizeGameVal(TESR_SkyColor); // linearise
 	// tint shadowed areas with Sky color before blending
-	float4 colorShadow = luma(color.rgb) * Shadow.r * skyColor;
+	float4 colorShadow = luma(color.rgb) * Shadow.r * TESR_SkyColor;
 	colorShadow.rgb = lerp(colorShadow, color * Shadow.r, saturate(Shadow.r + 0.5)).rgb;// bias the transition between the 2 colors to make it less noticeable
 	colorShadow.rgb = max(0.0,colorShadow.rgb);
-    colorShadow.rgb = delinearizeRenderedBuffer(colorShadow.rgb); // delinearise
 	return float4(colorShadow.rgb, 1.0); 
 }
 

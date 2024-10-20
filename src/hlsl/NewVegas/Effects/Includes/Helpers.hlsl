@@ -15,6 +15,7 @@
 #define reconstructZ(normal)  (normalize(float3(normal.xy, sqrt(1 - saturate(dot(normal.xy, normal.xy)))))) // derives the Z component of a normal
 #define bend(a, b)           (a * (1 + b) / (1 + a * b)) //bends the response curve in a symetric way 
 #define scaledReinhard(a, b) ((a * b) / (1 + a * b)) // curve that reaches a maximum of 1 with a speed b
+#define	envreflect(i, n)	((2 * dot(i, n)) * (i)) - ((n) * dot(i, i))
 
 #define PI 3.1415926539
 #define white     float4 (1, 1, 1, 1)
@@ -47,113 +48,6 @@ float4 linearize(float4 color) {
     float3 linearRGBLo = color.rgb / 12.92;
     float3 linearRGBHi = pows((color.rgb + 0.055) / 1.055, 2.4);
     color.rgb = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float3 delinearizeTonemapper(float3 color) {
-    float3 sRGBLo = color * 12.92;
-    float3 sRGBHi = (pows(abs(color), 1.0 / 2.4) * 1.055) - 0.055;
-    return (color <= 0.0031308) ? sRGBLo : sRGBHi;
-}
-float4 delinearizeTonemapper(float4 color) {
-    float3 sRGBLo = color.rgb * 12.92;
-    float3 sRGBHi = (pows(abs(color.rgb), 1.0 / 2.4) * 1.055) - 0.055;
-    color.rgb = (color.rgb <= 0.0031308) ? sRGBLo : sRGBHi;
-    return color;
-}
-float3 linearizeTonemapper(float3 color) {
-    float3 linearRGBLo = color / 12.92;
-    float3 linearRGBHi = pows((color + 0.055) / 1.055, 2.4);
-    return (color <= 0.04045) ? linearRGBLo : linearRGBHi;
-}
-float4 linearizeTonemapper(float4 color) {
-    float3 linearRGBLo = color.rgb / 12.92;
-    float3 linearRGBHi = pows((color.rgb + 0.055) / 1.055, 2.4);
-    color.rgb = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float3 linearizeGameVal(float3 color) {
-    //float3 linearRGBLo = color / 12.92;
-    //float3 linearRGBHi = pows((color + 0.055) / 1.055, 2.4);
-    //return (color <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float4 linearizeGameVal(float4 color) {
-    //float3 linearRGBLo = color.rgb / 12.92;
-    //float3 linearRGBHi = pows((color.rgb + 0.055) / 1.055, 2.4);
-    //color.rgb = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float3 linearizeNoise(float3 color) {
-    //float3 linearRGBLo = color / 12.92;
-    //float3 linearRGBHi = pows((color + 0.055) / 1.055, 2.4);
-    //return (color <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float4 linearizeNoise(float4 color) {
-    //float3 linearRGBLo = color.rgb / 12.92;
-    //float3 linearRGBHi = pows((color.rgb + 0.055) / 1.055, 2.4);
-    //color.rgb = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float3 linearizeRenderedBuffer(float3 color) {
-    //float3 linearRGBLo = color / 12.92;
-    //float3 linearRGBHi = pows((color + 0.055) / 1.055, 2.4);
-    //return (color <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float4 linearizeRenderedBuffer(float4 color) {
-    //float3 linearRGBLo = color.rgb / 12.92;
-    //float3 linearRGBHi = pows((color.rgb + 0.055) / 1.055, 2.4);
-    //color.rgb = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float3 linearizeSourceBuffer(float3 color) {
-    //float3 linearRGBLo = color / 12.92;
-    //float3 linearRGBHi = pows((color + 0.055) / 1.055, 2.4);
-    //return (color <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float4 linearizeSourceBuffer(float4 color) {
-    //float3 linearRGBLo = color.rgb / 12.92;
-    //float3 linearRGBHi = pows((color.rgb + 0.055) / 1.055, 2.4);
-    //color.rgb = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
-    //return color;
-    return color;
-}
-float3 linearizeTex(float3 color) {
-    //float3 linearRGBLo = color / 12.92;
-    //float3 linearRGBHi = pows((color + 0.055) / 1.055, 2.4);
-    //return (color <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float4 linearizeTex(float4 color) {
-    //float3 linearRGBLo = color.rgb / 12.92;
-    //float3 linearRGBHi = pows((color.rgb + 0.055) / 1.055, 2.4);
-    //color.rgb = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
-    return color;
-}
-float3 delinearizeRenderedBuffer(float3 color) {
-    //float3 sRGBLo = color * 12.92;
-    //float3 sRGBHi = (pows(abs(color), 1.0 / 2.4) * 1.055) - 0.055;
-    //return (color <= 0.0031308) ? sRGBLo : sRGBHi;
-    return color;
-}
-float4 delinearizeRenderedBuffer(float4 color) {
-    //float3 sRGBLo = color.rgb * 12.92;
-    //float3 sRGBHi = (pows(abs(color.rgb), 1.0 / 2.4) * 1.055) - 0.055;
-    //color.rgb = (color.rgb <= 0.0031308) ? sRGBLo : sRGBHi;
-    return color;
-}
-float3 delinearizeSourceBuffer(float3 color) {
-    //float3 sRGBLo = color * 12.92;
-    //float3 sRGBHi = (pows(abs(color), 1.0 / 2.4) * 1.055) - 0.055;
-    //return (color <= 0.0031308) ? sRGBLo : sRGBHi;
-    return color;
-}
-float4 delinearizeSourceBuffer(float4 color) {
-    //float3 sRGBLo = color.rgb * 12.92;
-    //float3 sRGBHi = (pows(abs(color.rgb), 1.0 / 2.4) * 1.055) - 0.055;
-    //color.rgb = (color.rgb <= 0.0031308) ? sRGBLo : sRGBHi;
     return color;
 }
 
