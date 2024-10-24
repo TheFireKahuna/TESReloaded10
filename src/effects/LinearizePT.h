@@ -15,6 +15,7 @@ public:
 		D3DXVECTOR4		OptsObjectColor;
 		D3DXVECTOR4		OptsLightColor;
 		D3DXVECTOR4		OptsLightColor2;
+		D3DXVECTOR4		OptsObjectColor2;
 	};
 	LinearizePTStruct	Constants;
 

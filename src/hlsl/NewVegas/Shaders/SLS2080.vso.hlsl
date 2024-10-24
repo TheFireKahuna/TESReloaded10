@@ -52,9 +52,9 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float4 r0;
 
-    float3 mdl4 = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), IN.position.xyzw);
+    float3 mdl4 = mul(float3x4(ModelViewProj[0], ModelViewProj[1], ModelViewProj[2]), IN.position);
 
-    OUT.position.w = dot(ModelViewProj[3].xyzw, IN.position.xyzw);
+    OUT.position.w = dot(ModelViewProj[3], IN.position);
     OUT.position.xyz = mdl4.xyz;
 
     r0.xy = (IN.texcoord_0.xy * 0.015625) + LandBlendParams.xy;

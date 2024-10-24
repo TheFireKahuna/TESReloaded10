@@ -486,15 +486,14 @@ PreLinearize = 0            # Linearize the color buffer before pre-tonemapped e
 PreDelinearize = 0          # Delinearize the color buffer after pre-tonemapped effects
 PostLinearize = 0           # Linearize the color buffer before image-space effects
 PostDelinearize = 1         # Delinearize the color buffer after image-space effects
-LinearWeathers = 1          # Linearize all in-game weather values used in Effects and Shaders that NVR reads
-LinearEffectLights = 1      # Linearize light colors used in NVR effects
 
 [_Shaders.Linearization.Shaders]
-LinearLight = 1             # Linearize base light colors for PBR and Terrain Shaders
 LinearDiffuse = 1           # Linearize diffuse textures for PBR and Terrain Shaders
-LinearVertex = 1            # Linearize vertex colors for PBR and Terrain Shaders
-LinearRoughness = 1         # Linearize roughness values for PBR and Terrain Shaders
 LinearInputColor = 1        # Linearize IN_COLOR values for PBR and Terrain Shaders
+LinearLight = 1             # Linearize base light colors for PBR and Terrain Shaders
+LinearRoughness = 1         # Linearize roughness values for PBR and Terrain Shaders
+LinearVertex = 1            # Linearize vertex colors for PBR and Terrain Shaders
+LinearWeathers = 1          # Linearize all in-game weather values used in Effects and Shaders that NVR reads
 GlobalDiffuse = 1.0         # Global Diffuse colors
 GlobalAmbient = 1.0         # Global Ambient colors
 GlobalPointLight = 1.0      # Global Point Light colors

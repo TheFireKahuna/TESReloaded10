@@ -23,7 +23,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     vUV.x = (PSDecalOffset.y * r0.x) + PSDecalOffset.x;
     float4 vDiffuse = tex2D(DecalMap, vUV.xy);
     vDiffuse = linearCheck(vDiffuse, TESR_LinearObject.y);
-    OUT.Color.rgba = vDiffuse * IN.Normal.z;
+    OUT.Color = vDiffuse * IN.Normal.z;
 
     return OUT;
 };

@@ -187,7 +187,7 @@ VS_OUTPUT main(VS_INPUT IN)
  
     float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
     
-    OUT.sPosition.xyzw = mul(ModelViewProj, IN.position.xyzw);
+    OUT.sPosition = mul(ModelViewProj, IN.position);
     OUT.uv = IN.uv.xy;
     
     float3 eye = EyePosition.xyz - IN.position.xyz;
@@ -254,10 +254,10 @@ VS_OUTPUT main(VS_INPUT IN)
     #endif
     
     #ifdef PROJ_SHADOW
-        float shadowParam = dot(ShadowProj[3].xyzw, IN.position.xyzw);
+        float shadowParam = dot(ShadowProj[3], IN.position);
         float2 shadowUV;
-        shadowUV.x = dot(ShadowProj[0].xyzw, IN.position.xyzw);
-        shadowUV.y = dot(ShadowProj[1].xyzw, IN.position.xyzw);
+        shadowUV.x = dot(ShadowProj[0], IN.position);
+        shadowUV.y = dot(ShadowProj[1], IN.position);
         OUT.shadowUVs.xy = ((shadowParam * ShadowProjTransform.xy) + shadowUV) / (shadowParam * ShadowProjTransform.w);
         OUT.shadowUVs.zw = ((shadowUV.xy - ShadowProjData.xy) / ShadowProjData.w) * float2(1, -1) + float2(0, 1);
     #endif

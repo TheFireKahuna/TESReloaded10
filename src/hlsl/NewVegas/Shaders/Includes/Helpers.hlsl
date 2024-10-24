@@ -16,8 +16,12 @@
 #define bend(a, b)           (a * (1 + b) / (1 + a * b)) //bends the response curve in a symetric way 
 #define scaledReinhard(a, b) ((a * b) / (1 + a * b)) // curve that reaches a maximum of 1 with a speed b
 #define	envreflect(i, n)	((2 * dot(i, n)) * (i)) - ((n) * dot(i, i))
+#define	fracr(v)		angler(frac(anglei(v)))	// signed modulo % PI
+#define	anglei(v)		(((v) + PI) / (2 * PI))
+#define	angler(v)		(((v) * (2 * PI)) - PI)
 
 #define PI 3.1415926539
+#define TWO_PI 6.28318548
 #define white     float4 (1, 1, 1, 1)
 #define grey      float4 (0.5, 0.5, 0.5, 1)
 #define black     float4 (0, 0, 0, 1)
@@ -28,6 +32,12 @@
 #define cyan      float4 (0, 1, 1, 1)
 #define magenta   float4 (1, 0, 1, 1)
 
+float linearCheck(float color, int linearColor = 0) {
+    if (linearColor < 1) return color;
+    float linearRGBLo = color / 12.92;
+    float linearRGBHi = pows((color + 0.055) / 1.055, 2.4);
+    return (color <= 0.04045) ? linearRGBLo : linearRGBHi;
+}
 float3 linearCheck(float3 color, int linearColor = 0) {
     if (linearColor < 1) return color;
     float3 linearRGBLo = color / 12.92;

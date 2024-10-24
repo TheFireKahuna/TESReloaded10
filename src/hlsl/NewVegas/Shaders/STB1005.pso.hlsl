@@ -48,8 +48,8 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 noxel2 = texCUBE(NormalCubeMap, IN.texcoord_3).rgb;
     float3 noxel3 = tex2D(NormalMap, IN.NormalUV).rgb;
-    float3 att0 = tex2D(AttMapZ, IN.texcoord_2);
-    float3 att1 = tex2D(AttMapXY, IN.texcoord_1);
+    float3 att0 = tex2D(AttMapZ, IN.texcoord_2).rgb;
+    float3 att1 = tex2D(AttMapXY, IN.texcoord_1).rgb;
     float3 finalColor = (shades(expand(noxel3), expand(noxel2)) * sunColor) * (att1 * att0);
     OUT.color_0.a = PSLightColor[0].a;
     OUT.color_0.rgb = finalColor;

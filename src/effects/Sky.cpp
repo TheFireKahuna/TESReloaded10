@@ -7,18 +7,21 @@ void SkyShaders::RegisterConstants() {
 }
 
 void SkyShaders::UpdateConstants() {
-	if (TheShaderManager->Shaders.Tonemapping->Enabled)
-		Constants.SunsetColor.w = TheShaderManager->GetTransitionValue(Settings.SkyMultiplierDay, Settings.SkyMultiplierNight, 1.0);
-	else
-		Constants.SunsetColor.w = 1.0;
+	//if (TheShaderManager->Shaders.Tonemapping->Enabled)
+	//	Constants.SunsetColor.w = TheShaderManager->GetTransitionValue(Settings.SkyMultiplierDay, Settings.SkyMultiplierNight, 1.0);
+	//else
+	//	Constants.SunsetColor.w = 1.0;
 }
 
 void SkyShaders::UpdateSettings() {
 
 	useSunDiskColor = TheSettingManager->GetSettingF("Shaders.Sky.Main", "UseSunDiskColor");
 
-	Settings.SkyMultiplierDay = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "SkyMultiplier");
-	Settings.SkyMultiplierNight = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "SkyMultiplier");
+	//Settings.SkyMultiplierDay = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "SkyMultiplier");
+	//Settings.SkyMultiplierNight = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "SkyMultiplier");
+
+	float tempVar = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalControl");
+	Constants.SunsetColor.w = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalSky") * tempVar;
 
 	Constants.SkyData.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
 	Constants.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");

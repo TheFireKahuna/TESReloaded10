@@ -6,14 +6,13 @@ void LinearizePTEffect::UpdateSettings() {
 	Constants.Options.z = TheSettingManager->GetSettingI("Shaders.Linearization.NVR", "PostLinearize");
 	Constants.Options.w = TheSettingManager->GetSettingI("Shaders.Linearization.NVR", "PostDelinearize");
 
-	linearizeGameColors = TheSettingManager->GetSettingI("Shaders.Linearization.NVR", "LinearWeathers");
-	linearizeLights = TheSettingManager->GetSettingI("Shaders.Linearization.NVR", "LinearEffectLights");
-
 	Constants.OptsShared.x = TheSettingManager->GetSettingI("Shaders.Linearization.Shaders", "LinearLight");
 	Constants.OptsShared.y = TheSettingManager->GetSettingI("Shaders.Linearization.Shaders", "LinearDiffuse");
 	Constants.OptsShared.z = TheSettingManager->GetSettingI("Shaders.Linearization.Shaders", "LinearVertex");
 	Constants.OptsShared.w = TheSettingManager->GetSettingI("Shaders.Linearization.Shaders", "LinearRoughness");
 	Constants.OptsTerrainColor.y = TheSettingManager->GetSettingI("Shaders.Linearization.Shaders", "LinearInputColor");
+
+	linearizeGameColors = TheSettingManager->GetSettingI("Shaders.Linearization.Shaders", "LinearWeathers");
 
 	if (Constants.OptsShared.x > 0) {
 		Constants.OptsObject.x = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearLight");
@@ -24,12 +23,20 @@ void LinearizePTEffect::UpdateSettings() {
 			Constants.OptsObjectColor.y = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearLightEmittance");
 			Constants.OptsObjectColor.z = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearLightPointLight");
 			Constants.OptsObjectColor.w = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearLightEnvMap");
+
+			Constants.OptsObjectColor2.x = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearNoLightColor");
+			Constants.OptsObjectColor2.y = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearNoLightMats");
+			Constants.OptsObjectColor2.z = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearNoLightFog");
 		}
 		else {
 			Constants.OptsObjectColor.x = 0;
 			Constants.OptsObjectColor.y = 0;
 			Constants.OptsObjectColor.z = 0;
 			Constants.OptsObjectColor.w = 0;
+
+			Constants.OptsObjectColor2.x = 0;
+			Constants.OptsObjectColor2.z = 0;
+			Constants.OptsObjectColor2.w = 0;
 		}
 
 		if (Constants.OptsTerrain.x > 0) {
@@ -39,8 +46,8 @@ void LinearizePTEffect::UpdateSettings() {
 		}
 		else {
 			Constants.OptsTerrainColor.x = 0;
+			Constants.OptsTerrainColor.y = 0;
 			Constants.OptsTerrainColor.z = 0;
-			Constants.OptsTerrainColor.w = 0;
 		}
 	}
 	else {
@@ -55,14 +62,26 @@ void LinearizePTEffect::UpdateSettings() {
 		Constants.OptsTerrainColor.x = 0;
 		Constants.OptsTerrainColor.z = 0;
 		Constants.OptsTerrainColor.w = 0;
+
+		Constants.OptsObjectColor2.x = 0;
+		Constants.OptsObjectColor2.z = 0;
+		Constants.OptsObjectColor2.w = 0;
 	}
+	linearizeLights = Constants.OptsTerrainColor.z;
 	if (Constants.OptsShared.y > 0) {
 		Constants.OptsObject.y = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearDiffuse");
+
+		if (Constants.OptsObject.y > 0)
+			Constants.OptsObjectColor2.w = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearNoLightDiffuse");
+		else
+			Constants.OptsObjectColor2.w = 0;
+
 		Constants.OptsTerrain.y = TheSettingManager->GetSettingI("Shaders.Linearization.Terrain", "LinearDiffuse");
 	}
 	else {
 		Constants.OptsObject.y = 0;
 		Constants.OptsTerrain.y = 0;
+		Constants.OptsObjectColor2.w = 0;
 	}
 	if (Constants.OptsShared.z > 0) {
 		Constants.OptsObject.z = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearVertex");
@@ -94,6 +113,12 @@ void LinearizePTEffect::UpdateSettings() {
 	Constants.OptsLightColor2.x = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalEnvMap");
 	Constants.OptsLightColor2.y = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalGlowMap");
 
+
+	float tempVar = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalControl");
+	Constants.OptsLightColor *= tempVar;
+	Constants.OptsLightColor2.x *= tempVar;
+	Constants.OptsLightColor2.y *= tempVar;
+
 }
 
 void LinearizePTEffect::RegisterConstants() {
@@ -104,6 +129,7 @@ void LinearizePTEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_LinearTerrain", &Constants.OptsTerrain);
 	TheShaderManager->RegisterConstant("TESR_LinearObjectColor", &Constants.OptsObjectColor);
 	TheShaderManager->RegisterConstant("TESR_LinearTerrainColor", &Constants.OptsTerrainColor);
+	TheShaderManager->RegisterConstant("TESR_LinearObjectExtra", &Constants.OptsObjectColor2);
 	TheShaderManager->RegisterConstant("TESR_ShaderBaseColors", &Constants.OptsLightColor);
 	TheShaderManager->RegisterConstant("TESR_ShaderExtraColors", &Constants.OptsLightColor2);
 }

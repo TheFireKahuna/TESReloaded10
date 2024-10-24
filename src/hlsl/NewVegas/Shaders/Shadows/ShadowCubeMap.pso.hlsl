@@ -19,7 +19,7 @@ PS_OUTPUT main(VS_OUTPUT IN) {
 	float r1;
 	
 	if (TESR_ShadowData.y == 1.0f) { // Alpha is required
-		r0.rgba = tex2D(DiffuseMap, IN.texcoord_1.xy);
+		r0 = tex2D(DiffuseMap, IN.texcoord_1.xy);
 		if (r0.a < 0.2f) discard;
 	}
 	

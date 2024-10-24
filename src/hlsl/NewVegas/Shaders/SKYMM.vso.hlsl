@@ -54,7 +54,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.rgb = (color.r * blendColor0) + (color.g * blendColor1) + (color.b * blendColor2);
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
 
-    OUT.position.xyzw = mul(ModelViewProj, IN.position).xyww;
+    OUT.position = mul(ModelViewProj, IN.position).xyww;
     
     if (TESR_DepthConstants.z)
         OUT.position.z = 0.0; // invert depth

@@ -16,6 +16,9 @@
 #define bend(a, b)           (a * (1 + b) / (1 + a * b)) //bends the response curve in a symetric way 
 #define scaledReinhard(a, b) ((a * b) / (1 + a * b)) // curve that reaches a maximum of 1 with a speed b
 #define	envreflect(i, n)	((2 * dot(i, n)) * (i)) - ((n) * dot(i, i))
+#define	fracr(v)		    angler(frac(anglei(v)))	// signed modulo % PI
+#define	anglei(v)		(((v) + PI) / (2 * PI))
+#define	angler(v)		(((v) * (2 * PI)) - PI)
 
 #define PI 3.1415926539
 #define white     float4 (1, 1, 1, 1)

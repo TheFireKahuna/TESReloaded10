@@ -422,7 +422,7 @@ float ShaderManager::GetTransitionValue(float Day, float Night, float Interior) 
 ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 
 	if (!memcmp(Name, "WATER", 5)) return Shaders.Water;
-	if (!memcmp(Name, "GRASS", 5)) return Shaders.Grass;
+	if (strstr(GrassShadersNames, Name)) return Shaders.Grass;
 	if (!memcmp(Name, "ISHDR", 5) || !memcmp(Name, "HDR", 3)) return Shaders.Tonemapping; // tonemapping shaders have different names between New vegas and Oblivion
 	if (!memcmp(Name, "PAR", 3)) return Shaders.POM;
 	if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin;

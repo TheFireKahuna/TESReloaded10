@@ -7,7 +7,8 @@
 #define EffectsPath "Data\\Shaders\\NewVegasReloaded\\Effects\\"
 #define RenderStateArgs 0, 0
 #define TerrainShadersNames "SLS2002.vso SLS2003.pso SLS2006.pso SLS2080.vso SLS2082.pso SLS2100.vso SLS2092.pso SLS2096.pso SLS2100.pso SLS2104.pso SLS2108.pso SLS2112.pso SLS2116.pso SLS2120.pso SLS2124.pso SLS2128.pso SLS2132.pso SLS2136.pso SLS2140.pso SLS2144.pso"
-#define ObjectShadersNames "STB1005.pso SLS2057.pso SLS2058.pso SLS2059.pso SLS2151.pso GDecal.pso"
+#define ObjectShadersNames "GDECAL.pso GDECAL.vso NOLIGHT000.vso NOLIGHT001.vso NOLIGHT002.vso NOLIGHTMAT.pso NOLIGHTTEX.pso NOLIGHTTEXVC.pso NOLIGHTTEXVCPMA.pso NOLIGHTVCONLY.pso DISTTREE.pso SLS1000.vso SLS1002.pso SLS1003.vso SLS1004.vso SLS1005.vso SLS1006.vso SLS1007.vso SLS1017.vso SLS1018.vso SLS1024.vso SLS1030.pso SLS2050.vso SLS2057.pso SLS2058.pso SLS2059.pso SLS2102.vso SLS2151.pso STB1005.pso STB2004.vso"
+#define GrassShadersNames "GRASS23x000.vso GRASS23x002.vso GRASS23x000TMS.pso"
 #define BloodShaders ""
 
 #define SamplerStatesMax 12

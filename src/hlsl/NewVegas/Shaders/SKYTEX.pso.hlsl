@@ -59,7 +59,7 @@ struct SunValues {
     float sunHeight;
     float sunInfluence;
     float3 sunColor;
-    float3 sunDir;
+    float sunDir;
     float isDayTime;
 };
 

@@ -36,13 +36,13 @@ VS_OUTPUT main(VS_INPUT IN) {
 	float4 r0 = IN.position;
 	
 	if (TESR_ShadowData.x == 1.0f) { // Skinned (Actors)
-		offset.xyzw = IN.blendindexes.zyxw * const_0.y;
+		offset = IN.blendindexes.zyxw * const_0.y;
 		r0.w = 1;
-		q0.xyzw = (IN.position.xyzx * const_0.xxxz) + const_0.zzzx;
-		q8.xyz = mul(float3x4(Bones[0 + offset.w].xyzw, Bones[1 + offset.w].xyzw, Bones[2 + offset.w].xyzw), q0.xyzw);
-		q6.xyz = mul(float3x4(Bones[0 + offset.z].xyzw, Bones[1 + offset.z].xyzw, Bones[2 + offset.z].xyzw), q0.xyzw);
-		q5.xyz = mul(float3x4(Bones[0 + offset.x].xyzw, Bones[1 + offset.x].xyzw, Bones[2 + offset.x].xyzw), q0.xyzw);
-		q4.xyz = mul(float3x4(Bones[0 + offset.y].xyzw, Bones[1 + offset.y].xyzw, Bones[2 + offset.y].xyzw), q0.xyzw);
+		q0 = (IN.position.xyzx * const_0.xxxz) + const_0.zzzx;
+		q8.xyz = mul(float3x4(Bones[0 + offset.w], Bones[1 + offset.w], Bones[2 + offset.w]), q0);
+		q6.xyz = mul(float3x4(Bones[0 + offset.z], Bones[1 + offset.z], Bones[2 + offset.z]), q0);
+		q5.xyz = mul(float3x4(Bones[0 + offset.x], Bones[1 + offset.x], Bones[2 + offset.x]), q0);
+		q4.xyz = mul(float3x4(Bones[0 + offset.y], Bones[1 + offset.y], Bones[2 + offset.y]), q0);
 		q7.xyz = (IN.blendweight.z * q6.xyz) + ((IN.blendweight.x * q5.xyz) + (q4.xyz * IN.blendweight.y));
 		r0.xyz = ((1 - weight(IN.blendweight.xyz)) * q8.xyz) + q7.xyz;
 	}

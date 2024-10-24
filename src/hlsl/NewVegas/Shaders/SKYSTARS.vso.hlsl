@@ -59,7 +59,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.rgb = (color.r * blendColor0) + (color.g * blendColor1) + (color.b * blendColor2);
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
     
-    OUT.position.xyzw = mul(ModelViewProj, IN.position.xyzw).xyww;
+    OUT.position = mul(ModelViewProj, IN.position).xyww;
 
     if (TESR_DepthConstants.z)
         OUT.position.z = 0.0; // invert depth
@@ -70,7 +70,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.location = IN.position.xyz;
 
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
-    OUT.texcoord_2.x = saturate((dot(Model[2].xyzw, IN.position.xyzw) - EyePosition.z) / 17);
+    OUT.texcoord_2.x = saturate((dot(Model[2], IN.position) - EyePosition.z) / 17);
 
     return OUT;
 };

@@ -58,13 +58,13 @@ VS_OUTPUT main(VS_INPUT IN) {
 	float4 r0 = IN.position;
 	
 	if (TESR_ShadowData.x == 1.0f) { // Skinned (Actors)
-		offset.xyzw = IN.blendindexes.zyxw * const_0.y;
+		offset = IN.blendindexes.zyxw * const_0.y;
 		r0.w = 1;
-		q0.xyzw = (IN.position.xyzx * const_0.xxxz) + const_0.zzzx;
-		q8.xyz = mul(float3x4(Bones[0 + offset.w].xyzw, Bones[1 + offset.w].xyzw, Bones[2 + offset.w].xyzw), q0.xyzw);
-		q6.xyz = mul(float3x4(Bones[0 + offset.z].xyzw, Bones[1 + offset.z].xyzw, Bones[2 + offset.z].xyzw), q0.xyzw);
-		q5.xyz = mul(float3x4(Bones[0 + offset.x].xyzw, Bones[1 + offset.x].xyzw, Bones[2 + offset.x].xyzw), q0.xyzw);
-		q4.xyz = mul(float3x4(Bones[0 + offset.y].xyzw, Bones[1 + offset.y].xyzw, Bones[2 + offset.y].xyzw), q0.xyzw);
+		q0 = (IN.position.xyzx * const_0.xxxz) + const_0.zzzx;
+		q8.xyz = mul(float3x4(Bones[0 + offset.w], Bones[1 + offset.w], Bones[2 + offset.w]), q0);
+		q6.xyz = mul(float3x4(Bones[0 + offset.z], Bones[1 + offset.z], Bones[2 + offset.z]), q0);
+		q5.xyz = mul(float3x4(Bones[0 + offset.x], Bones[1 + offset.x], Bones[2 + offset.x]), q0);
+		q4.xyz = mul(float3x4(Bones[0 + offset.y], Bones[1 + offset.y], Bones[2 + offset.y]), q0);
 		q7.xyz = (IN.blendweight.z * q6.xyz) + ((IN.blendweight.x * q5.xyz) + (q4.xyz * IN.blendweight.y));
 		r0.xyz = ((1 - weight(IN.blendweight.xyz)) * q8.xyz) + q7.xyz;
 	}
@@ -91,16 +91,16 @@ VS_OUTPUT main(VS_INPUT IN) {
 		q5.xy = (((((-2.52398507e-007 * q10.xy) + 2.47609005e-005) * q10.xy) - (1.0 / 72)) * q10.xy) + (1.0 / 24);
 		r2.xy = (q5.xy * q10.xy) - 0.5;
 		q10.xw = (q10.yx * r2.yx) + 1;
-		r2.xyzw = IN.blendindexes.w * LeafBase[IN.blendindexes.z];
+		r2 = IN.blendindexes.w * LeafBase[IN.blendindexes.z];
 		q10.y = -q10.w;
 		r4.x = dot(q10.zwx, r2.xyz);
 		r5.x = dot(q10.zxy, r2.xyz);
 		q10.y = dot(r3.wxz, BillboardUp.xyz);
 		q10.x = dot(r3.xyz, BillboardUp.xyz);
 		q10.zw = BillboardUp.zw;
-		q59.xyzw = ((r4.x * q10.xyzw) + (r5.x * r1.xyzw)) + r0.xyzw;
-		q28.xyzw = mul(float4x4(WindMatrices[0 + offset.x].xyzw, WindMatrices[1 + offset.x].xyzw, WindMatrices[2 + offset.x].xyzw, WindMatrices[3 + offset.x].xyzw), q59.xyzw);
-		r0.xyzw = (IN.blendindexes.x * (q28.xyzw - q59.xyzw)) + q59.xyzw;
+		q59 = ((r4.x * q10) + (r5.x * r1)) + r0;
+		q28 = mul(float4x4(WindMatrices[0 + offset.x], WindMatrices[1 + offset.x], WindMatrices[2 + offset.x], WindMatrices[3 + offset.x]), q59);
+		r0 = (IN.blendindexes.x * (q28 - q59)) + q59;
 	}
     if (TESR_ShadowData.x != 1.0f) r0 = mul(r0, TESR_ShadowWorldTransform);
 	r0 = mul(r0, TESR_ShadowViewProjTransform);

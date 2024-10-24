@@ -53,7 +53,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.a = BlendColor[0].a * IN.color_0.a;
 
 
-    OUT.position.xyzw = mul(ModelViewProj, IN.position).xyww;
+    OUT.position = mul(ModelViewProj, IN.position).xyww;
 
     if (TESR_DepthConstants.z > 0) {
         OUT.position.z = 0; // invert depth

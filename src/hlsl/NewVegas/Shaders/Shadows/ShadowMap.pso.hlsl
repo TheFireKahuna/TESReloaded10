@@ -21,7 +21,7 @@ PS_OUTPUT main(VS_OUTPUT IN) {
 	float depth;
 
 	if (TESR_ShadowData.y == 1.0f) { // Leaves (Speedtrees) or alpha is required
-		r0.rgba = (TESR_ShadowData.x == 2.0f)?tex2D(LeafDiffuseMap, IN.texcoord_1.xy):tex2D(DiffuseMap, IN.texcoord_1.xy);
+		r0 = (TESR_ShadowData.x == 2.0f)?tex2D(LeafDiffuseMap, IN.texcoord_1.xy):tex2D(DiffuseMap, IN.texcoord_1.xy);
 		if (r0.a < 0.5f) discard;
 	}
 	depth = IN.texcoord_0.z / IN.texcoord_0.w;

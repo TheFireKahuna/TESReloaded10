@@ -7,6 +7,21 @@ public:
 
 	std::map<std::string, ShaderTemplate> Templates() {
 		return std::map<std::string, ShaderTemplate>{
+			// 1.0 Base Pixel Shaders
+			{ "SLS1000.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}} } },
+			{ "SLS1003.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}, {"TEX", ""}} } },
+			{ "SLS1004.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}, {"TEX", ""}, {"VC", ""}} } },
+			{ "SLS1005.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}, {"TEX", ""}, {"FACEGENBLEND", ""}} } },
+			{ "SLS1006.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}, {"TEX", ""}, {"HAIR", ""}} } },
+			{ "SLS1031.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}, {"FOG", ""}, {"TEX", ""}} } },
+			{ "SLS1039.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}} } },
+			{ "SLS1047.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}, {"CONSTALPHA", ""}} } },
+			{ "SLS2150.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}, {"FOG", ""}, {"FOGANDAMBIENT", ""}} } },
+			{ "STB1000.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}} } },
+			{ "STB1006.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}, {"TEX", ""}, {"VC", ""}} } },
+			{ "STB1009.pso", ShaderTemplate{ "ObjectTemplate_1_0", {{"PS", ""}, {"FOG", ""}} } },
+
+			// 2.0 Lighting Shaders
 			{ "SLS2000.vso", ShaderTemplate{ "ObjectTemplate", {{"VS", ""}} } },
 			{ "SLS2001.vso", ShaderTemplate{ "ObjectTemplate", {{"VS", ""}} } },
 			{ "SLS2003.vso", ShaderTemplate{ "ObjectTemplate", {{"VS", ""}, {"SKIN", ""}} } },

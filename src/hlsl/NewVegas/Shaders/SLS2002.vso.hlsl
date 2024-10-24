@@ -12,6 +12,8 @@ float4 LightData[10] : register(c25);
 float4 TESR_CameraPosition : register(c36);
 float4x4 TESR_InvViewProjectionTransform : register(c37);
 
+#include "includes/Helpers.hlsl"
+
 // Registers:
 //
 //   Name            Reg   Size
@@ -56,19 +58,19 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 r1 = IN.position;
     r1.z = lerp(IN.texcoord_1.x, IN.position.z, GeomorphParams.x);
 
-    float q0 = (abs(dot(ObjToCubeSpace[1].xyzw, r1.xyzw) - HighDetailRange.y) < HighDetailRange.w ? 1.0 : 0.0);
-    float q1 = (abs(dot(ObjToCubeSpace[0].xyzw, r1.xyzw) - HighDetailRange.x) < HighDetailRange.z ? 1.0 : 0.0);
+    float q0 = (abs(dot(ObjToCubeSpace[1], r1) - HighDetailRange.y) < HighDetailRange.w ? 1.0 : 0.0);
+    float q1 = (abs(dot(ObjToCubeSpace[0], r1) - HighDetailRange.x) < HighDetailRange.z ? 1.0 : 0.0);
 
     r0.z = r1.z - ((q0.x * q1.x) * GeomorphParams.y);
-    float3 mdl11 = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), r0.xyzw);
+    float3 mdl11 = mul(float3x4(ModelViewProj[0], ModelViewProj[1], ModelViewProj[2]), r0);
 
     // fog
     float q2 = 1 - saturate((FogParam.x - length(mdl11)) / FogParam.y);
-    // log r0.x, r0.x
+    q2 = log2(q2);
     OUT.color_1.a = exp2(q2.x * FogParam.z);
     OUT.color_1.rgb = FogColor.rgb;
 
-    OUT.position.w = dot(ModelViewProj[3].xyzw, r0.xyzw);
+    OUT.position.w = dot(ModelViewProj[3], r0);
     OUT.position.xyz = mdl11.xyz;
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_1 = LightData[0].xyz; // sun direction

@@ -263,12 +263,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     
     OUT.uv = IN.uv.xy;
     
-    float4 position = IN.position.xyzw;
+    float4 position = IN.position;
     
     #ifndef SKIN
         float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
     
-        OUT.sPosition.xyzw = mul(ModelViewProj, position.xyzw);
+        OUT.sPosition = mul(ModelViewProj, position);
     #else
         float4 offset = IN.blendIndices.zyxw * 765.01001;
         float4 blend = IN.blendWeight.xyzz;
@@ -278,7 +278,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         position.w = 1;
         position.xyz = BonesTransformPosition(Bones, offset, blend, position);
     
-        OUT.sPosition.xyzw = mul(SkinModelViewProj, position.xyzw);
+        OUT.sPosition = mul(SkinModelViewProj, position);
     #endif
     
     #if defined(DIFFUSE) || defined(POINT)
@@ -355,10 +355,10 @@ VS_OUTPUT main(VS_INPUT IN) {
     #endif
     
     #ifdef PROJ_SHADOW
-        float shadowParam = dot(ShadowProj[3].xyzw, position.xyzw);
+        float shadowParam = dot(ShadowProj[3], position);
         float2 shadowUV;
-        shadowUV.x = dot(ShadowProj[0].xyzw, position.xyzw);
-        shadowUV.y = dot(ShadowProj[1].xyzw, position.xyzw);
+        shadowUV.x = dot(ShadowProj[0], position);
+        shadowUV.y = dot(ShadowProj[1], position);
         OUT.shadowUVs.xy = ((shadowParam * ShadowProjTransform.xy) + shadowUV) / (shadowParam * ShadowProjTransform.w);
         OUT.shadowUVs.zw = ((shadowUV.xy - ShadowProjData.xy) / ShadowProjData.w) * float2(1, -1) + float2(0, 1);
     #endif
@@ -421,12 +421,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     
     OUT.uv = IN.uv.xy;
     
-    float4 position = IN.position.xyzw;
+    float4 position = IN.position;
     
     #ifndef SKIN
         float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
     
-        OUT.sPosition.xyzw = mul(ModelViewProj, position.xyzw);
+        OUT.sPosition = mul(ModelViewProj, position);
     #else
         float4 offset = IN.blendIndices.zyxw * 765.01001;
         float4 blend = IN.blendWeight.xyzz;
@@ -435,7 +435,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     
         position.w = 1;
         position.xyz = BonesTransformPosition(Bones, offset, blend, position);
-        OUT.sPosition.xyzw = mul(SkinModelViewProj, position.xyzw);
+        OUT.sPosition = mul(SkinModelViewProj, position);
     #endif
     
     OUT.lPosition.xyz = position.xyz;

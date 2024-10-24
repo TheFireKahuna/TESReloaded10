@@ -62,7 +62,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.location = IN.position.xyz;
 
     IN.position.z -= 5; // lower mesh to avoid visiible seam at the bottom
-    OUT.position.xyzw = mul(ModelViewProj, IN.position.xyzw).xyww;
+    OUT.position = mul(ModelViewProj, IN.position).xyww;
 
     if (TESR_DepthConstants.z)
         OUT.position.z = 0.0; // invert depth

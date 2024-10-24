@@ -48,12 +48,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 mdl0;
     float4 r0;
 
-    mdl0.xyz = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), IN.position.xyzw);
+    mdl0.xyz = mul(float3x4(ModelViewProj[0], ModelViewProj[1], ModelViewProj[2]), IN.position);
 
     OUT.blend_0 = IN.blend_0;
     OUT.blend_1 = IN.blend_1;
 
-    OUT.sPosition.w = dot(ModelViewProj[3].xyzw, IN.position.xyzw);
+    OUT.sPosition.w = dot(ModelViewProj[3], IN.position);
     OUT.sPosition.xyz = mdl0.xyz;
     OUT.uv.xy = IN.uv.xy;
     OUT.vertex_color.xyz = IN.vertex_color.rgb;
@@ -140,7 +140,7 @@ PS_OUTPUT main(PS_INPUT IN) {
         float3 pointlightDir;
         [unroll] for (int i = 0; i < lightCount; i++) {
             pointlightDir = mul(tbn, PSLightPosition[i].xyz - IN.lPosition.xyz);
-            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, linearCheck(PSLightColor[i + 1].rgb * TESR_ShaderBaseColors.z, TESR_LinearTerrainColor.z), eyeDir, combinedNormal, baseColor, roughness, 1.0);
+            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, linearCheck(PSLightColor[i + 1].rgb, TESR_LinearTerrainColor.z) * TESR_ShaderBaseColors.z, eyeDir, combinedNormal, baseColor, roughness, 1.0);
         }
     #endif
     
