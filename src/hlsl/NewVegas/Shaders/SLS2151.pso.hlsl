@@ -39,9 +39,9 @@ struct VS_OUTPUT {
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
-    float3 color = linearCheck(IN.color_1.rgb, TESR_LinearObjectTerrain.y);
+    float3 color = IN.color_1.rgb;
 
-    float3 ambientColor = linearCheck(AmbientColor.rgb, TESR_LinearObjectColor.x)  * TESR_ShaderBaseColors.y;
+    float3 ambientColor = AmbientColor.rgb  * TESR_ShaderBaseColors.y;
 
     float4 baseColor = tex2D(BaseMap, IN.BaseUV);			// partial precision
     baseColor = linearCheck(baseColor, TESR_LinearObject.y);

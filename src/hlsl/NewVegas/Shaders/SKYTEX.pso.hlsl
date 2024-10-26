@@ -20,6 +20,7 @@ float4 TESR_SunsetColor : register(c15);
 float4 TESR_HDRBloomData : register(c16);
 float4 TESR_SunDiskColor : register(c17);
 float4 TESR_LinearSky : register(c18);
+float4 TESR_ShaderExtraColors : register(c19);
 
 
 // Registers:
@@ -112,9 +113,11 @@ float4 ShadeSun(SunValues Sun, float4 texColor, float4 vertexColor){
         float isSunset = smoothstep(0.3, 0.0, Sun.sunHeight);
         texColor.rgb += isSunset * Sun.sunColor;
         texColor.rgb += Sun.sunColor * TESR_SunAmount.w;
+        texColor.rgb *= TESR_ShaderExtraColors.z;
         texColor.a = Sun.isDayTime; // force alpha 1 for sun disk in the daytime
     }else{
         texColor.rgb *= vertexColor.rgb * Params.y * lerp(TESR_SunAmount.w, 1, isSunOrMoon); // vertex color (animated by the engine)
+        texColor.rgb *= TESR_ShaderExtraColors.w;
         texColor.a *= vertexColor.a;
     }
     return texColor;
@@ -165,7 +168,7 @@ float4 ShadeClouds(float4 finalColor, float4 vertexColor, float3 skyColor, SunVa
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-	float4 color = linearCheck(IN.color_0, TESR_LinearSky.y);
+	float4 color = IN.color_0;
 
     float3 eyeDir = normalize(IN.location);
     float verticality = pows(compress(dot(eyeDir, up)), 3);

@@ -17,6 +17,8 @@ void LinearizePTEffect::UpdateSettings() {
 	if (Constants.OptsShared.x > 0) {
 		Constants.OptsObject.x = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearLight");
 		Constants.OptsTerrain.x = TheSettingManager->GetSettingI("Shaders.Linearization.Terrain", "LinearLight");
+		Constants.OptsSky.y = TheSettingManager->GetSettingI("Shaders.Linearization.Sky", "LinearColor");
+		Constants.OptsSky.w = TheSettingManager->GetSettingI("Shaders.Linearization.Sky", "LinearBlend");
 
 		if (Constants.OptsObject.x > 0) {
 			Constants.OptsObjectColor.x = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearLightSunAmb");
@@ -66,7 +68,12 @@ void LinearizePTEffect::UpdateSettings() {
 		Constants.OptsObjectColor2.x = 0;
 		Constants.OptsObjectColor2.z = 0;
 		Constants.OptsObjectColor2.w = 0;
+
+		Constants.OptsSky.y = 0;
+		Constants.OptsSky.w = 0;
 	}
+	Constants.OptsSky.x = TheSettingManager->GetSettingI("Shaders.Linearization.Sky", "LinearClouds");
+	Constants.OptsSky.z = TheSettingManager->GetSettingI("Shaders.Linearization.Sky", "LinearStars");
 	linearizeLights = Constants.OptsTerrainColor.z;
 	if (Constants.OptsShared.y > 0) {
 		Constants.OptsObject.y = TheSettingManager->GetSettingI("Shaders.Linearization.Object", "LinearDiffuse");
@@ -100,10 +107,6 @@ void LinearizePTEffect::UpdateSettings() {
 		Constants.OptsTerrain.w = 0;
 	}
 
-	Constants.OptsSky.x = TheSettingManager->GetSettingI("Shaders.Linearization.Sky", "LinearClouds");
-	Constants.OptsSky.y = TheSettingManager->GetSettingI("Shaders.Linearization.Sky", "LinearColor");
-	Constants.OptsSky.z = TheSettingManager->GetSettingI("Shaders.Linearization.Sky", "LinearStars");
-	Constants.OptsSky.w = TheSettingManager->GetSettingI("Shaders.Linearization.Sky", "LinearBlend");
 
 	Constants.OptsLightColor.x = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalDiffuse");
 	Constants.OptsLightColor.y = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalAmbient");
@@ -112,12 +115,14 @@ void LinearizePTEffect::UpdateSettings() {
 
 	Constants.OptsLightColor2.x = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalEnvMap");
 	Constants.OptsLightColor2.y = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalGlowMap");
+	Constants.OptsLightColor2.z = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalSun");
+	Constants.OptsLightColor2.w = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalMoon");
 
 
 	float tempVar = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalControl");
-	Constants.OptsLightColor *= tempVar;
-	Constants.OptsLightColor2.x *= tempVar;
-	Constants.OptsLightColor2.y *= tempVar;
+	float tempVar2 = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalScale");
+	Constants.OptsLightColor *= tempVar * pow(10, tempVar2) * 0.1;
+	Constants.OptsLightColor2 *= tempVar * pow(10, tempVar2) * 0.1;
 
 }
 

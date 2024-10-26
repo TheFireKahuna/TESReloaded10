@@ -56,7 +56,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     // Lighting
     finalColor.rgb = (q1 * finalColor.rrgb).rgb;
-    float3 sunColor = linearCheck(DiffuseColor.rgb, TESR_LinearObjectColor.x);
+    float3 sunColor = DiffuseColor.rgb * TESR_ShaderBaseColors.x;
     OUT.texcoord5.rgb = ((shades(DiffuseDir.xyz, windCalc.xyz) * finalColor.rgb) * sunColor) * AdditionalParams.x;
 
     instanceData.x = log(instanceData.x);
@@ -68,7 +68,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     OUT.texcoord0.xy = IN.texcoord_0.xy;
 
-    float4 ambientColor = linearCheck(AmbientColor, TESR_LinearObjectColor.x) * TESR_ShaderBaseColors.y;
+    float4 ambientColor = AmbientColor * TESR_ShaderBaseColors.y;
     OUT.texcoord4 = q1 * ambientColor;
 
     return OUT;

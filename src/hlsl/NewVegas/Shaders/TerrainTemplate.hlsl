@@ -48,12 +48,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 mdl0;
     float4 r0;
 
-    mdl0.xyz = mul(float3x4(ModelViewProj[0], ModelViewProj[1], ModelViewProj[2]), IN.position);
+    mdl0.xyz = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), IN.position.xyzw);
 
     OUT.blend_0 = IN.blend_0;
     OUT.blend_1 = IN.blend_1;
 
-    OUT.sPosition.w = dot(ModelViewProj[3], IN.position);
+    OUT.sPosition.w = dot(ModelViewProj[3].xyzw, IN.position.xyzw);
     OUT.sPosition.xyz = mdl0.xyz;
     OUT.uv.xy = IN.uv.xy;
     OUT.vertex_color.xyz = IN.vertex_color.rgb;
@@ -99,15 +99,10 @@ float4 AmbientColor : register(c1);
 float4 PSLightColor[13] : register(c3);
 float4 PSLightDir : register(c18);
 float4 PSLightPosition[12] : register(c19);
-float4 TESR_LinearTerrain : register(c40);
-float4 TESR_LinearTerrainColor : register(c41);
-float4 TESR_ShaderBaseColors : register(c42);
+float4 TESR_ShaderBaseColors : register(c39);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
-
-    float3 sunColor = linearCheck(PSLightColor[0].rgb, TESR_LinearTerrainColor.x) * TESR_ShaderBaseColors.x;
-    float3 ambientColor = linearCheck(AmbientColor.rgb, TESR_LinearTerrainColor.w) * TESR_ShaderBaseColors.y;
     
     int texCount = TEX_COUNT;  // Macro.
     float3 tangent = normalize(IN.tangent.xyz);
@@ -127,20 +122,20 @@ PS_OUTPUT main(PS_INPUT IN) {
     float2 offsetUV = getParallaxCoords(dist, IN.uv.xy, dx, dy, eyeDir, texCount, BaseMap, blends, weights);
 
     float roughness = 1.f;
-    float3 baseColor = blendDiffuseMaps(linearCheck(IN.vertex_color, TESR_LinearTerrain.z), offsetUV, texCount, BaseMap, weights, TESR_LinearTerrain.y);
+    float3 baseColor = blendDiffuseMaps(IN.vertex_color, offsetUV, texCount, BaseMap, weights);
     float3 combinedNormal = blendNormalMaps(offsetUV, texCount, NormalMap, weights, roughness);
 
     float3 lightTS = mul(tbn, PSLightDir.xyz);
     float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, offsetUV, dx, dy, lightTS, texCount, blends, BaseMap);
     
-    float3 lighting = getSunLighting(lightTS, sunColor, eyeDir, combinedNormal, ambientColor, baseColor, roughness, 1.0, parallaxShadowMultiplier);
+    float3 lighting = getSunLighting(lightTS, PSLightColor[0].rgb * TESR_ShaderBaseColors.x, eyeDir, combinedNormal, AmbientColor.rgb * TESR_ShaderBaseColors.y, baseColor, roughness, 1.0, parallaxShadowMultiplier);
 
     #if defined(POINTLIGHT)
         int lightCount = 12;
         float3 pointlightDir;
         [unroll] for (int i = 0; i < lightCount; i++) {
             pointlightDir = mul(tbn, PSLightPosition[i].xyz - IN.lPosition.xyz);
-            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, linearCheck(PSLightColor[i + 1].rgb, TESR_LinearTerrainColor.z) * TESR_ShaderBaseColors.z, eyeDir, combinedNormal, baseColor, roughness, 1.0);
+            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, PSLightColor[i + 1].rgb * TESR_ShaderBaseColors.z, eyeDir, combinedNormal, baseColor, roughness, 1.0);
         }
     #endif
     

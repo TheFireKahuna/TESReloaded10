@@ -65,7 +65,7 @@ float noise( float3 x )
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
-	float4 skytint = linearCheck(IN.color_0, TESR_LinearSky.y);
+	float4 skytint = IN.color_0;
 
 	float4 stars = tex2D(TexMap, IN.TexUV);
 	stars = linearCheck(stars, TESR_LinearSky.z);

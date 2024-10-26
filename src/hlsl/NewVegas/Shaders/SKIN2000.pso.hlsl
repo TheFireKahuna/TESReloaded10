@@ -1,4 +1,4 @@
-// Skin Shader for when only the sun light is used
+//
 //
 // Parameters:
 
@@ -8,15 +8,12 @@ sampler2D FaceGenMap0 : register(s2);
 sampler2D FaceGenMap1 : register(s3);
 sampler2D NormalMap : register(s1);
 float4 PSLightColor[10] : register(c3);
-float4 Toggles : register(c27); // x:bUseVertexColors, y:fUnknown_FogRelated, z:fSpecularity, w:fAlphaTestRef
+float4 Toggles : register(c27);
+float4 TESR_LinearObject : register(c28);
+float4 TESR_ShaderBaseColors : register(c29);
+float4 TESR_LinearObjectExtra : register(c30);
 
-float4 TESR_ReciprocalResolution;
-float4 TESR_SkinData;
-float4 TESR_SkinColor;
-float4 TESR_DebugVar;
-
-
-#include "Includes/Helpers.hlsl"
+#include "includes/Helpers.hlsl"
 
 // Registers:
 //
@@ -35,44 +32,75 @@ float4 TESR_DebugVar;
 // Structures:
 
 struct VS_INPUT {
-    float2 BaseUV : TEXCOORD0;			            // UV
-    float3 texcoord_1 : TEXCOORD1;			// light data in tangent space
-    float3 texcoord_6 : TEXCOORD6;			// eye data in tangent space
-    float3 position : SV_POSITION;			// light data in tangent space
-    float3 color_0 : COLOR0;                // vertex color?
-    float4 color_1 : COLOR1;                // fog contribution?
+    float2 texcoord_0 : TEXCOORD0;			// partial precision
+    float3 texcoord_6 : TEXCOORD6_centroid;			// partial precision
+    float3 color_0 : COLOR0;
+    float4 color_1 : COLOR1;
+    float3 texcoord_1 : TEXCOORD1_centroid;			// partial precision
 };
 
 struct VS_OUTPUT {
     float4 color_0 : COLOR0;
 };
 
-#include "Includes/Skin.hlsl"
-
+// Code:
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
+    float3 ambientColor = AmbientColor.rgb * TESR_ShaderBaseColors.y;
+    float4 sunColor = PSLightColor[0];
+    sunColor.rgb *= TESR_ShaderBaseColors.x;
 
-    // base geometry information
-    float3 lightDirection = normalize(IN.texcoord_1);
-    float3 eyeDirection = normalize(IN.texcoord_6);
-    float3 normal = getNormal(IN.BaseUV);
+    float4 r0;
+    float4 r1;
+    float4 r2;
+    float4 r3;
+    float4 r4;
 
-    // calculate lighting components
-    float3 lighting = GetLighting(lightDirection, eyeDirection, normal, PSLightColor[0].rgb);
-    float3 sss = GetSSS(lightDirection, normal) * float3(0.5, 0.2, 0.3) * AmbientColor.rgb;
-    float spec = GetSpecular(lightDirection, eyeDirection, normal, PSLightColor[0].rgb);
+    const float4 const_0 = {-0.5, 2, 1, 0.5};
+    const int4 const_2 = {0, 1, 0, 0};
+    r0.xyzw = tex2D(BaseMap, IN.texcoord_0.xy);			// partial precision
+    r0 = linearCheck(r0, TESR_LinearObject.y);
+    r1.w = 1;
+    r1.x = AmbientColor.a - r1.w;
+    r1.x = (r1.x >= 0.0 ? 0 : 1);
+    r1.y = r0.w - Toggles.w;
+    r1.xyzw = r1.x * r1.y;
+    clip(r1.xyzw);
+    r1.xyzw = tex2D(NormalMap, IN.texcoord_0.xy);			// partial precision
+    r2.xyzw = tex2D(FaceGenMap0, IN.texcoord_0.xy);			// partial precision
+    //r2 = linearCheck(r2, TESR_LinearObject.y);
+    r3.xyzw = tex2D(FaceGenMap1, IN.texcoord_0.xy);			// partial precision
+    //r3 = linearCheck(r3, TESR_LinearObject.y);
+    r1.xyz = r1.xyz - 0.5;
+    r1.xyz = 2 * r1.xyz;			// partial precision
+    r4.xyz = normalize(r1.xyz);			// partial precision
+    r1.xyz = normalize(IN.texcoord_6.xyz);			// partial precision
+    r1.w = saturate(dot(r4.xyz, r1.xyz));			// partial precision
+    r2.w = saturate(dot(r4.xyz, IN.texcoord_1.xyz));			// partial precision
+    r3.w = saturate(dot(r1.xyz, -IN.texcoord_1));			// partial precision
+    r1.x = 1 - r1.w;			// partial precision
+    r1.x = r1.x * r1.x;			// partial precision
+    r3.w = r3.w * r1.x;			// partial precision
+    r1.xyz = r3.w * sunColor.rgb;			// partial precision
+    r1.xyz = r1.xyz * 0.5;			// partial precision
+    r1.xyz = (r2.w * sunColor.rgb) + r1.xyz;			// partial precision
+    r1.xyz = r1.xyz + ambientColor;			// partial precision
+    r4.xyz = max(r1.xyz, 0);			// partial precision
+    r1.xyz = r2.xyz - 0.5;			// partial precision
+    r0.xyz = (2 * r1.xyz) + r0.xyz;			// partial precision
+    r1.w = r0.w * AmbientColor.a;			// partial precision
+    r2.xyz = 2 * r3.xyz;			// partial precision
+    r0.xyz = r0.xyz * r2.xyz;			// partial precision
+    r0.xyz = 2 * r0.xyz;			// partial precision
+    r2.xyz = r0.xyz * IN.color_0.rgb;			// partial precision
+    r0.xyz = (Toggles.x <= 0.0 ? r0.xyz : r2.xyz);			// partial precision
+    r2.xyz = (-r0.xyz * r4.xyz) + IN.color_1.rgb;			// partial precision
+    r0.xyz = r4.xyz * r0.xyz;			// partial precision
+    r2.xyz = (IN.color_1.a * r2.xyz) + r0.xyz;			// partial precision
+    r1.xyz = (Toggles.y <= 0.0 ? r0.xyz : r2.xyz);			// partial precision
+    OUT.color_0.rgba = r1.xyzw;			// partial precision
 
-    float4 baseColor = getBaseColor(IN.BaseUV, FaceGenMap0, FaceGenMap1, BaseMap);
-    baseColor.rgb = ApplyVertexColor(baseColor.rgb, IN.color_0.rgb, Toggles);
-
-    float4 color = AmbientColor.a >= 1 ? 0 : (baseColor.a - Toggles.w);
-    float3 finalColor = lighting * baseColor.rgb + sss + spec;
-
-    color.rgb = ApplyFog(finalColor, IN.color_1, Toggles);
-    color.a = baseColor.a * AmbientColor.a;
-
-    OUT.color_0 = color;
     return OUT;
 };
 

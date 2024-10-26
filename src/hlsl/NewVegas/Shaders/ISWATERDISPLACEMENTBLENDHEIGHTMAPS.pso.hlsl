@@ -1,0 +1,48 @@
+//
+//
+// Parameters:
+
+float BlendAmount : register(c1);
+sampler2D HeightMap01 : register(s0);
+sampler2D HeightMap02 : register(s1);
+float fDamp : register(c3);
+
+
+// Registers:
+//
+//   Name         Reg   Size
+//   ------------ ----- ----
+//   BlendAmount  const_1       1
+//   fDamp        const_3       1
+//   HeightMap01  texture_0       1
+//   HeightMap02  texture_1       1
+//
+
+
+// Structures:
+
+struct VS_INPUT {
+    float2 texcoord_0 : TEXCOORD0;
+};
+
+struct VS_OUTPUT {
+    float4 color_0 : COLOR0;
+};
+
+// Code:
+
+VS_OUTPUT main(VS_INPUT IN) {
+    VS_OUTPUT OUT;
+
+    float4 r0;
+    float4 r1;
+
+    r0.xyzw = tex2D(HeightMap02, IN.texcoord_0.xy);
+    r1.xyzw = tex2D(HeightMap01, IN.texcoord_0.xy);
+    OUT.color_0.a = 1;
+    OUT.color_0.rgb = (BlendAmount.x * abs(r0.x) - ((0.8 / fDamp.x) * abs(r1.x))) + ((0.8 / fDamp.x) * abs(r1.x));
+
+    return OUT;
+};
+
+// approximately 11 instruction slots used (2 texture, 9 arithmetic)

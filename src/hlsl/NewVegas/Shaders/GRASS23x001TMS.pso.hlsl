@@ -1,0 +1,59 @@
+//
+//
+// Parameters:
+
+float4 AlphaTestRef : register(c3);
+sampler2D AttMap : register(s1);
+sampler2D DiffuseMap : register(s0);
+float4 PointLightColor : register(c2);
+
+
+// Registers:
+//
+//   Name            Reg   Size
+//   --------------- ----- ----
+//   PointLightColor const_2       1
+//   AlphaTestRef    const_3       1
+//   DiffuseMap      texture_0       1
+//   AttMap          texture_1       1
+//
+
+
+// Structures:
+
+struct VS_INPUT {
+    float2 DiffuseUV : TEXCOORD0;			// partial precision
+    float3 texcoord_4 : TEXCOORD4_centroid;			// partial precision
+    float4 texcoord_5 : TEXCOORD5_centroid;			// partial precision
+    float4 texcoord_1 : TEXCOORD1;			// partial precision
+    float4 color_0 : COLOR0;			// partial precision
+};
+
+struct VS_OUTPUT {
+    float4 color_0 : COLOR0;
+};
+
+// Code:
+
+VS_OUTPUT main(VS_INPUT IN) {
+    VS_OUTPUT OUT;
+/*
+
+    float1 att0;
+    float1 att1;
+    float3 q2;
+    float4 r0;
+
+    r0.xyzw = tex2D(DiffuseMap, IN.DiffuseUV.xy);			// partial precision
+    att1.x = tex2D(AttMap, IN.texcoord_1.zw);			// partial precision
+    att0.x = tex2D(AttMap, IN.texcoord_1.xy);			// partial precision
+    q2.xyz = (saturate((1 - att0.x) - att1.x) * (0.4 * PointLightColor.rgb)) + (IN.texcoord_5.xyz + IN.texcoord_4.xyz);
+    OUT.color_0.a = (AlphaTestRef.x >= r0.w ? 0 : IN.texcoord_5.w);			// partial precision
+    OUT.color_0.rgb = (IN.color_0.a * (IN.color_0.rgb - (r0.xyz * q2.xyz))) + (r0.xyz * q2.xyz);			// partial precision
+*/
+
+    OUT.color_0 = IN.color_0;
+    return OUT;
+};
+
+// approximately 16 instruction slots used (3 texture, 13 arithmetic)

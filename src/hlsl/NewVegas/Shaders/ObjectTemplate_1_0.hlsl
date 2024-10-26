@@ -55,10 +55,10 @@ struct PS_OUTPUT {
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 #if !defined(TEX)
-    float3 ambientColor = linearCheck(AmbientColor.rgb, TESR_LinearObjectColor.x)  * TESR_ShaderBaseColors.y;
+    float3 ambientColor = AmbientColor.rgb  * TESR_ShaderBaseColors.y;
 #endif
 #if defined(FOG)
-    float4 fogColor = linearCheck(IN.FogColor, TESR_LinearObjectExtra.z);
+    float4 fogColor = IN.FogColor;
 #endif
 
     float3 finalColor;
@@ -80,17 +80,16 @@ PS_OUTPUT main(PS_INPUT IN) {
 
 #if defined(HAIR)
     float4 layerMap = tex2D(LayerMap, IN.DiffuseUV);
-    layerMap = linearCheck(layerMap, TESR_LinearObject.y);
     //float inputColor = linearCheck(IN.Color.g, TESR_LinearObject.x);
     
-    float3 emittanceColor = linearCheck(EmittanceColor.rgb, TESR_LinearObjectColor.y) * TESR_ShaderBaseColors.w;
-    baseColor.rgb = (2 * ((IN.Color.g * (emittanceColor - 0.5)) + 0.5)) * lerp(baseColor.rgb, layerMap.rgb, layerMap.w);
+    //float3 emittanceColor = EmittanceColor.rgb * TESR_ShaderBaseColors.w;
+    baseColor.rgb = (2 * ((IN.Color.g * (EmittanceColor.rgb - 0.5)) + 0.5)) * lerp(baseColor.rgb, layerMap.rgb, layerMap.w);
 
 #elif defined(FACEGENBLEND)
     float3 decalMap0 = tex2D(DecalMap, IN.DecalUV_1).rgb;
     float3 decalMap1 = tex2D(Decal2Map, IN.Decal2UV_2).rgb;
-    decalMap0 = linearCheck(decalMap0, TESR_LinearObject.y);
-    decalMap1 = linearCheck(decalMap1, TESR_LinearObject.y);
+    //decalMap0 = linearCheck(decalMap0, TESR_LinearObject.y);
+    //decalMap1 = linearCheck(decalMap1, TESR_LinearObject.y);
 
     baseColor.rgb = 2 * ((2 * decalMap1) * (expand(decalMap0) + baseColor.rgb));
 #endif

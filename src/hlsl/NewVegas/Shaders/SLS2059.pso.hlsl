@@ -44,8 +44,8 @@ struct VS_OUTPUT {
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
-    float3 sunColor = linearCheck(PSLightColor[0].rgb, TESR_LinearObjectColor.x)  * TESR_ShaderBaseColors.x;
-    float3 color = linearCheck(IN.color_0.rgb, TESR_LinearObjectTerrain.y);
+    float3 sunColor = PSLightColor[0].rgb  * TESR_ShaderBaseColors.x;
+    float3 color = IN.color_0.rgb;
 
     float3 normTexCoords = normalize(IN.texcoord_2.xyz);			// partial precision
     float3 envMap = texCUBE(EnvironmentCubeMap, envreflect(normalize(expand(IN.texcoord_1.xyz)), normTexCoords)).rgb;			// partial precision

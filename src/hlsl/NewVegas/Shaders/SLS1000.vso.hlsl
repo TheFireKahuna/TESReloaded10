@@ -34,7 +34,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
     OUT.position = mul(ModelViewProj, IN.position);
-    OUT.texcoord_0 = IN.texcoord_0;
+    OUT.texcoord_0 = IN.texcoord_0.xy;
 
     return OUT;
 };

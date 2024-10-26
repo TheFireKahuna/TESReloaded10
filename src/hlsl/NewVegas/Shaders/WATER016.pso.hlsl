@@ -73,7 +73,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float4 sky = skyColor(eyeDirection, SunColor);
     float depth = TESR_WaterSettings.x - TESR_CameraPosition.z;
 	float4 refractions = tex2Dproj(RefractionMap, refractionPos);
-	refractions = linearCheck(refractions) * smoothstep(200, 0, depth) + sky;
+	refractions = refractions * smoothstep(200, 0, depth) + sky;
 
     float4 color = sky;
     color = getFresnelBelowWater(surfaceNormal, eyeDirection, ShallowColor * sunLuma, color);

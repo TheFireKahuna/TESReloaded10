@@ -67,13 +67,11 @@ PS_OUTPUT main(PS_INPUT IN) {
     float refractionCoeff = (waterDepth.y * depthFog) * ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff * exteriorRefractionModifier);
 	float4 reflection = tex2Dproj(ReflectionMap, reflectionPos);
-	reflection = linearCheck(reflection);
     float4 refractionPos = reflectionPos;
     refractionPos.y = refractionPos.w - reflectionPos.y;
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb;
 
 	float4 color = tex2Dproj(RefractionMap, refractionPos);
-	color = linearCheck(color);
     color = getLightTravel(refractedDepth, ShallowColor, DeepColor, sunLuma, TESR_WaterSettings, color);
     color = lerp(getTurbidityFog(refractedDepth, ShallowColor, TESR_WaterVolume, sunLuma, color), TESR_WaterLODColor * sunLuma, LODfade); // fade to full fog to hide LOD seam
     // color = getTurbidityFog(refractedDepth, ShallowColor, TESR_WaterVolume, sunLuma, color); // fade to full fog to hide LOD seam

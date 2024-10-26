@@ -4,7 +4,6 @@
 
 sampler2D DiffuseMap : register(s0);
 float4 TESR_LinearObject : register(c0);
-float4 TESR_LinearObjectExtra : register(c1);
 
 #include "includes/Helpers.hlsl"
 
@@ -33,12 +32,13 @@ struct VS_OUTPUT {
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
-    float3 color = linearCheck(IN.color_0, TESR_LinearObjectExtra.y);
+    float3 color = IN.color_0;
 
     float4 baseColor = tex2D(DiffuseMap, IN.DiffuseUV);			// partial precision
-    baseColor = linearCheck(baseColor, TESR_LinearObjectExtra.w);
+    baseColor = linearCheck(baseColor, TESR_LinearObject.y);
 
-    OUT.color_0.rgb = (IN.texcoord_2.w * (linearCheck(IN.texcoord_2.xyz,TESR_LinearObject.x)  - (color * baseColor.rgb))) + (baseColor.rgb * color);			// partial precision
+    OUT.color_0.rgb = (IN.texcoord_2.w * (IN.texcoord_2.xyz  - (color * baseColor.rgb))) + (baseColor.rgb * color);			// partial precision
+    //OUT.color_0.rgb = IN.color_0.rgb;			// partial precision
     OUT.color_0.a = baseColor.a;			// partial precision
 
     return OUT;

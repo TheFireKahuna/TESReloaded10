@@ -110,10 +110,10 @@ float4 AvgLuma(VSOUT IN) : COLOR0
 	float newLuma = (luma(color) + (7 * oldLuma.r)) / 8; // average over 8 frames
 
 	// gradually change average luma
-	float animatedLuma = stepTo(oldLuma.g, newLuma, TESR_GameTime.w * decreaseRate, TESR_GameTime.w * increaseRate);
+	//float animatedLuma = stepTo(oldLuma.g, newLuma, TESR_GameTime.w * decreaseRate, TESR_GameTime.w * increaseRate);
 
 	// texture will store the actual current luma, the animated current luma, and the animated focal distance for DoF.
-	return float4(newLuma, animatedLuma, getFocalDistance(), 1.0);
+	return float4(newLuma, newLuma, getFocalDistance(), 1.0);
 }
  
 technique

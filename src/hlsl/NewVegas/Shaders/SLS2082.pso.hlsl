@@ -7,9 +7,7 @@ sampler2D LODLandNoise : register(s2);
 
 float4 AmbientColor : register(c1);
 float4 PSLightColor[10] : register(c3);
-float4 TESR_LinearTerrain : register(c38);
-float4 TESR_LinearTerrainColor : register(c39);
-float4 TESR_ShaderBaseColors : register(c40);
+float4 TESR_ShaderBaseColors : register(c18);
 // float4 TESR_DebugVar;
 
 
@@ -48,9 +46,6 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 sunColor = linearCheck(PSLightColor[0].rgb, TESR_LinearTerrainColor.x) * TESR_ShaderBaseColors.x;
-    float3 ambientColor = linearCheck(AmbientColor.rgb, TESR_LinearTerrainColor.x) * TESR_ShaderBaseColors.y;
-
     float3 eyeDir = -normalize(IN.location.xyz);
 
     float noise = tex2D(LODLandNoise, IN.BaseUV.xy * TESR_TerrainExtraData.w).r;
@@ -64,7 +59,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float roughness = saturate(TESR_TerrainData.y * (1 - normal.a));
 
-    float3 lighting = getSunLighting(IN.texcoord_3.xyz, sunColor, eyeDir, normal.rgb, ambientColor, baseColor, roughness);
+    float3 lighting = getSunLighting(IN.texcoord_3.xyz, PSLightColor[0].rgb * TESR_ShaderBaseColors.x, eyeDir, normal.rgb, AmbientColor.rgb * TESR_ShaderBaseColors.y, baseColor, roughness);
 
     float3 final = lighting;
 

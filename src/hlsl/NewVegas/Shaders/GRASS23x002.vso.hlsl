@@ -10,9 +10,6 @@ uniform float4         FogColor         : register(c14);   // c14
 uniform float4         FogParam         : register(c15);   // c15
 uniform float4         InstanceData[2]  : register(c20);   // c20-c21
 
-float4 TESR_LinearObjectColor : register(c22);
-float4 TESR_ShaderBaseColors : register(c23);
-
 #include "includes/Helpers.hlsl"
 
 struct VS_INPUT
@@ -74,7 +71,7 @@ VS_OUTPUT main(VS_INPUT IN)
     r1.xyz -= 0.5;
 
     // mad r0.y, r1.w, c8.x, c8.y
-    r0.y = min(0.0,(r1.w * 0.75) + 0.25);
+    r0.y = (r1.w * 0.75) + 0.25;
 
     // add r1.xyz, r1, r1
     r1.xyz *= 2;
@@ -122,14 +119,12 @@ VS_OUTPUT main(VS_INPUT IN)
     r2.w = 1.0; // 1.0
     
     // mul o2, r0.y, c6
-    float4 ambientColor = linearCheck(AmbientColor, TESR_LinearObjectColor.x);
-    ambientColor.rgb *= TESR_ShaderBaseColors.y;
-    OUT.texcoord4 = linearCheck(r0.y, TESR_LinearObjectColor.x) * ambientColor;
+    float4 ambientColor = AmbientColor;
+    OUT.texcoord4 = r0.y * ambientColor;
 
     // mul o3.xyz, r0, c7.x
-    float3 sunColor = linearCheck(DiffuseColor.rgb, TESR_LinearObjectColor.x) * TESR_ShaderBaseColors.x;
     //float3 sunColor = DiffuseColor.rgb;
-    OUT.texcoord5.xyz = ((sunDot * (linearCheck(r0.y, TESR_LinearObjectColor.x) * linearCheck(IN.color.xyz, TESR_LinearObjectColor.x))) * sunColor.rgb) * AddlParams.x;
+    OUT.texcoord5.xyz = r0.y * IN.color.rgb * AddlParams.x;
   
     // dp4 r0.x, c9, r2
     // dp4 r0.y, c10, r2

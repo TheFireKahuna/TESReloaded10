@@ -78,9 +78,6 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.color_0.rgb = skyColor; // multiply sky strength for HDR
     OUT.color_0.a = IN.color_0.a;
 
-    // dithering
-	OUT.color_0.rgb += ditherMat[ (IN.screen.x)%4 ][ (IN.screen.y)%4 ] / 255;
-
     // OUT.color_0.rgb = lerp(green, red, sunDir);
 
     // OUT.color_0.rgb = TESR_DepthConstants.zzz;

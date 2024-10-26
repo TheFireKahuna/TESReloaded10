@@ -46,7 +46,7 @@ struct VS_OUTPUT {
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
-    float3 color = linearCheck(IN.color_0.rgb, TESR_LinearObjectTerrain.y);
+    float3 color = IN.color_0.rgb;
 
     float4 normals = tex2D(NormalMap, IN.NormalUV);			// partial precision
     float4 customEnvMask = tex2D(CustomEnvMask, IN.NormalUV);			// partial precision

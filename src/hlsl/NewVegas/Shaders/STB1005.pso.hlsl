@@ -44,7 +44,7 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 sunColor = linearCheck(PSLightColor[0].rgb, TESR_LinearObjectColor.x)  * TESR_ShaderBaseColors.x;
+    float3 sunColor = PSLightColor[0].rgb  * TESR_ShaderBaseColors.x;
 
     float3 noxel2 = texCUBE(NormalCubeMap, IN.texcoord_3).rgb;
     float3 noxel3 = tex2D(NormalMap, IN.NormalUV).rgb;

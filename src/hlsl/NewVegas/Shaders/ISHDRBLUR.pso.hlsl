@@ -48,12 +48,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 blurOffset9 = tex2D(ScreenSpace, (BlurScale.xy * BlurOffsets[8].xy) + IN.ScreenOffset);
     float4 blurOffset8 = tex2D(ScreenSpace, (BlurScale.xy * BlurOffsets[7].xy) + IN.ScreenOffset);
     float4 blurOffset2 = tex2D(ScreenSpace, (BlurScale.xy * BlurOffsets[0].xy) + IN.ScreenOffset);
-    float3 finalColor = (BlurOffsets[3].z * blurOffset4.xyz) + ((BlurOffsets[2].z * blurOffset3.xyz) + ((BlurOffsets[0].z * blurOffset2.xyz) + (blurOffset1.xyz * BlurOffsets[1].z)));
-    finalColor = (BlurOffsets[7].z * blurOffset8.xyz) + ((BlurOffsets[6].z * blurOffset7.xyz) + ((BlurOffsets[5].z * blurOffset6.xyz) + ((BlurOffsets[4].z * blurOffset5.xyz) + finalColor.xyz)));
-    finalColor = (BlurOffsets[10].z * blurOffset11.xyz) + ((BlurOffsets[9].z * blurOffset10.xyz) + ((BlurOffsets[8].z * blurOffset9.xyz) + finalColor.xyz));
-    finalColor = (BlurOffsets[13].z * blurOffset14.xyz) + ((BlurOffsets[12].z * blurOffset13.xyz) + ((BlurOffsets[11].z * blurOffset12.xyz) + finalColor.xyz));
-    OUT.color_0.a = BlurScale.z;
-    OUT.color_0.rgb = (BlurOffsets[14].z * blurOffset0.xyz) + finalColor;
+    float3 finalColor = (BlurOffsets[3].b * blurOffset4.rgb) + ((BlurOffsets[2].b * blurOffset3.rgb) + ((BlurOffsets[0].b * blurOffset2.rgb) + (blurOffset1.rgb * BlurOffsets[1].b)));
+    finalColor = (BlurOffsets[7].b * blurOffset8.rgb) + ((BlurOffsets[6].b * blurOffset7.rgb) + ((BlurOffsets[5].b * blurOffset6.rgb) + ((BlurOffsets[4].b * blurOffset5.rgb) + finalColor.rgb)));
+    finalColor = (BlurOffsets[10].b * blurOffset11.rgb) + ((BlurOffsets[9].b * blurOffset10.rgb) + ((BlurOffsets[8].b * blurOffset9.rgb) + finalColor.rgb));
+    finalColor = (BlurOffsets[13].b * blurOffset14.rgb) + ((BlurOffsets[12].b * blurOffset13.rgb) + ((BlurOffsets[11].b * blurOffset12.rgb) + finalColor.rgb));
+    OUT.color_0.a = BlurScale.b;
+    OUT.color_0.rgb = (BlurOffsets[14].b * blurOffset0.rgb) + finalColor;
 
     return OUT;
 };

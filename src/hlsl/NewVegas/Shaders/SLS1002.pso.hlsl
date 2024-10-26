@@ -34,7 +34,7 @@ struct VS_OUTPUT {
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
-    float4 sunColor = linearCheck(PSLightColor[0], TESR_LinearObjectColor.x) * TESR_ShaderBaseColors.x;
+    float4 sunColor = PSLightColor[0] * TESR_ShaderBaseColors.x;
 
     float3 noxel0 = tex2D(NormalMap, IN.NormalUV.xy).rgb;
     OUT.color_0.a = sunColor.a;

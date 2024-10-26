@@ -138,6 +138,7 @@ public:
 		PBRSettings Rain;
 		PBRSettings Night;
 		PBRSettings NightRain;
+		PBRSettings Interiors;
 	};
 	PBRSettingsStruct Settings;
 

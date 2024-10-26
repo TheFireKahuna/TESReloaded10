@@ -21,7 +21,8 @@ void SkyShaders::UpdateSettings() {
 	//Settings.SkyMultiplierNight = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "SkyMultiplier");
 
 	float tempVar = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalControl");
-	Constants.SunsetColor.w = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalSky") * tempVar;
+	float tempVar2 = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalScale");
+	Constants.SunsetColor.w = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalSky") * tempVar * pow(10, tempVar2) * 0.1;
 
 	Constants.SkyData.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
 	Constants.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");

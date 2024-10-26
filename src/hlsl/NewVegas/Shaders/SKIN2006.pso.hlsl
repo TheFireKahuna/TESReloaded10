@@ -1,116 +1,142 @@
-// Skin shader for 2 extra point lights (light 2 and 3) 
+//
 //
 // Parameters:
 
-sampler2D BaseMap : register(s0);
-sampler2D NormalMap : register(s1);
-sampler2D GlowMap : register(s3);
-sampler2D AttenuationMap : register(s4);
-
 float4 AmbientColor : register(c1);
-float4 PSLightColor[10];
+sampler2D AttenuationMap : register(s4);
+sampler2D BaseMap : register(s0);
+sampler2D GlowMap : register(s3);
+sampler2D NormalMap : register(s1);
+float4 PSLightColor[3] : register(c3);
+float4 TESR_LinearObject : register(c28);
+float4 TESR_ShaderBaseColors : register(c29);
+float4 TESR_LinearObjectExtra : register(c30);
 
-float4 TESR_ReciprocalResolution;
-float4 TESR_SkinData;
-float4 TESR_SkinColor;
-float4 TESR_DebugVar;
-
+#include "includes/Helpers.hlsl"
 
 // Registers:
 //
 //   Name           Reg   Size
 //   -------------- ----- ----
 //   AmbientColor   const_1       1
-//   PSLightColor[0]   SunLightColor       3
+//   PSLightColor[0]   PSLightColor[0]       3
 //   BaseMap        texture_0       1
 //   NormalMap      texture_1       1
 //   GlowMap        texture_3       1
 //   AttenuationMap texture_4       1
 //
 
-#include "Includes/helpers.hlsl"
 
 // Structures:
 
 struct VS_INPUT {
-    float2 BaseUV : TEXCOORD0;
-    float3 texcoord_1 : TEXCOORD1_centroid;			// eyeDirection for pointlight1
-    float3 texcoord_2 : TEXCOORD2_centroid;			// light direction from pointlight
-    float3 texcoord_3 : TEXCOORD3_centroid;			// light direction from pointlight2
-    float4 texcoord_4 : TEXCOORD4;			        // attenuation map UV
-    float4 texcoord_5 : TEXCOORD5;			        // attenuation map2 UV
-    float3 texcoord_7 : TEXCOORD7_centroid;			// eyeDirection for pointlight2
+    float3 texcoord_1 : TEXCOORD1_centroid;			// partial precision
+    float3 texcoord_2 : TEXCOORD2_centroid;			// partial precision
+    float3 texcoord_3 : TEXCOORD3_centroid;			// partial precision
+    float4 texcoord_4 : TEXCOORD4;			// partial precision
+    float4 texcoord_5 : TEXCOORD5;			// partial precision
+    float2 texcoord_0 : TEXCOORD0;			// partial precision
+    float3 texcoord_7 : TEXCOORD7_centroid;			// partial precision
 };
-
 
 struct VS_OUTPUT {
     float4 color_0 : COLOR0;
 };
 
 // Code:
-#include "Includes/Skin.hlsl"
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float1 att1;
-    float1 att3;
-    float1 att39;
-    float1 att4;
-    float3 noxel2;
-    float1 q10;
-    float1 q11;
-    float1 q13;
-    float1 q16;
-    float1 q17;
-    float1 q18;
-    float1 q19;
-    float3 q40;
-    float3 q5;
-    float3 q6;
-    float1 q8;
-    float1 q9;
+    const float4 const_0 = {-0.5, 1, 0.5, 0.3};
+    const float4 const_2 = {0.769230783, -2, 3, 0};
+    float3 ambientColor = AmbientColor.rgb * TESR_ShaderBaseColors.y;
+    float4 sunColor = PSLightColor[0];
+    sunColor.rgb *= TESR_ShaderBaseColors.x;
+    float4 lightColor1 = PSLightColor[1];
+    float4 lightColor2 = PSLightColor[2];
+    lightColor1.rgb *= TESR_ShaderBaseColors.z;
+    lightColor2.rgb *= TESR_ShaderBaseColors.z;
+
     float4 r0;
     float4 r1;
-    float4 r2;
+    float4 r2 = 0;
+    float4 r3 = 0;
     float4 r4;
     float4 r5;
-    float3 r6;
-    float4 texel0;
+    float4 r6;
+    float4 r7;
+    float4 r8;
 
-    const float4 SunLightColor = PSLightColor[1];
-    const float4 PointLight1Color = PSLightColor[2];
-    const float4 PointLight2Color = PSLightColor[3];
+    r0.x = IN.texcoord_4.z;			// partial precision
+    r0.y = IN.texcoord_4.w;			// partial precision
+    r1.x = IN.texcoord_5.z;			// partial precision
+    r1.y = IN.texcoord_5.w;			// partial precision
+    r1.xyzw = tex2D(AttenuationMap, r1.xy);			// partial precision
+    r4.xyzw = tex2D(AttenuationMap, IN.texcoord_4.xy);			// partial precision
+    r5.xyzw = tex2D(NormalMap, IN.texcoord_0.xy);			// partial precision
+    r6.xyzw = tex2D(GlowMap, IN.texcoord_0.xy);			// partial precision
+    r2.xyzw = tex2D(AttenuationMap, r2.xy);			// partial precision
+    r7.xyzw = tex2D(AttenuationMap, IN.texcoord_5.xy);			// partial precision
+    r8.xyzw = tex2D(BaseMap, IN.texcoord_0.xy);			// partial precision
+    r8 = linearCheck(r8, TESR_LinearObject.y);
+    r3.w = 1 - r2.x;			// partial precision
+    r3.w = saturate(r3.w - r0.x);			// partial precision
+    r0.xyz = r3.xyz - 0.5;
+    r0.xyz = 2 * r0.xyz;			// partial precision
+    r2.xyz = normalize(r0.xyz);			// partial precision
+    r0.xyz = normalize(IN.texcoord_2.xyz);			// partial precision
+    r0.w = dot(r2.xyz, r0.xyz);
+    r2.w = saturate(r0.w);			// partial precision
+    r0.w = r0.w + 0.3;
+    r0.w = saturate(r0.w * 0.769230783);
+    r4.w = (r2.w * -2) + 3;
+    r1.y = r2.w * r2.w;
+    r4.w = r4.w * r1.y;
+    r1.y = (r0.w * -2) + 3;
+    r0.w = r0.w * r0.w;
+    r0.w = saturate((r1.y * r0.w) - r4.w);			// partial precision
+    r3.xyz = normalize(IN.texcoord_7.xyz);			// partial precision
+    r4.w = saturate(dot(r3.xyz, -r0.xyz));			// partial precision
+    r0.x = saturate(dot(r2.xyz, r3.xyz));			// partial precision
+    r0.x = 1 - r0.x;			// partial precision
+    r0.x = r0.x * r0.x;			// partial precision
+    r4.w = r4.w * r0.x;			// partial precision
+    r0.z = 0.5;
+    r1.yzw = lerp(lightColor1.wzyx, r4.wzyx, r0.z);			// partial precision
+    r1.yzw = r4.w * r1.yzw;			// partial precision
+    r1.yzw = (lightColor1.wzyx * r2.w) + r1.yzw;			// partial precision
+    r1.yzw = (r0.w * r4.wzyx) + r1.yzw;			// partial precision
+    r2.w = saturate(dot(r2.xyz, IN.texcoord_1.xyz));			// partial precision
+    r4.w = saturate(dot(r3.xyz, -IN.texcoord_1));			// partial precision
+    r4.w = r0.x * r4.w;			// partial precision
+    r5.yzw = r4.w * sunColor.wzyx;			// partial precision
+    r5.yzw = r5.yzw * 0.5;			// partial precision
+    r5.yzw = (sunColor.wzyx * r2.w) + r5.yzw;			// partial precision
+    r1.yzw = (r3.w * r1.yzw) + r5.yzw;			// partial precision
+    r2.w = 1 - r5.x;			// partial precision
+    r2.w = saturate(r2.w - r1.x);			// partial precision
+    r5.xyz = normalize(IN.texcoord_3.xyz);			// partial precision
+    r4.w = saturate(dot(r3.xyz, -r5.xyz));			// partial precision
+    r0.y = dot(r2.xyz, r5.xyz);
+    r4.w = r0.x * r4.w;			// partial precision
+    r2.xyz = lerp(lightColor2.rgb, r4.xyz, r0.z);			// partial precision
+    r2.xyz = r4.w * r2.xyz;			// partial precision
+    r4.w = saturate(r0.y);			// partial precision
+    r0.x = r0.y + 0.3;
+    r0.x = saturate(r0.x * 0.769230783);
+    r0.yzw = (lightColor2.wzyx * r4.w) + r2.wzyx;			// partial precision
+    r1.x = (r4.w * -2) + 3;
+    r4.w = r4.w * r4.w;
+    r4.w = r1.x * r4.w;
+    r1.x = (r0.x * -2) + 3;
+    r0.x = r0.x * r0.x;
+    r4.w = saturate((r1.x * r0.x) - r4.w);			// partial precision
+    r0.xyz = (r4.w * r4.xyz) + r0.wzy;			// partial precision
+    r0.xyz = (r2.w * r0.xyz) + r1.wzy;			// partial precision
+    r6.xyz = r0.xyz + ambientColor;			// partial precision
+    OUT.color_0.rgba = r6.xyzw;			// partial precision
 
-    noxel2.xyz = tex2D(NormalMap, IN.BaseUV.xy);			// partial precision
-    r4.xyzw = tex2D(GlowMap, IN.BaseUV.xy);			// partial precision
-    texel0.xyzw = tex2D(BaseMap, IN.BaseUV.xy);			// partial precision
-    OUT.color_0.rgba = texel0.xyzw;			// partial precision
-    att4.x = tex2D(AttenuationMap, IN.texcoord_4.zw);			// partial precision
-    att3.x = tex2D(AttenuationMap, IN.texcoord_4.xy);			// partial precision
-    att1.x = tex2D(AttenuationMap, IN.texcoord_5.xy);			// partial precision
-    att39.x = tex2D(AttenuationMap, IN.texcoord_5.zw);			// partial precision
-    r2.w = saturate((1 - att1.x) - att39.x);			// partial precision
-    q6.xyz = normalize(expand(noxel2.xyz));			// partial precision
-    q5.xyz = normalize(IN.texcoord_7.xyz);			// partial precision
-    q13.x = sqr(1 - shades(q6.xyz, q5.xyz));			// partial precision
-    r4.w = shades(q5.xyz, -normalize(IN.texcoord_2.xyz)) * q13.x;			// partial precision
-    q16.x = dot(q6.xyz, normalize(IN.texcoord_3.xyz));
-    q18.x = saturate(q16.x);			// partial precision
-    q17.x = saturate((q16.x + 0.3) * 0.769230783);
-    q19.x = saturate(((3 - (q17.x * 2)) * sqr(q17.x)) - ((3 - (q18.x * 2)) * sqr(q18.x)));			// partial precision
-    q8.x = dot(q6.xyz, normalize(IN.texcoord_2.xyz));
-    q9.x = saturate(q8.x);			// partial precision
-    q10.x = saturate((q8.x + 0.3) * 0.769230783);
-    q11.x = saturate(((3 - (q10.x * 2)) * sqr(q10.x)) - ((3 - (q9.x * 2)) * sqr(q9.x)));			// partial precision
-    r2.xyz = (q13.x * shades(q5.xyz, -normalize(IN.texcoord_3.xyz))) * lerp(PointLight2Color.xyz, r4.xyz, 0.5);			// partial precision
-    q40.xyz = (q11.x * r4.xyzw) + ((PointLight1Color.xyzw * q9.x) + (r4.w * lerp(PointLight1Color.xyzw, r4.wzyx, 0.5)));			// partial precision
-    r0.yzw = (PointLight2Color.xyzw * q18.x) + r2.xyzw;			// partial precision
-    r5.yzw = ((q13.x * shades(q5.xyz, -IN.texcoord_1)) * SunLightColor.xyzw) * 0.5;			// partial precision
-    r1.yzw = (saturate((1 - att3.x) - att4.x) * q40.xyz) + ((SunLightColor.xyzw * shades(q6.xyz, IN.texcoord_1.xyz)) + r5.yzw);			// partial precision
-    r6.xyz = ((r2.w * ((q19.x * r4.yzw) + r0.yzw)) + r1.yzw) + AmbientColor.rgb;			// partial precision
-
-    OUT.color_0.rgba = selectColor(TESR_DebugVar.x, float4(r6, 1.0), PSLightColor[0], PSLightColor[1], PSLightColor[2], PSLightColor[3], PSLightColor[4], PSLightColor[5], PSLightColor[6], PSLightColor[7], PSLightColor[8]);
     return OUT;
 };
 

@@ -10,6 +10,8 @@ sampler2D LODParentTex : register(s4);
 float4 LODTexParams : register(c31);
 sampler2D NormalMap : register(s1);
 float4 PSLightColor[10] : register(c3);
+float4 TESR_ShaderBaseColors : register(c32);
+float4 TESR_LinearTerrain : register(c33);
 
 
 // Registers:
@@ -54,16 +56,18 @@ VS_OUTPUT main(VS_INPUT IN) {
     normal = r0.z >= 1 ? normal : lerp(parentNormal, normal, LODTexParams.w);
 
     float lighting = shades(expand(normal), IN.texcoord_1.xyz);
-    float3 q4 = max((lighting * PSLightColor[0].rgb) + AmbientColor.rgb, 0);
+    float3 q4 = max((lighting * PSLightColor[0].rgb  * TESR_ShaderBaseColors.x) + (AmbientColor.rgb  * TESR_ShaderBaseColors.y), 0);
     
-    float2 q1 = (IN.NormalUV * 0.9921875) + (1.0 / 256);
-    float3 r1 = tex2D(LODParentTex, (0.5 * q1) + lerp(r0.xy, 0.25, (1.0 / 128))).rgb;
-    float3 r2 = tex2D(BaseMap, q1).rgb;
+    float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
+    float3 blendColor = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128))).rgb;
+    blendColor = linearCheck(blendColor, TESR_LinearTerrain.y);
+    float3 baseColor = tex2D(BaseMap, uv).rgb;
+    baseColor = linearCheck(baseColor, TESR_LinearTerrain.y);
     
-    float3 q5 = (r0.z >= 1 ? r2 : lerp(r1, r2, LODTexParams.w)) * ((noise * 0.8) + 0.55);
+    baseColor = (r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w)) * ((noise * 0.8) + 0.55);
 
 
-    OUT.color_0.rgb = (IN.color_1.a * (IN.color_1.rgb - (q5 * q4))) + (q5 * q4);
+    OUT.color_0.rgb = (IN.color_1.a * (IN.color_1.rgb - (lighting * baseColor))) + (lighting * baseColor);
 
     OUT.color_0.rgb *= green.rgb;
 
