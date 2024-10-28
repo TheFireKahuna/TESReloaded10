@@ -75,7 +75,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     skyColor *= TESR_SunsetColor.w;
 
-    OUT.color_0.rgb = skyColor; // multiply sky strength for HDR
+    OUT.color_0.rgb = skyColor * Params.y; // multiply sky strength for HDR
     OUT.color_0.a = IN.color_0.a;
 
     // OUT.color_0.rgb = lerp(green, red, sunDir);

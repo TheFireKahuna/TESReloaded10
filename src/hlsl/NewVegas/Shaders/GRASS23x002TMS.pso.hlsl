@@ -36,7 +36,7 @@ struct VS_OUTPUT {
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
-/*
+
     float3 q2;
     float4 r1;
     float1 t0;
@@ -48,8 +48,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     q2.xyz = (((IN.texcoord_3.z * ((t1.xyz - 1) * t0.x)) + 1) * IN.texcoord_5.xyz) + IN.texcoord_4.xyz;			// partial precision
     OUT.color_0.a = saturate(r1.w * 1.75) * IN.texcoord_5.w;			// partial precision
     OUT.color_0.rgb = (IN.color_0.a * (IN.color_0.rgb - (r1.xyz * q2.xyz))) + (q2.xyz * r1.xyz);			// partial precision
-*/
-    OUT.color_0 = IN.color_0;
+
     return OUT;
 };
 

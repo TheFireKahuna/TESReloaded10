@@ -17,7 +17,7 @@ sampler2D DiffuseMap : register(s0);
 
 struct VS_INPUT {
     float2 DiffuseUV : TEXCOORD0;			// partial precision
-    float3 color_0 : COLOR0;
+    float3 texcoord_1 : TEXCOORD1;			// partial precision
     float4 texcoord_2 : TEXCOORD2;			// partial precision
 };
 
@@ -30,15 +30,14 @@ struct VS_OUTPUT {
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
-    float3 q0;
-    float4 r0;
+    float4 r2;
 
-    r0.xyzw = tex2D(DiffuseMap, IN.DiffuseUV.xy);			// partial precision
-    q0.xyz = (IN.texcoord_2.w * (IN.texcoord_2.xyz - (IN.color_0.rgb * r0.xyz))) + (r0.xyz * IN.color_0.rgb);			// partial precision
-    OUT.color_0.a = r0.w;			// partial precision
-    OUT.color_0.rgb = q0.xyz;			// partial precision
+    float4 r0 = tex2D(DiffuseMap, IN.DiffuseUV.xy);			// partial precision
+    r2.w = 2 * r0.w;			// partial precision
+    r2.xyz = (IN.texcoord_2.w * (IN.texcoord_2.xyz - (r0.xyz * IN.texcoord_1.xyz))) + (r0.xyz * IN.texcoord_1.xyz);			// partial precision
+    OUT.color_0.rgba = r2.xyzw;			// partial precision
 
     return OUT;
 };
 
-// approximately 6 instruction slots used (1 texture, 5 arithmetic)
+// approximately 7 instruction slots used (1 texture, 6 arithmetic)

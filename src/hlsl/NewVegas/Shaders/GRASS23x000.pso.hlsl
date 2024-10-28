@@ -2,6 +2,7 @@
 //
 // Parameters:
 
+float4 AlphaTestRef : register(c3);
 sampler2D DiffuseMap : register(s0);
 
 
@@ -9,6 +10,7 @@ sampler2D DiffuseMap : register(s0);
 //
 //   Name         Reg   Size
 //   ------------ ----- ----
+//   AlphaTestRef const_3       1
 //   DiffuseMap   texture_0       1
 //
 
@@ -36,10 +38,10 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     r1.xyzw = tex2D(DiffuseMap, IN.DiffuseUV.xy);			// partial precision
     q0.xyz = IN.texcoord_5.xyz + IN.texcoord_4.xyz;			// partial precision
-    OUT.color_0.a = saturate(r1.w * 1.75) * IN.texcoord_5.w;			// partial precision
+    OUT.color_0.a = (AlphaTestRef.x >= r1.w ? 0 : IN.texcoord_5.w);			// partial precision
     OUT.color_0.rgb = (IN.color_0.a * (IN.color_0.rgb - (r1.xyz * q0.xyz))) + (q0.xyz * r1.xyz);			// partial precision
 
     return OUT;
 };
 
-// approximately 8 instruction slots used (1 texture, 7 arithmetic)
+// approximately 9 instruction slots used (1 texture, 8 arithmetic)

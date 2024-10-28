@@ -224,7 +224,7 @@ void ShaderManager::UpdateConstants() {
 	GameState.isSnow = currentWeather?currentWeather->GetWeatherType() == TESWeather::WeatherType::kType_Snow : false;
 
 	TimeGlobals* GameTimeGlobals = TimeGlobals::Get();
-	float GameHour = fmod(GameTimeGlobals->GameHour->data, 24); // make sure the hours values are less than 24
+	double GameHour = fmod(0.0 + GameTimeGlobals->GameHour->data, 24.0); // make sure the hours values are less than 24
 
 	float SunriseStart = WorldSky->GetSunriseBegin();
 	float SunriseEnd = WorldSky->GetSunriseEnd();
@@ -255,15 +255,37 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.GameTime.z = (float)TheFrameRateManager->Time;
 	ShaderConst.GameTime.w = TheFrameRateManager->ElapsedTime; // frameTime in seconds
 
+	const double pi = 3.14159265358979323846;
+
+	ShaderConst.SunAmount.y = GameState.isDayTime; // accurate 0 - 1 value based on weather transition times
+	GameState.isDayTime = smoothStep(0, 1, GameState.dayLight); // smooth daytime progression -- more accurate to light changes
+	ShaderConst.SunAmount.x = GameState.isDayTime;
+
+
 	ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
 	D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
 	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
 
 	// during the day, track the sun mesh position instead of the lighting direction in exteriors
-	if (GameState.isExterior && GameState.dayLight > 0.5)
-		ShaderConst.SunDir = ShaderConst.SunPosition;
-	else
-		ShaderConst.SunPosition.z = -ShaderConst.SunPosition.z;
+	if (GameState.isExterior) {
+		if (GameState.dayLight < 0.5) {
+			/*double timeAngle = (GameHour) * pi * 2.0;
+
+			D3DXVECTOR4 RealSunPos = D3DXVECTOR4(0.0f, 0.0f, 10.0f, 0.0f);
+			D3DXMATRIX rotationMat;
+			D3DXMatrixRotationYawPitchRoll(&rotationMat, sin(timeAngle), 0.0, 0.0);
+			D3DXVec4Transform(&RealSunPos, &RealSunPos, &rotationMat);
+
+			ShaderConst.SunPosition = RealSunPos;
+			D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
+			ShaderConst.SunDir = ShaderConst.SunPosition * -1.0f;
+			ShaderConst.SunDir = D3DXVECTOR4((float)(1.0 - cos(timeAngle) / 2.0), 0.0f, (float)(sin(timeAngle) / 2.0), 1.0f) * -1.0*/
+			ShaderConst.SunPosition.z = -ShaderConst.SunPosition.z;
+		}
+
+		ShaderConst.SunDir = ShaderConst.SunPosition;;
+	}
+
 
 
 	// expose the light vector in view space for screen space lighting
@@ -274,10 +296,6 @@ void ShaderManager::UpdateConstants() {
 	D3DXVec4Normalize(&ShaderConst.ViewSpaceLightDir, &ShaderConst.ViewSpaceLightDir);
 
 	ShaderConst.sunGlare = currentWeather ? (currentWeather->GetSunGlare() / 255.0f) : 0.5f;
-
-	ShaderConst.SunAmount.y = GameState.isDayTime; // accurate 0 - 1 value based on weather transition times
-	GameState.isDayTime = smoothStep(0, 1, GameState.dayLight); // smooth daytime progression -- more accurate to light changes
-	ShaderConst.SunAmount.x = GameState.isDayTime;
 
 	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
 	ShaderConst.sunColor.y = WorldSky->sunDirectional.g;

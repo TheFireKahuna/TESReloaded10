@@ -382,6 +382,7 @@ float4 TESR_LinearObject : register(c41);
 float4 TESR_ShaderBaseColors : register(c42);
 float4 TESR_LinearObjectExtra : register(c43);
 float4 TESR_ShaderExtraColors : register(c44);
+float4 TESR_DebugVar : register(c45);
 
 #define	uvtile(w)		(((w) * 0.04) - 0.02)
 
@@ -456,9 +457,9 @@ PS_OUTPUT main(PS_INPUT IN)
     
         #if !defined(DIFFUSE) && !defined(POINT)
             if (TESR_ParallaxData.y)
-                lighting = getSunLighting(IN.lightDir.xyz, sunColor * shadowMultiplier, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+                lighting = getSunLighting(IN.lightDir.xyz, sunColor, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
             else
-                lighting = getVanillaLightingAtt(IN.lightDir.xyz, 1.f, sunColor * shadowMultiplier, IN.viewDir.xyz, normal.xyz, baseColor.rgb, normal.a, glossPower);
+                lighting = getVanillaLightingAtt(IN.lightDir.xyz, 1.f, sunColor, IN.viewDir.xyz, normal.xyz, baseColor.rgb, normal.a, glossPower);
         #elif defined(DIFFUSE)
             // Pointlight vanilla att.
             if (TESR_ParallaxData.y)
@@ -486,9 +487,9 @@ PS_OUTPUT main(PS_INPUT IN)
     
         #if !defined(DIFFUSE) && !defined(ONLY_SPECULAR)
             if (TESR_ParallaxData.y)
-                lighting += getAmbientLighting(AmbientColor.rgb * TESR_ShaderBaseColors.y, baseColor.rgb);
+                lighting += getAmbientLighting(AmbientColor.rgb * TESR_ShaderBaseColors.y, sunColor, baseColor.rgb);
             else
-                lighting += baseColor.rgb * AmbientColor.rgb * TESR_ShaderBaseColors.y;
+                lighting += getAmbientLighting(AmbientColor.rgb * TESR_ShaderBaseColors.y, sunColor, baseColor.rgb);
         #endif
     
         // Other light sources.
@@ -533,19 +534,29 @@ PS_OUTPUT main(PS_INPUT IN)
             lighting.rgb = lerp(lighting.rgb, IN.fogColor.rgb, IN.fogColor.a);
         #endif
     #endif
+    float3 finalColor = preExposeLighting(lighting);
     
-    OUT.color.rgb = lighting.rgb;
+    OUT.color.rgb = finalColor.rgb;
     
     #if defined(DIFFUSE) || defined(NO_LIGHT)
         OUT.color.a = 1;
     #elif defined(ONLY_SPECULAR)
         if (!TESR_ParallaxData.y)
             OUT.color.rgb = saturate(OUT.color.rgb);
-        OUT.color.a = weight(lighting.rgb);
+        OUT.color.a = weight(finalColor.rgb);
     #elif defined(ONLY_LIGHT)
         OUT.color.a = baseColor.a;
     #else
         OUT.color.a = alpha * AmbientColor.a;
+    #endif
+    
+    #ifndef NO_LIGHT
+        if (TESR_DebugVar.y > 0.0) {
+            if (TESR_DebugVar.y > 0.1)
+                OUT.color.rgb = roughness.xxx * (sunColor / 2.0);
+            else
+                OUT.color.rgb = normal.aaa * (sunColor / 2.0);
+        }
     #endif
 
     return OUT;

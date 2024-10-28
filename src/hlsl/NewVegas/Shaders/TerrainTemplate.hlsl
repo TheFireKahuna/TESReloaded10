@@ -41,6 +41,7 @@ float3 FogColor : register(c15);
 float4 FogParam : register(c14);
 row_major float4x4 ModelViewProj : register(c0);
 float4x4 TESR_InvViewProjectionTransform : register(c36);
+float4 TESR_DebugVar : register(c37);
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
@@ -48,13 +49,11 @@ VS_OUTPUT main(VS_INPUT IN) {
     float3 mdl0;
     float4 r0;
 
-    mdl0.xyz = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), IN.position.xyzw);
+    OUT.sPosition = mul(ModelViewProj, IN.position);
 
     OUT.blend_0 = IN.blend_0;
     OUT.blend_1 = IN.blend_1;
 
-    OUT.sPosition.w = dot(ModelViewProj[3].xyzw, IN.position.xyzw);
-    OUT.sPosition.xyz = mdl0.xyz;
     OUT.uv.xy = IN.uv.xy;
     OUT.vertex_color.xyz = IN.vertex_color.rgb;
     OUT.lPosition.xyz = IN.position.xyz;
@@ -100,16 +99,18 @@ float4 PSLightColor[13] : register(c3);
 float4 PSLightDir : register(c18);
 float4 PSLightPosition[12] : register(c19);
 float4 TESR_ShaderBaseColors : register(c39);
+float4 TESR_DebugVar : register(c40);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
     
     int texCount = TEX_COUNT;  // Macro.
-    float3 tangent = normalize(IN.tangent.xyz);
-    float3 binormal = normalize(IN.binormal.xyz);
-    float3 normal = normalize(IN.normal.xyz);
-    float3x3 tbn = float3x3(tangent, binormal, normal);
-    float3 eyeDir = -mul(tbn, normalize(IN.viewPosition.xyz));
+    //float3 tangent = normalize(IN.tangent.xyz);
+    //float3 binormal = normalize(IN.binormal.xyz);
+    //float3 normal = normalize(IN.normal.xyz);
+    float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
+    //float3 eyeDir = -mul(tbn, normalize(IN.viewPosition.xyz));
+    float3 viewDir = -mul(tbn, normalize(IN.viewPosition.xyz));
 
     float dist = length(IN.viewPosition.xyz);
 
@@ -119,27 +120,43 @@ PS_OUTPUT main(PS_INPUT IN) {
     
     float weights[7] = { 0, 0, 0, 0, 0, 0, 0 };
     float blends[7] = { IN.blend_0.x, IN.blend_0.y, IN.blend_0.z, IN.blend_0.w, IN.blend_1.x, IN.blend_1.y, IN.blend_1.z };
-    float2 offsetUV = getParallaxCoords(dist, IN.uv.xy, dx, dy, eyeDir, texCount, BaseMap, blends, weights);
+    float2 offsetUV = getParallaxCoords(dist, IN.uv.xy, dx, dy, viewDir, texCount, BaseMap, blends, weights);
 
-    float roughness = 1.f;
     float3 baseColor = blendDiffuseMaps(IN.vertex_color, offsetUV, texCount, BaseMap, weights);
-    float3 combinedNormal = blendNormalMaps(offsetUV, texCount, NormalMap, weights, roughness);
-
+    float4 combinedNormal = blendNormalMaps(offsetUV, texCount, NormalMap, weights);
+    float roughness = getRoughness(combinedNormal.w);
     float3 lightTS = mul(tbn, PSLightDir.xyz);
+    float3 sunColor = PSLightColor[0].rgb * TESR_ShaderBaseColors.x;
+    
+    if (TESR_DebugVar.y > 0.0) {
+        OUT.color_0.a = 1;
+        if (combinedNormal.w > 1.0) {
+            OUT.color_0.rgb = roughness.xxx * float3(1.0, 0.0, 0.0) * (sunColor / 2.0);
+        }
+        else if (TESR_DebugVar.y > 0.1) {
+            OUT.color_0.rgb = roughness.xxx * (sunColor / 2.0);
+        }
+        else {
+            OUT.color_0.rgb = combinedNormal.www * (sunColor / 2.0);
+        }
+        return OUT;
+    }
+
     float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, offsetUV, dx, dy, lightTS, texCount, blends, BaseMap);
     
-    float3 lighting = getSunLighting(lightTS, PSLightColor[0].rgb * TESR_ShaderBaseColors.x, eyeDir, combinedNormal, AmbientColor.rgb * TESR_ShaderBaseColors.y, baseColor, roughness, 1.0, parallaxShadowMultiplier);
+    float3 lighting = getSunLighting(lightTS, sunColor, viewDir, combinedNormal, baseColor, roughness, 1.0, parallaxShadowMultiplier);
+    lighting += getAmbientLighting(AmbientColor.rgb * TESR_ShaderBaseColors.y, sunColor, baseColor.rgb);
 
     #if defined(POINTLIGHT)
         int lightCount = 12;
         float3 pointlightDir;
         [unroll] for (int i = 0; i < lightCount; i++) {
             pointlightDir = mul(tbn, PSLightPosition[i].xyz - IN.lPosition.xyz);
-            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, PSLightColor[i + 1].rgb * TESR_ShaderBaseColors.z, eyeDir, combinedNormal, baseColor, roughness, 1.0);
+            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, PSLightColor[i + 1].rgb * TESR_ShaderBaseColors.z, viewDir, combinedNormal, baseColor, roughness, 1.0);
         }
     #endif
     
-    float3 finalColor = lighting;
+    float3 finalColor = preExposeLighting(lighting);
 
     OUT.color_0.a = 1;
     OUT.color_0.rgb = finalColor;

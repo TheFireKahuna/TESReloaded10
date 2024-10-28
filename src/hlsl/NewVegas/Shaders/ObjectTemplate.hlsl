@@ -535,15 +535,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     normal.xyz = normalize(expand(normal.xyz));
     
     float roughness = getRoughness(normal.a);
-    
-    if (TESR_DebugVar.y > 0.0) {
-        OUT.color.a = 1;
-        if (TESR_DebugVar.y > 0.1)
-            OUT.color.rgb = roughness.xxx;
-        else
-            OUT.color.rgb = normal.aaa;
-        return OUT;
-    }
+    float3 sunColor = PSLightColor[0].rgb * TESR_ShaderBaseColors.x;
     
     #ifndef NO_VERTEX_COLOR
         float3 vertexColor = linearCheck(IN.vertexColor.rgb, TESR_LinearObject.z);
@@ -567,12 +559,11 @@ PS_OUTPUT main(PS_INPUT IN) {
         shadowMultiplier = lerp(1, shadow, shadowMask);
     #endif
     
-    float3 sunColor = PSLightColor[0].rgb * TESR_ShaderBaseColors.x;
     #if !defined(DIFFUSE) && !defined(POINT)
-        float3 lighting = getSunLighting(IN.lightDir.xyz, sunColor * shadowMultiplier, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        float3 lighting = getSunLighting(IN.lightDir.xyz, sunColor, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #else
         // Pointlights only.
-        float3 lighting = getPointLightLighting(IN.lightDir.xyz, IN.lightDir.w, PSLightColor[0].rgb * TESR_ShaderBaseColors.z * shadowMultiplier, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        float3 lighting = getPointLightLighting(IN.lightDir.xyz, IN.lightDir.w, sunColor, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #endif
     
     // Self emmitance.
@@ -583,7 +574,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     #endif
     
     #if !defined(DIFFUSE) && !defined(ONLY_SPECULAR)
-        lighting += getAmbientLighting(AmbientColor.rgb * TESR_ShaderBaseColors.y, baseColor.rgb);
+        lighting += getAmbientLighting(AmbientColor.rgb * TESR_ShaderBaseColors.y, sunColor, baseColor.rgb);
     #endif
     
     // Other light sources.
@@ -595,7 +586,7 @@ PS_OUTPUT main(PS_INPUT IN) {
         lighting += getPointLightLighting(IN.light3Dir.xyz, IN.light3Dir.w, PSLightColor[2].rgb * TESR_ShaderBaseColors.z, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #endif
     
-    float3 finalColor = lighting.rgb;
+    float3 finalColor = preExposeLighting(lighting);
     
     // Fog.
     #ifndef NO_FOG
@@ -617,6 +608,13 @@ PS_OUTPUT main(PS_INPUT IN) {
     #else
         OUT.color.a = baseColor.a * AmbientColor.a;
     #endif
+    
+    if (TESR_DebugVar.y > 0.0) {
+        if (TESR_DebugVar.y > 0.1)
+            OUT.color.rgb = roughness.xxx * (sunColor / 2.0);
+        else
+            OUT.color.rgb = normal.aaa * (sunColor / 2.0);
+    }
 
     return OUT;
 }
@@ -676,6 +674,7 @@ float4 PSLightPosition[8] : register(c19);
 #endif
 float4 TESR_LinearObject : register(c41);
 float4 TESR_ShaderBaseColors : register(c42);
+float4 TESR_DebugVar : register(c40);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
@@ -731,10 +730,10 @@ PS_OUTPUT main(PS_INPUT IN) {
         lighting += (5 > lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(IN.light6.xyz, att, PSLightColor[5].rgb * TESR_ShaderBaseColors.z, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #endif
     
-    lighting += getAmbientLighting(AmbientColor.rgb * TESR_ShaderBaseColors.y, baseColor.rgb);
+    lighting += getAmbientLighting(AmbientColor.rgb * TESR_ShaderBaseColors.y, sunColor, baseColor.rgb);
     
     // TODO: Vanilla attenuates the full specular term by IN.lPosition.w for some reason. Is this a problem?
-    float3 finalColor = lighting;
+    float3 finalColor = preExposeLighting(lighting);
     
     #ifndef OPT
         finalColor.rgb = (useFog <= 0.0 ? finalColor.rgb : lerp(finalColor.rgb, IN.fogColor.rgb, IN.fogColor.a));
@@ -744,6 +743,13 @@ PS_OUTPUT main(PS_INPUT IN) {
     
     OUT.color.rgb = finalColor.rgb;
     OUT.color.a = baseColor.a * AmbientColor.a;
+    
+    if (TESR_DebugVar.y > 0.0) {
+        if (TESR_DebugVar.y > 0.1)
+            OUT.color.rgb = roughness.xxx * (sunColor / 2.0);
+        else
+            OUT.color.rgb = normal.aaa * (sunColor / 2.0);
+    }
 
     return OUT;
 }

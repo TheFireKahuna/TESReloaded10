@@ -8,7 +8,7 @@ float3 FogColor : register(c15);
 float4 LandBlendParams : register(c19);
 float4 LightData[10] : register(c25);
 float4 TESR_CameraPosition : register(c35);
-float4x4 TESR_InvViewProjectionTransform : register(c36);
+float4x4 TESR_InvViewProjectionTransform : register(c37);
 
 
 // Registers:
@@ -52,10 +52,9 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float4 r0;
 
-    float3 mdl4 = mul(float3x4(ModelViewProj[0], ModelViewProj[1], ModelViewProj[2]), IN.position);
+    float4 mdl4 = mul(ModelViewProj, IN.position);
 
-    OUT.position.w = dot(ModelViewProj[3], IN.position);
-    OUT.position.xyz = mdl4.xyz;
+    OUT.position = mdl4;
 
     r0.xy = (IN.texcoord_0.xy * 0.015625) + LandBlendParams.xy;
     r0.z = 1 - r0.x;
@@ -73,7 +72,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.texcoord_5.w = r0.z;
     OUT.texcoord_5.xyz = FogColor.rgb;
 
-    OUT.location.xyz = mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
+    OUT.location.xyz = -mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
     OUT.worldpos = OUT.location + TESR_CameraPosition.xyz;
 
     return OUT;

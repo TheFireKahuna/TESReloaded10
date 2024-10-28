@@ -40,10 +40,10 @@ VS_OUTPUT main(VS_INPUT IN) {
     //const float4 const_3 = {0.299, 0.587000012, 0.114, 0};
 
     float4 color = tex2D(ScreenSpace, IN.ScreenOffset.xy);
-    float3 tint = Tint.rgb;
+    //float3 tint = Tint.rgb;
     //q0.x = dot(color.xyz, const_3.xyz);
     //q3 = lerp(q0.x, color, Cinematic.x);
-    color.rgb = lerp(color.rgb, tint * luma(color.rgb), saturate(Tint.a * TESR_ToneMapping.z)); // apply tint
+    //color.rgb = lerp(color.rgb, tint * luma(color.rgb), saturate(Tint.a * TESR_ToneMapping.z)); // apply tint
     //float4 final = (Cinematic.w * lerp((Tint.a * ((q0.x * Tint) - q3)) + q3, Fade, Fade.w)) - Cinematic.y;
     //color = (Cinematic.z * final) + Cinematic.y;
     OUT.color_0.a = color.w;

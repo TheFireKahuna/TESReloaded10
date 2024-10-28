@@ -1,9 +1,9 @@
 #if defined(__INTELLISENSE__)
     #include "Pointlights.hlsl"
-    #include "PBR.hlsl"
+    #include "PBR_Alt.hlsl"
 #else
     #include "includes/Pointlights.hlsl"
-    #include "includes/PBR.hlsl"
+    #include "includes/PBR_Alt.hlsl"
 #endif
 
 float4 TESR_PBRData : register(c32);
@@ -106,10 +106,15 @@ float3 getSunLighting(float3 lightDir, float3 lightColor, float3 viewDir, float3
     #elif defined(SPECULAR)
         return PBRSun(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
     #else
-        return PBRDiffuse(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
+        return PBRSunDiffuse(0, roughness, albedo, normal, viewDir, lightDir, lightColor);
     #endif
 }
 
 float3 getAmbientLighting(float3 ambient, float3 albedo) {
     return ambient * TESR_PBRData.w * albedo;
+}
+
+float3 getAmbientLighting(float3 ambient, float3 sunLuminanceInLux, float3 albedo) {
+    return (sunLuminanceInLux / 50.0) * TESR_PBRData.w * albedo;
+    //return float3(0.0f, 0.0f, 0.0f);
 }

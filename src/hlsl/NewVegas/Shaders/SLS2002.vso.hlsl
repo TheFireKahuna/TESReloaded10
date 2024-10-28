@@ -62,20 +62,19 @@ VS_OUTPUT main(VS_INPUT IN) {
     float q1 = (abs(dot(ObjToCubeSpace[0], r1) - HighDetailRange.x) < HighDetailRange.z ? 1.0 : 0.0);
 
     r0.z = r1.z - ((q0.x * q1.x) * GeomorphParams.y);
-    float3 mdl11 = mul(float3x4(ModelViewProj[0], ModelViewProj[1], ModelViewProj[2]), r0);
+    float4 mdl11 = mul(ModelViewProj, r0);
 
     // fog
-    float q2 = 1 - saturate((FogParam.x - length(mdl11)) / FogParam.y);
+    float q2 = 1 - saturate((FogParam.x - length(mdl11.xyz)) / FogParam.y);
     q2 = log2(q2);
     OUT.color_1.a = exp2(q2.x * FogParam.z);
     OUT.color_1.rgb = FogColor.rgb;
 
-    OUT.position.w = dot(ModelViewProj[3], r0);
-    OUT.position.xyz = mdl11.xyz;
+    OUT.position = mdl11;
     OUT.texcoord_0.xy = IN.texcoord_0.xy;
     OUT.texcoord_1 = LightData[0].xyz; // sun direction
 
-    OUT.location.xyz = mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
+    OUT.location.xyz = -mul(TESR_InvViewProjectionTransform, OUT.position).xyz;
     OUT.worldpos = OUT.location.xyz + TESR_CameraPosition.xyz;
 
     return OUT;

@@ -3,24 +3,20 @@
 #define	ScreenSpace	Src0
 // Parameters:
 
-sampler2D AvgLum : register(s1);
 float4 BlurOffsets[16] : register(c3);
 float3 BlurScale : register(c2);
 float4 HDRParam : register(c1);
 sampler2D ScreenSpace : register(s0);
-float4 TimingData : register(c0);
 
 
 // Registers:
 //
 //   Name         Reg   Size
 //   ------------ ----- ----
-//   TimingData   const_0       1
 //   HDRParam     const_1       1
 //   BlurScale    const_2       1
 //   BlurOffsets[0]  const_3      16
 //   ScreenSpace         texture_0       1
-//   AvgLum       texture_1       1
 //
 
 
@@ -59,17 +55,16 @@ VS_OUTPUT main(VS_INPUT IN) {
     finalColor = (BlurOffsets[7].z * blurOffset7.rgb) + ((BlurOffsets[6].z * blurOffset6.rgb) + ((BlurOffsets[5].z * blurOffset5.rgb) + ((BlurOffsets[4].z * blurOffset4.rgb) + finalColor)));
     finalColor = (BlurOffsets[10].z * blurOffset10.rgb) + ((BlurOffsets[9].z * blurOffset9.rgb) + ((BlurOffsets[8].z * blurOffset8.rgb) + finalColor));
     finalColor = (BlurOffsets[13].z * blurOffset13.rgb) + ((BlurOffsets[12].z * blurOffset12.rgb) + ((BlurOffsets[11].z * blurOffset11.rgb) + finalColor));
-    finalColor = (BlurOffsets[15].z * blurOffset15.rgb) + ((BlurOffsets[14].z * blurOffset14.rgb) + finalColor);*/
-    //float4 avgLuma = tex2D(AvgLum, IN.ScreenOffset.xy);
-    //finalColor = lerp(avgLuma.rgb, finalColor, 1 - pow(abs(HDRParam.z), TimingData.z));
-    //OUT.color_0.a = BlurScale.z;
-    //OUT.color_0.rgb = finalColor;
+    finalColor = (BlurOffsets[15].z * blurOffset15.rgb) + ((BlurOffsets[14].z * blurOffset14.rgb) + finalColor);
+    OUT.color_0.a = BlurScale.z;
+    OUT.color_0.rgb = finalColor;*/
     float4 screenSpace = tex2D(ScreenSpace, IN.ScreenOffset.xy);
     OUT.color_0.rgb = screenSpace.rgb;
     OUT.color_0.a = BlurScale.z;
-    //OUT.color_0.rgb = finalColor * (min(max(0.01, length(finalColor)), HDRParam.w) / max(0.01, length(finalColor)));
+
+    //OUT.color_0.rgb = q4.xyz * (min(max(0.01, length(q4.xyz)), HDRParam.x) / max(0.01, length(q4.xyz)));
 
     return OUT;
 };
 
-// approximately 66 instruction slots used (17 texture, 49 arithmetic)
+// approximately 59 instruction slots used (16 texture, 43 arithmetic)

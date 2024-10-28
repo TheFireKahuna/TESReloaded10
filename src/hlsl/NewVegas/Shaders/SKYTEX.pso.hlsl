@@ -113,7 +113,7 @@ float4 ShadeSun(SunValues Sun, float4 texColor, float4 vertexColor){
         float isSunset = smoothstep(0.3, 0.0, Sun.sunHeight);
         texColor.rgb += isSunset * Sun.sunColor;
         texColor.rgb += Sun.sunColor * TESR_SunAmount.w;
-        texColor.rgb *= TESR_ShaderExtraColors.z;
+        texColor.rgb *= TESR_ShaderExtraColors.z * Params.y;
         texColor.a = Sun.isDayTime; // force alpha 1 for sun disk in the daytime
     }else{
         texColor.rgb *= vertexColor.rgb * Params.y * lerp(TESR_SunAmount.w, 1, isSunOrMoon); // vertex color (animated by the engine)

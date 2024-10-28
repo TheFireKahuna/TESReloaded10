@@ -41,13 +41,14 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     //float4 blurOffset3 = tex2D(ScreenSpace, (BlurScale.xy * BlurOffsets[3].xy) + IN.ScreenOffset.xy);
     //float4 blurOffset2 = tex2D(ScreenSpace, (BlurScale.xy * BlurOffsets[2].xy) + IN.ScreenOffset.xy);
-    //float4 blurOffset1 = tex2D(ScreenSpace, (BlurScale.xy * BlurOffsets[1].xy) + IN.ScreenOffset.xy);
+   // float4 blurOffset1 = tex2D(ScreenSpace, (BlurScale.xy * BlurOffsets[1].xy) + IN.ScreenOffset.xy);
     //float4 blurOffset0 = tex2D(ScreenSpace, (BlurScale.xy * BlurOffsets[0].xy) + IN.ScreenOffset.xy);
+    //float3 blurOffsetBlend = (BlurOffsets[3].z * blurOffset3.rgb) + ((BlurOffsets[2].z * blurOffset2.rgb) + ((BlurOffsets[0].z * blurOffset0.rgb) + (blurOffset1.rgb * BlurOffsets[1].z)));
     //float4 avgLuma = tex2D(AvgLum, IN.ScreenOffset.xy);
-    //float3 blurOffsetBlend.rgb = (BlurOffsets[3].z * blurOffset3.rgb) + ((BlurOffsets[2].z * blurOffset2.rgb) + ((BlurOffsets[0].z * blurOffset0.rgb) + (blurOffset1.rgb * BlurOffsets[1].z)));
     //float3 adaptBlend.rgb = lerp(avgLuma.rgb, blurOffsetBlend.rgb, 1 - pow(abs(HDRParam.z), TimingData.z));
-    OUT.color_0.rgb = float3(1.0,1.0,1.0);
-    OUT.color_0.a = 0.0;
+    float4 screenSpace = tex2D(ScreenSpace, IN.ScreenOffset.xy);
+    OUT.color_0.rgb = screenSpace.rgb;
+    OUT.color_0.a = BlurScale.z;
     //OUT.color_0.rgb = adaptBlend.rgb * (min(max(0.01, length(adaptBlend.rgb)), HDRParam.w) / max(0.01, length(adaptBlend.rgb)));
 
     return OUT;
