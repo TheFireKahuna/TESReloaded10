@@ -19,7 +19,7 @@ float4 TESR_BloomData : register(c31); //
 
 sampler2D Src0 : register(s0);
 sampler2D DestBlend : register(s1);    // base non tonemapped image
-sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
 // Registers:
 //

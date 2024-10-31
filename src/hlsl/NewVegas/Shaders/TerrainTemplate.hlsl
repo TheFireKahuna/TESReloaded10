@@ -33,6 +33,7 @@ struct VS_OUTPUT {
     float3 binormal : TEXCOORD4;
     float3 normal : TEXCOORD5;
     float4 viewPosition : TEXCOORD7;
+    float3x3 TBN : TEXCOORD8;
 };
 
 #ifdef VS
@@ -41,7 +42,7 @@ float3 FogColor : register(c15);
 float4 FogParam : register(c14);
 row_major float4x4 ModelViewProj : register(c0);
 float4x4 TESR_InvViewProjectionTransform : register(c36);
-float4 TESR_DebugVar : register(c37);
+float4 TESR_DebugVar : register(c44);
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
@@ -66,6 +67,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.viewPosition.w = r0.z;
     OUT.viewPosition.xyz = mul(TESR_InvViewProjectionTransform, OUT.sPosition).xyz;
 
+    float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
+    OUT.TBN = tbn;
+
     return OUT;
 };
 
@@ -83,6 +87,7 @@ struct PS_INPUT
     float4 blend_1 : COLOR1;
     float4 viewPosition : TEXCOORD7_centroid;
     float4 sPosition : POSITION1;
+    float3x3 TBN : TEXCOORD8_centroid;
 };
 
 struct PS_OUTPUT {
@@ -108,8 +113,8 @@ PS_OUTPUT main(PS_INPUT IN) {
     //float3 tangent = normalize(IN.tangent.xyz);
     //float3 binormal = normalize(IN.binormal.xyz);
     //float3 normal = normalize(IN.normal.xyz);
-    float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
     //float3 eyeDir = -mul(tbn, normalize(IN.viewPosition.xyz));
+    float3x3 tbn = IN.TBN;
     float3 viewDir = -mul(tbn, normalize(IN.viewPosition.xyz));
 
     float dist = length(IN.viewPosition.xyz);

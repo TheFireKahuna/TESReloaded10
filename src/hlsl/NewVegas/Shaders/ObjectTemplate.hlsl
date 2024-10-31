@@ -202,6 +202,7 @@ struct VS_OUTPUT {
 #ifdef PROJ_SHADOW
     float4 shadowUVs : TEXCOORD7;
 #endif
+    float3x3 TBN : TEXCOORD8;
 };
 
 #ifndef NO_FOG
@@ -231,23 +232,24 @@ float4 LightData[10] : register(c25);
 #endif
 
 float4 TESR_DebugVar : register(c40);
+float4 TESR_CameraPosition : register(c41);
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
     
     OUT.uv = IN.uv.xy;
-    
+
     float4 position = IN.position.xyzw;
-    
+    float3x3 tbn;
     #ifndef SKIN
-        float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
+        tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
     
         OUT.sPosition.xyzw = mul(ModelViewProj, position.xyzw);
     #else
         float4 offset = IN.blendIndices.zyxw * 765.01001;
         float4 blend = IN.blendWeight.xyzz;
         blend.w = 1 - weight(IN.blendWeight.xyz);
-        float3x3 tbn = BonesTransformTBN(Bones, offset, blend, IN.tangent, IN.binormal, IN.normal);
+        tbn = BonesTransformTBN(Bones, offset, blend, IN.tangent, IN.binormal, IN.normal);
     
         position.w = 1;
         position.xyz = BonesTransformPosition(Bones, offset, blend, position);
@@ -264,6 +266,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.lightDir.w = LightData[0].w;
     OUT.lightDir.xyz = mul(tbn, light);
     
+    float3 viewDir;
     #if defined(SPECULAR)
         OUT.viewDir.xyz = mul(tbn, normalize(EyePosition.xyz - position.xyz));
     #else
@@ -302,6 +305,8 @@ VS_OUTPUT main(VS_INPUT IN) {
         OUT.shadowUVs.zw = ((shadowUV.xy - ShadowProjData.xy) / ShadowProjData.w) * float2(1, -1) + float2(0, 1);
     #endif
 
+    OUT.TBN = tbn;
+
     return OUT;
 };
 
@@ -331,6 +336,7 @@ struct VS_OUTPUT {
     float4 light5 : TEXCOORD6;
     float4 light6 : TEXCOORD7;
 #endif
+    float3x3 TBN : TEXCOORD8;
 };
 
 float3 FogColor : register(c15);
@@ -354,6 +360,8 @@ row_major float4x4 ModelViewProj : register(c0);
 #else
     #define lightOffset 1
 #endif
+float4 TESR_DebugVar : register(c40);
+float4 TESR_CameraPosition : register(c41);
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
@@ -362,25 +370,26 @@ VS_OUTPUT main(VS_INPUT IN) {
     
     float4 position = IN.position.xyzw;
     
+    float3x3 tbn;
     #ifndef SKIN
-    float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
+        tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
     
     OUT.sPosition.xyzw = mul(ModelViewProj, position.xyzw);
     #else
         float4 offset = IN.blendIndices.zyxw * 765.01001;
         float4 blend = IN.blendWeight.xyzz;
         blend.w = 1 - weight(IN.blendWeight.xyz);
-        float3x3 tbn = BonesTransformTBN(Bones, offset, blend, IN.tangent, IN.binormal, IN.normal);
+        tbn = BonesTransformTBN(Bones, offset, blend, IN.tangent, IN.binormal, IN.normal);
     
         position.w = 1;
         position.xyz = BonesTransformPosition(Bones, offset, blend, position);
         OUT.sPosition.xyzw = mul(SkinModelViewProj, position.xyzw);
     #endif
-    
+    float3 viewDir;
     #if defined(SPECULAR)
-        float3 viewDir = mul(tbn, normalize(EyePosition.xyz - position.xyz));
+        viewDir = mul(tbn, normalize(EyePosition.xyz - position.xyz));
     #else
-        float3 viewDir = -mul(tbn, mul(TESR_InvViewProjectionTransform, OUT.sPosition).xyz);
+        viewDir = -mul(tbn, mul(TESR_InvViewProjectionTransform, OUT.sPosition).xyz);
     #endif
     
     OUT.lPosition.xyz = position.xyz;
@@ -396,37 +405,45 @@ VS_OUTPUT main(VS_INPUT IN) {
     float lightsFrac = frac(lights);
     float lightsThreshold = (lights < 0.0 ? (-lightsFrac < lightsFrac ? 1.0 : 0.0) : 0) + (lights - lightsFrac);
     float lightUsed;
+    float3 light;
     
     #ifndef OPT
         OUT.lightDir.w = viewDir.x;
-        OUT.lightDir.xyz = mul(tbn, LightData[0].xyz);
+        light = LightData[0].xyz;
+        OUT.lightDir.xyz = mul(tbn, light);
     #else
         lightUsed = 0 < lightsThreshold ? 1.0 : 0.0;
-        OUT.lightDir.xyz = lightUsed * mul(tbn, LightData[lightOffset + 0].xyz - position.xyz);
+        light = LightData[lightOffset + 0].xyz - position.xyz;
+        OUT.lightDir.xyz = lightUsed * mul(tbn, light);
         OUT.lightDir.w = viewDir.x;
     #endif
     
     lightUsed = 1 < lightsThreshold ? 1.0 : 0.0;
-    OUT.light2.xyz = lightUsed * mul(tbn, LightData[lightOffset + 1].xyz - position.xyz);
+    light = LightData[lightOffset + 1].xyz - position.xyz;
+    OUT.light2.xyz = lightUsed * mul(tbn, light);
     OUT.light2.w = viewDir.y;
     
     lightUsed = 2 < lightsThreshold ? 1.0 : 0.0;
-    OUT.light3.xyz = lightUsed * mul(tbn, LightData[lightOffset + 2].xyz - position.xyz);
+    light = LightData[lightOffset + 2].xyz - position.xyz;
+    OUT.light3.xyz = lightUsed * mul(tbn, light);
     OUT.light3.w = viewDir.z;
     
     #if MAX_LIGHTS > 3
         lightUsed = 3 < lightsThreshold ? 1.0 : 0.0;
-        OUT.light4.xyz = lightUsed * mul(tbn, LightData[lightOffset + 3].xyz - position.xyz);
+        light = LightData[lightOffset + 3].xyz - position.xyz;
+        OUT.light4.xyz = lightUsed * mul(tbn, light);
         OUT.light4.w = lightUsed * LightData[lightOffset + 3].w;
     #endif
     
     #if MAX_LIGHTS > 4
         lightUsed = 4 < lightsThreshold ? 1.0 : 0.0;
-        OUT.light5.xyz = lightUsed * mul(tbn, LightData[lightOffset + 4].xyz - position.xyz);
+        light = LightData[lightOffset + 4].xyz - position.xyz;
+        OUT.light5.xyz = lightUsed * mul(tbn, light);
         OUT.light5.w = lightUsed * LightData[lightOffset + 4].w;
         
         lightUsed = 5 < lightsThreshold ? 1.0 : 0.0;
-        OUT.light6.xyz = lightUsed * mul(tbn, LightData[lightOffset + 5].xyz - position.xyz);
+        light = LightData[lightOffset + 5].xyz - position.xyz;
+        OUT.light6.xyz = lightUsed * mul(tbn, light);
         OUT.light6.w = lightUsed * LightData[lightOffset + 5].w;
     #endif
     
@@ -436,6 +453,8 @@ VS_OUTPUT main(VS_INPUT IN) {
     fogStrength = log2(fogStrength);
     OUT.fogColor.a = exp2(fogStrength * FogParam.z);
     OUT.fogColor.rgb = FogColor.rgb;
+
+    OUT.TBN = tbn;
 
     return OUT;
 };
@@ -462,6 +481,7 @@ struct PS_INPUT {
 #ifdef PROJ_SHADOW
     float4 shadowUVs : TEXCOORD7;
 #endif
+    float3x3 TBN : TEXCOORD8;
 };
 
 struct PS_OUTPUT {
@@ -645,6 +665,7 @@ struct PS_INPUT {
     float4 light5 : TEXCOORD6_centroid;
     float4 light6 : TEXCOORD7_centroid;
 #endif
+    float3x3 TBN : TEXCOORD8;
 };
 
 struct PS_OUTPUT {

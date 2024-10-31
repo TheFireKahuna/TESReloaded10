@@ -4,7 +4,7 @@
 // Parameters:
 sampler2D Src0 : register(s0);
 sampler2D DestBlend : register(s1);
-sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
+sampler2D TESR_BloomBuffer : register(s8) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = POINT; MINFILTER = POINT; MIPFILTER = POINT; };
 
 float4 HDRParam : register(c1);
 float3 BlurScale : register(c2);

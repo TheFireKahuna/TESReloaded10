@@ -182,6 +182,7 @@ row_major float4x4 ModelViewProj : register(c0);
     float4 ShadowProjData : register(c22);
     float4 ShadowProjTransform : register(c23);
 #endif
+float4 TESR_DebugVar : register(c40);
 
 VS_OUTPUT main(VS_INPUT IN)
 {
