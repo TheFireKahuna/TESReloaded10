@@ -4,16 +4,46 @@ float4 TESR_MotionBlurData;
 float4 TESR_DepthOfFieldData;
 float4 TESR_GameTime;
 float4 TESR_ExposureData; // x:min brightness, y;max brightness, z:dark adapt speed, w: light adapt speed
+float4 TESR_ReciprocalResolution;
+float4 TESR_HistogramBufferData;
+float4 TESR_HistogramTexelData;
+float4 TESR_DebugVar;
 
-sampler2D TESR_RenderedBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_AvgLumaBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
-sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_SourceBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_DepthBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_RenderedBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+
+sampler2D TESR_HistogramSampleBufferY : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_HistogramSampleBufferXY : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_HistogramBinBufferY : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_HistogramBinBufferXY : register(s6) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_HistogramBuffer : register(s7) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_AvgLumaBuffer : register(s8) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_HistogramLumaBuffer : register(s9) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+
+static const float BlockSize = 16;
 
 static const float decreaseRate = -TESR_ExposureData.z; // max value for adaptation speed towards darker screens
 // static const float decreaseRate = -TESR_ExposureData.z * 0.001; // max value for adaptation speed towards darker screens
 static const float increaseRate = TESR_ExposureData.w; // max value for adaptation speed towards brighter screens
 // static const float increaseRate = TESR_ExposureData.w * 0.001; // max value for adaptation speed towards brighter screens
 static const float2 center = float2(0.5, 0.5); // this shader is to be applied on a 1x1 texture so we sample at the center
+
+static const float2 Histogram_Position = 0.0f;
+static const float2 Histogram_Size = 0.25f;
+static const float Histogram_ScaleY = 25.0f;
+static const float Histogram_BackgroundBlend = 0.5f;
+static const float Histogram_Antialias = 2.0f;
+
+static const bool Histogram_View = true;
+static const bool Histogram_Mix = false;
+
+#define MINLOG -16
+#define MAXLOG 16
+#define LOGRANGE 32
+#define ONEOVERLOGRANGE 0.03125
+// 1.0 / ((abs(-16) + 16))
+
 
 #include "Includes/Helpers.hlsl"
 #include "Includes/Depth.hlsl"
@@ -23,13 +53,13 @@ struct VSOUT
 	float4 vertPos : POSITION;
 	float2 UVCoord : TEXCOORD0;
 };
- 
+
 struct VSIN
 {
 	float4 vertPos : POSITION0;
 	float2 UVCoord : TEXCOORD0;
 };
- 
+
 VSOUT FrameVS(VSIN IN)
 {
 	VSOUT OUT = (VSOUT)0.0f;
@@ -76,6 +106,7 @@ float getFocalDistance() {
 	float centerDepth = readDepth(center);
 	float depth = centerDepth;
 	float2 samplingRange = speed;
+	[fastopt][loop]
 	for (int i=0; i<12; i++){
 		depth += readDepth(center + 0.3 * taps[i] * samplingRange);
 	}
@@ -88,32 +119,229 @@ float getFocalDistance() {
 	return stepTo(oldFocus, depth, 3 * step * TESR_GameTime.w, 1 * step * TESR_GameTime.w);
 }
 
-float4 AvgLuma(VSOUT IN) : COLOR0
-{	
-	float2 oldLuma = tex2D(TESR_AvgLumaBuffer, center).rg;
-	float3 renderColor = 0;
 
-	// samples 100 different locations around the screen to calculate an average
-	float4 color = float4(0, 0, 0, 0);
-	float total = 0;
-	for (float i = 0.05; i < 1; i+= 0.1){
-		for (float j = 0.05; j < 1; j+= 0.1){
-			color.rgb += tex2D(TESR_RenderedBuffer, float2(i, j)).rgb;
-			total++;
+float4 Histogram_GetLuma(VSOUT IN): COLOR0 {
+	float lum = luma(tex2D(TESR_SourceBuffer, IN.UVCoord).rgb);
+	// Avoid taking the log of zero
+	[flatten]
+	if (lum < 0.005) {
+		return float4(0.0, 1.0, 0.0, 0.0);
+	}
+	else {
+		return float4((log2(lum) - MINLOG) * ONEOVERLOGRANGE, 0.0, 0.0, 0.0);
+	}
+}
+
+
+float4 Histogram_SamplePixelsX(VSOUT IN): COLOR0 {
+	float sampleUV =  TESR_ReciprocalResolution.y;
+	float4 luma = 0;
+	float4 lumaSum = 0;
+	float2 coords = IN.UVCoord;
+	float highestVal = 0;
+
+	[unroll]
+	for(float i = 0; i < BlockSize; i += 1) {
+		coords.y = IN.UVCoord.y + (i * sampleUV);
+		luma = tex2D(TESR_HistogramLumaBuffer, coords);
+		highestVal = max(luma.x, highestVal);
+		lumaSum += luma;
+	}
+	lumaSum.z = highestVal;
+	lumaSum.w = 1.0;
+    return lumaSum;
+}
+float4 Histogram_SamplePixelsY(VSOUT IN): COLOR0 {
+	float sampleUV =  TESR_ReciprocalResolution.x;
+	float4 luma = 0;
+	float4 lumaSum = 0;
+	float2 coords = IN.UVCoord;
+	float highestVal = 0;
+
+	[unroll]
+	for(float i = 0; i < BlockSize; i += 1) {
+		coords.x = IN.UVCoord.x + (i * sampleUV);
+		luma = tex2D(TESR_HistogramSampleBufferY, coords);
+		highestVal = max(luma.z, highestVal);
+		lumaSum += luma;
+	}
+	lumaSum.z = highestVal;
+	lumaSum.w = 1.0;
+    return lumaSum;
+}
+
+
+float4 Histogram_SampleBinsX(VSOUT IN): COLOR0 {
+	float binUV =  TESR_HistogramTexelData.x;
+	float4 luma = 0;
+	float4 lumaSum = 0;
+	float2 coords = IN.UVCoord;
+	float highestVal = 0;
+	[unroll]
+	for(float i = 0; i < BlockSize; i += 1) {
+		coords.y = IN.UVCoord.y + (i * binUV);
+		luma = tex2D(TESR_HistogramSampleBufferXY, coords);
+		highestVal = max(luma.z, highestVal);
+		lumaSum += luma;
+	}
+	lumaSum.z = highestVal;
+	lumaSum.w = 1.0;
+    return lumaSum;
+}
+
+
+float4 Histogram_SampleBinsY(VSOUT IN): COLOR0 {
+	float binUV =  TESR_HistogramTexelData.y;
+	float4 luma = 0;
+	float4 lumaSum = 0;
+	float2 coords = IN.UVCoord;
+	float highestVal = 0;
+	[unroll]
+	for(float i = 0; i < BlockSize; i += 1) {
+		coords.x = IN.UVCoord.x + (i * binUV);
+		luma = tex2D(TESR_HistogramBinBufferY, coords);
+		highestVal = max(luma.z, highestVal);
+		lumaSum += luma;
+	}
+	lumaSum.z = highestVal;
+	lumaSum.w = 1.0;
+    return lumaSum;
+}
+
+
+float4 Histogram_1D(VSOUT IN): COLOR0 {
+	float binCount = TESR_HistogramBufferData.z;
+	float binUV =  TESR_HistogramTexelData.z;
+	float4 luma = 0;
+	float4 lumaSum = 0;
+	float2 coords = IN.UVCoord;
+	float highestVal = 0;
+	[loop]
+	for(float i = 0; i < binCount; i += 1) {
+		coords.y = IN.UVCoord.y + (i * binUV);
+		luma = tex2Dgrad(TESR_HistogramBinBufferXY, coords, 0, 0);
+		highestVal = max(luma.z, highestVal);
+		lumaSum += luma;
+	}
+	lumaSum.z = highestVal;
+	lumaSum.w = 1.0;
+    return lumaSum;
+}
+
+float4 Histogram_Display(VSOUT IN): COLOR0 {
+	float maxLuma = tex2D(TESR_AvgLumaBuffer, center).g;
+	float3 lumaSum = 0.1;
+	if (TESR_DebugVar.x > 0.0) {
+		if (TESR_DebugVar.x > 0.3) {
+			lumaSum = tex2D(TESR_AvgLumaBuffer, IN.UVCoord).rgb;
+			if (TESR_DebugVar.z > 0.0) {
+				float sampleCount = (1.0 / TESR_ReciprocalResolution.x) * (1.0 / TESR_ReciprocalResolution.y);
+				sampleCount -= lumaSum.g;
+				lumaSum.r /= sampleCount;
+			}
 		}
+		else if (TESR_DebugVar.x > 0.2) {
+			lumaSum = tex2D(TESR_HistogramBinBufferXY, IN.UVCoord).rgb;
+			if (TESR_DebugVar.z > 0.0) {
+				float sampleCount = 256.0;
+				if (TESR_DebugVar.w > 0.0) {
+					sampleCount -= lumaSum.g;
+				}
+				lumaSum.r /= sampleCount;
+				if (TESR_DebugVar.w > 0.0) {
+					lumaSum.r /= lumaSum.b;
+				}
+			}
+		}
+		else if  (TESR_DebugVar.x > 0.1) {
+			lumaSum = tex2D(TESR_HistogramSampleBufferXY, IN.UVCoord).rgb;
+			if (TESR_DebugVar.z > 0.0) {
+				float sampleCount = 16.0;
+				sampleCount -= lumaSum.g;
+				lumaSum.r /= sampleCount;
+				if (TESR_DebugVar.w > 0.0) {
+					lumaSum.r /= lumaSum.b;
+				}
+			}
+		}
+		else  {
+			lumaSum = tex2D(TESR_HistogramLumaBuffer, IN.UVCoord).rgb;
+			if (TESR_DebugVar.w > 0.0) {
+				lumaSum.r /= maxLuma;
+			}
+		}
+		lumaSum = lumaSum.rrr;
 	}
-	for (i= 0 ; i < 12; i++){
-		color.rgb += tex2D(TESR_RenderedBuffer, center + taps[i]).rgb;
-		total++;
+	else {
+		lumaSum = tex2D(TESR_SourceBuffer, IN.UVCoord).rgb;
 	}
-	color /= total;
-	float newLuma = (luma(color) + (7 * oldLuma.r)) / 8; // average over 8 frames
+	if (TESR_DebugVar.z > 0.1) {
+		lumaSum = exp2(lumaSum);
+	}
+
+	return float4(lumaSum.r, lumaSum.g, lumaSum.b, 1.0);
+	
+	//float sampleCount = 256;
+	
+	//float weightedAverageLuminance = exp2((weightedLogAverage * 12.0) + -10.0);
+	/*
+    uint2 BufferDim;
+    ColorBuffer.GetDimensions(BufferDim.x, BufferDim.y);
+
+    const uint2 RectCorner = uint2(BufferDim.x / 2 - 512, BufferDim.y - 256);
+    const uint2 GroupCorner = RectCorner + DTid.xy * 4;
+
+    uint height = 127 - DTid.y * 4;
+    uint threshold = histValue * 128 / max(1, maxHistValue);
+
+    float3 OutColor = (GI == (uint)Exposure[3]) ? float3(1.0, 1.0, 0.0) : float3(0.5, 0.5, 0.5);
+
+    for (uint i = 0; i < 4; ++i)
+    {
+        float3 MaskedColor = (height - i) < threshold ? OutColor : float3(0, 0, 0);
+
+        // 4-wide column with 2 pixels for the histogram bar and 2 for black spacing
+        ColorBuffer[GroupCorner + uint2(0, i)] = MaskedColor;
+        ColorBuffer[GroupCorner + uint2(1, i)] = MaskedColor;
+        ColorBuffer[GroupCorner + uint2(2, i)] = float3(0, 0, 0);
+        ColorBuffer[GroupCorner + uint2(3, i)] = float3(0, 0, 0);
+    }
+	return tex2D(TESR_HistogramBinBufferXY, IN.UVCoord).rrr;*/
+	//return maxLuma;
+	//if (weightedLogAverage != 0) {
+		//weightedLogAverage /= maxLuma;
+		//return float4(weightedLogAverage, weightedLogAverage, weightedLogAverage, 1.0);
+	//}
+	//return float4(0, 0, 0, 1);
+}
+
+float4 AvgLuma(VSOUT IN): COLOR0 {
+	float binCount = TESR_HistogramBufferData.w;
+	float binUV =  TESR_HistogramTexelData.w;
+	float4 luma = 0;
+	float4 lumaSum = 0;
+	float2 coords = center;
+	float highestVal = 0;
+
+	[loop]
+	for(float i = 0; i < binCount; i += 1) {
+		coords.x = IN.UVCoord.x * (i * binUV);
+		luma = tex2Dgrad(TESR_HistogramBuffer, coords, 0, 0);
+		highestVal = max(luma.z, highestVal);
+		lumaSum += luma;
+	}
+	float sampleCount = (1.0 / TESR_ReciprocalResolution.x) * (1.0 / TESR_ReciprocalResolution.y);
+	float weightedLogAverage = lumaSum.r / (sampleCount - lumaSum.g);
+	
+	float weightedAverageLuminance = exp2(((weightedLogAverage * LOGRANGE) + MINLOG));
+	float luminanceLastFrame = tex2D(TESR_AvgLumaBuffer, center).r;
+	float adaptedLuminance = luminanceLastFrame + (weightedAverageLuminance - luminanceLastFrame) * (1 - exp(-TESR_GameTime.w * 3.0));
 
 	// gradually change average luma
 	//float animatedLuma = stepTo(oldLuma.g, newLuma, TESR_GameTime.w * decreaseRate, TESR_GameTime.w * increaseRate);
 
 	// texture will store the actual current luma, the animated current luma, and the animated focal distance for DoF.
-	return float4(newLuma, newLuma, getFocalDistance(), 1.0);
+	return float4(adaptedLuminance, highestVal, getFocalDistance(), 1.0);
 }
  
 technique
@@ -121,6 +349,62 @@ technique
 	pass
 	{
 		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Histogram_GetLuma();
+	}
+}
+technique
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Histogram_SamplePixelsX();
+	}
+}
+technique
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Histogram_SamplePixelsY();
+	}
+}
+technique
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Histogram_SampleBinsX();
+	}
+}
+technique
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Histogram_SampleBinsY();
+	}
+}
+technique
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Histogram_1D();
+	}
+}
+technique
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
 		PixelShader = compile ps_3_0 AvgLuma();
+	}
+}
+technique
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Histogram_Display();
 	}
 }

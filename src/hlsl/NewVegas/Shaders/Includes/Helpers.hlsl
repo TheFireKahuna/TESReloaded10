@@ -20,8 +20,12 @@
 #define	anglei(v)		(((v) + PI) / (2 * PI))
 #define	angler(v)		(((v) * (2 * PI)) - PI)
 
+
+#define FP32_MIN asfloat(0x00800000)
+#define FP32_MAX asfloat(0x7F7FFFFF)
 #define PI 3.1415926539
 #define TWO_PI 6.28318548
+
 #define white     float4 (1, 1, 1, 1)
 #define grey      float4 (0.5, 0.5, 0.5, 1)
 #define black     float4 (0, 0, 0, 1)
@@ -51,6 +55,11 @@ float4 linearCheck(float4 color, int linearColor = 0) {
     color.rgb = (color.rgb <= 0.04045) ? linearRGBLo : linearRGBHi;
     return color;
 }
+static const float3x3 Bt709ToXYZ = float3x3(
+    0.412390798f,  0.357584327f, 0.180480793f,
+    0.212639003f,  0.715168654f, 0.0721923187f,
+    0.0193308182f, 0.119194783f, 0.950532138f
+);
 
 float4 selectColor(float selector, float4 color0, float4 color1, float4 color2, float4 color3, float4 color4, float4 color5, float4 color6, float4 color7, float4 color8, float4 color9){
     if (selector == 0.0) return color0;
