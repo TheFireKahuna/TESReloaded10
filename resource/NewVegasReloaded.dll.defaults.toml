@@ -278,26 +278,26 @@ Mode = 0                               # Chose when the DOF is activated: 0: alw
 NearBlurCutOff = 0                     # Close up range that doesn't get blurred to avoid blurry gun/player character.
 Radius = 1.5                           # Radius for the bokeh blur.
 
-[_Shaders.Exposure.Main]
-DarkAdaptSpeed = 50.0                  # Speed for the exposure to adjust when the screen gets darker.
-LightAdaptSpeed = 50.0                 # Speed for the exposure to adjust when the screen gets brighter.
-MaxBrightness = 0.5                    # Brightness treshold above which the screen will be darkened.
-MinBrightness = 0.2                    # Brightness treshold below which the screen will be brightened.
-
 [_Shaders.Exposure.Interiors]
-DarkAdaptSpeed = 50.0                  # Speed for the exposure to adjust when the screen gets darker.
-LightAdaptSpeed = 50.0                 # Speed for the exposure to adjust when the screen gets brighter.
-MaxBrightness = 0.3                    # Brightness treshold above which the screen will be darkened.
-MinBrightness = 1.0                    # Brightness treshold below which the screen will be brightened.
+DarkAdaptSpeed = 1.0                   # Adjusts the speed of Adaptation between frames
+LightAdaptSpeed = 1.0                  # Unused
+MaxBrightness = 0.6                    # Controls the Target EV (Exposure Value), adjusts from EV100 in EV values
+MinBrightness = 0.6                    # Unused
+
+[_Shaders.Exposure.Main]
+DarkAdaptSpeed = 1.0                   # Adjusts the speed of Adaptation between frames
+LightAdaptSpeed = 1.0                  # Unused
+MaxBrightness = -0.3                   # Controls the Target EV (Exposure Value), adjusts from EV100 in EV values
+MinBrightness = 1.0                    # Unused
 
 [_Shaders.Exposure.Night]
-DarkAdaptSpeed = 50.0                  # Speed for the exposure to adjust when the screen gets darker.
-LightAdaptSpeed = 50.0                 # Speed for the exposure to adjust when the screen gets brighter.
-MaxBrightness = 0.0                    # Brightness treshold above which the screen will be darkened.
-MinBrightness = 0.3                    # Brightness treshold below which the screen will be brightened.
+DarkAdaptSpeed = 1.0                   # Adjusts the speed of Adaptation between frames
+LightAdaptSpeed = 1.0                  # Unused
+MaxBrightness = 0.6                    # Controls the Target EV (Exposure Value), adjusts from EV100 in EV values
+MinBrightness = 1.0                    # Unused
 
 [_Shaders.Exposure.Status]
-Enabled = true                         # Modulates screen gamma to correct exposure based on average brightness. Avoids screens that are too bright/dark.
+Enabled = true                         # Exposes screen luminance to an appropriate level via a luminance histogram and EV100 target
 
 [_Shaders.ExtraEffects.Status]
 Enabled = false                        # Not currently used. Enables loading of Effects in ExtraEffects folder that are not natively handled.
@@ -361,7 +361,7 @@ Enabled = true                        # Screenspace godrays/volumetric rays.
 
 [_Shaders.Tonemapping.Main]
 TonemappingMode = 2                   # Tonemapping Algorithm -  0:None (vanilla - DXVK HDR), 1:VTLottes (default), 2:NVRLottes, 3:Reinhard, 4:Reinhard Jodie, 5:ACES Filmic, 6:ACES Fitted, 7:Uncharted 2, 8:Uchimura (GT), 9:AGX, 10:DICE
-Exposure = 1.5                        # Scales the engine lighting strength/brightness range before tonemap, useful for HDR rendering
+Exposure = 1.0                        # Scales the engine lighting strength/brightness range before tonemap, useful for HDR rendering
 Gamma = 2.2                           # Gamma modifier to be applied after tonemapping, delinearises output. If placed at 1.0, outputs at linear space for HDR (UI unaffected)
 Linearization = 2.2                   # Converts image to corrected linear space before tonemapping. 1.0 is non-linear, if so place Gamma at 1.0 as well
 SkyMultiplier = 1.0                   # Scales the brightness of the sky/sun textures. Requires Sky shader enabled
@@ -380,7 +380,7 @@ PointLightMultiplier = 1.0            # Experimental - modifies the strength of 
 
 [_Shaders.Tonemapping.Interiors]
 TonemappingMode = 1                   # Tonemapping Algorithm -  0:None (vanilla - DXVK HDR), 1:VTLottes (default), 2:NVRLottes, 3:Reinhard, 4:Reinhard Jodie, 5:ACES Filmic, 6:ACES Fitted, 7:Uncharted 2, 8:Uchimura (GT), 9:AGX, 10:DICE
-Exposure = 1.3                        # Scales the engine lighting strength/brightness range before tonemap, useful for HDR rendering
+Exposure = 1.0                        # Scales the engine lighting strength/brightness range before tonemap, useful for HDR rendering
 Gamma = 2.2                           # Gamma modifier to be applied after tonemapping, delinearises output. If placed at 1.0, outputs at linear space for HDR (UI unaffected)
 Linearization = 2.2                   # Converts image to corrected linear space before tonemapping. 1.0 is non-linear, if so place Gamma at 1.0 as well
 SkyMultiplier = 1.0                   # Scales the brightness of the sky/sun textures. Requires Sky shader enabled
@@ -398,7 +398,7 @@ PointLightMultiplier = 1.0            # Experimental - modifies the strength of 
 
 
 [_Shaders.Tonemapping.Night]
-Exposure = 1.5                        # Scales the engine lighting strength/brightness range before tonemap, useful for HDR rendering
+Exposure = 1.0                        # Scales the engine lighting strength/brightness range before tonemap, useful for HDR rendering
 Gamma = 2.2                           # Gamma modifier to be applied after tonemapping, delinearises output. If placed at 1.0, outputs at linear space for HDR (UI unaffected)
 Linearization = 2.2                   # Converts image to corrected linear space before tonemapping. 1.0 is non-linear, if so place Gamma at 1.0 as well
 SkyMultiplier = 1.0                   # Scales the brightness of the sky/sun textures. Requires Sky shader enabled

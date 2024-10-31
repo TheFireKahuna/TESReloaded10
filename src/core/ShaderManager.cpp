@@ -683,8 +683,7 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 
 	// calculate average luma for use by shaders
 	if (avglumaRequired) {
-		RenderEffectToRT(Effects.AvgLuma->Textures.AvgLumaSurface, Effects.AvgLuma, NULL);
-		Device->SetRenderTarget(0, RenderTarget); 	// restore device used for effects
+		Effects.AvgLuma->RenderAvgLumaBuffer(RenderTarget, RenderedSurface, SourceSurface);
 	}
 
 	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
