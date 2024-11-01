@@ -8,6 +8,10 @@ public:
 	struct SettingsStruct{
 		float SkyMultiplierDay;
 		float SkyMultiplierNight;
+		float CloudMultiplierDay;
+		float CloudMultiplierNight;
+		float CloudTransparencyDay;
+		float CloudTransparencyNight;
 	};
 	SettingsStruct Settings;
 
