@@ -685,6 +685,9 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	if (avglumaRequired) {
 		Effects.AvgLuma->RenderAvgLumaBuffer(RenderTarget, RenderedSurface, SourceSurface);
 	}
+	else {
+		Effects.AvgLuma->renderTime = 0.0f;
+	}
 	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 
 	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);

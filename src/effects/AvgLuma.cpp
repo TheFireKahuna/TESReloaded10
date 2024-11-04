@@ -52,6 +52,8 @@ void AvgLumaEffect::RenderPass(IDirect3DDevice9* Device, UINT techniqueIndex, bo
 
 
 void AvgLumaEffect::RenderAvgLumaBuffer(IDirect3DSurface9* RenderTarget, IDirect3DSurface9* RenderedSurface, IDirect3DSurface9* SourceBuffer) {
+	auto timer = TimeLogger();
+
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	Device->StretchRect(RenderTarget, NULL, SourceBuffer, NULL, D3DTEXF_LINEAR);
@@ -60,49 +62,52 @@ void AvgLumaEffect::RenderAvgLumaBuffer(IDirect3DSurface9* RenderTarget, IDirect
 	// this is at either full res, or could be done at half-res for perf
 	Device->SetStreamSource(0, Textures.HistogramLumaBuffer, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, Textures.HistogramLumaSurface);
-	Render(Device, Textures.HistogramLumaSurface, Textures.HistogramLumaSurface, 0, false, NULL);
+	RenderPass(Device, 0 ,false);
 
 	// next, sample 16x16 pixels into a Screen/16 grid. sum up the total luminance into .R, sum up invalid pixels into .G
 	// this is done by summing 16x in the Y axis every Screen/16 * gridPosY into a single value in the Screen/16 Sample Buffer
 	// this is then repeated in the X axis, which sums the results of the previous pass
 	Device->SetStreamSource(0, Textures.HistogramSampleBufferY, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, Textures.HistogramSampleSurfaceY);
-	Render(Device, Textures.HistogramSampleSurfaceY, Textures.HistogramSampleSurfaceY, 1, false, NULL);
+	RenderPass(Device, 1 ,false);
 	Device->SetStreamSource(0, Textures.HistogramSampleBufferXY, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, Textures.HistogramSampleSurfaceXY);
-	Render(Device, Textures.HistogramSampleSurfaceXY, Textures.HistogramSampleSurfaceXY, 2, false, NULL);
+	RenderPass(Device, 2 ,false);
 
 	Device->SetStreamSource(0, Textures.HistogramSubsampleBufferY, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, Textures.HistogramSubsampleSurfaceY);
-	Render(Device, Textures.HistogramSubsampleSurfaceY, Textures.HistogramSubsampleSurfaceY, 3, false, NULL);
+	RenderPass(Device, 3 ,false);
 	Device->SetStreamSource(0, Textures.HistogramSubsampleBufferXY, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, Textures.HistogramSubsampleSurfaceXY);
-	Render(Device, Textures.HistogramSubsampleSurfaceXY, Textures.HistogramSubsampleSurfaceXY, 4, false, NULL);
+	RenderPass(Device, 4 ,false);
 
 	// calculate histogram bins
 	// we once more sample 16x16 pixels this time into a Screen/(16*16) grid. sum up the total luminance, sum up invalid pixels
 	// this time we will have a buffer (HistogramBinSurfaceXY, that has within a sum of each bin and the sum of its invalid pixels)
 	Device->SetStreamSource(0, Textures.HistogramBinBufferY, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, Textures.HistogramBinSurfaceY);
-	Render(Device, Textures.HistogramBinSurfaceY, Textures.HistogramBinSurfaceY, 5, false, NULL);
+	RenderPass(Device, 5 ,false);
 	Device->SetStreamSource(0, Textures.HistogramBinBufferXY, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, Textures.HistogramBinSurfaceXY);
-	Render(Device, Textures.HistogramBinSurfaceXY, Textures.HistogramBinSurfaceXY, 6, false, NULL);
+	RenderPass(Device, 6 ,false);
 
 	// the with this summarised, we sum up a 1D Bins*1 histogram which rolls up the Y axis
 	Device->SetStreamSource(0, Textures.HistogramBuffer, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, Textures.HistogramSurface);
-	Render(Device, Textures.HistogramSurface, Textures.HistogramSurface, 7, false, NULL);
+	RenderPass(Device, 7 ,false);
 
 	// finally, we sum up the X bins into a single 1x1 value, Average Log2 Luminance
 	Device->SetStreamSource(0, Textures.AvgLumaBuffer, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, Textures.AvgLumaSurface);
-	Render(Device, Textures.AvgLumaSurface, Textures.AvgLumaSurface, 8, false, NULL);
+	RenderPass(Device, 8 ,false);
 
 	// then we optionally render a histogram display
 	Device->SetStreamSource(0, TheShaderManager->FrameVertex, 0, sizeof(FrameVS)); // Set correct vertex buffer for given resolution.
 	Device->SetRenderTarget(0, RenderTarget);
-	Render(Device, RenderTarget, RenderTarget, 9, false, NULL);
+	RenderPass(Device, 9 ,false);
+
+	std::string name = "EffectRecord::Render " + *Path;
+	renderTime = timer.LogTime(name.c_str());
 }
 
 void AvgLumaEffect::RegisterConstants() {
