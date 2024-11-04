@@ -7,6 +7,7 @@ float4 TESR_ExposureData; // x:min brightness, y;max brightness, z:dark adapt sp
 float4 TESR_ReciprocalResolution;
 float4 TESR_HistogramBufferData;
 float4 TESR_HistogramTexelData;
+float4 TESR_HistogramTexelExtraData;
 float4 TESR_DebugVar;
 
 sampler2D TESR_SourceBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -20,8 +21,12 @@ sampler2D TESR_HistogramBinBufferXY : register(s6) = sampler_state { ADDRESSU = 
 sampler2D TESR_HistogramBuffer : register(s7) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_AvgLumaBuffer : register(s8) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_HistogramLumaBuffer : register(s9) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_HistogramSubsampleBufferY : register(s10) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
+sampler2D TESR_HistogramSubsampleBufferXY : register(s11) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
-static const float BlockSize = 16;
+static const float SampleSize = 4; // TESR_HistogramBufferData.x;
+static const float SubsampleSize = 4; // TESR_HistogramBufferData.x;
+static const float BinSize = 8; // TESR_HistogramBufferData.y / (SampleSize * SubsampleSize
 
 static const float decreaseRate = -TESR_ExposureData.z; // max value for adaptation speed towards darker screens
 // static const float decreaseRate = -TESR_ExposureData.z * 0.001; // max value for adaptation speed towards darker screens
@@ -128,7 +133,7 @@ float4 Histogram_GetLuma(VSOUT IN): COLOR0 {
 		return float4(0.0, 1.0, 0.0, 0.0);
 	}
 	else {
-		return float4((log2(lum) - MINLOG) * ONEOVERLOGRANGE, 0.0, 0.0, 0.0);
+		return float4(clamp((log2(lum) - MINLOG) * ONEOVERLOGRANGE, 0.0, 1.0), 0.0, 0.0, 0.0);
 	}
 }
 
@@ -141,7 +146,7 @@ float4 Histogram_SamplePixelsX(VSOUT IN): COLOR0 {
 	float highestVal = 0;
 
 	[unroll]
-	for(float i = 0; i < BlockSize; i += 1) {
+	for(float i = 0; i < SampleSize; i += 1) {
 		coords.y = IN.UVCoord.y + (i * sampleUV);
 		luma = tex2D(TESR_HistogramLumaBuffer, coords);
 		highestVal = max(luma.x, highestVal);
@@ -159,9 +164,47 @@ float4 Histogram_SamplePixelsY(VSOUT IN): COLOR0 {
 	float highestVal = 0;
 
 	[unroll]
-	for(float i = 0; i < BlockSize; i += 1) {
+	for(float i = 0; i < SampleSize; i += 1) {
 		coords.x = IN.UVCoord.x + (i * sampleUV);
 		luma = tex2D(TESR_HistogramSampleBufferY, coords);
+		highestVal = max(luma.z, highestVal);
+		lumaSum += luma;
+	}
+	lumaSum.z = highestVal;
+	lumaSum.w = 1.0;
+    return lumaSum;
+}
+
+
+float4 Histogram_SubsamplePixelsX(VSOUT IN): COLOR0 {
+	float sampleUV =  TESR_ReciprocalResolution.y;
+	float4 luma = 0;
+	float4 lumaSum = 0;
+	float2 coords = IN.UVCoord;
+	float highestVal = 0;
+
+	[unroll]
+	for(float i = 0; i < SubsampleSize; i += 1) {
+		coords.y = IN.UVCoord.y + (i * sampleUV);
+		luma = tex2D(TESR_HistogramSampleBufferXY, coords);
+		highestVal = max(luma.x, highestVal);
+		lumaSum += luma;
+	}
+	lumaSum.z = highestVal;
+	lumaSum.w = 1.0;
+    return lumaSum;
+}
+float4 Histogram_SubsamplePixelsY(VSOUT IN): COLOR0 {
+	float sampleUV =  TESR_ReciprocalResolution.x;
+	float4 luma = 0;
+	float4 lumaSum = 0;
+	float2 coords = IN.UVCoord;
+	float highestVal = 0;
+
+	[unroll]
+	for(float i = 0; i < SubsampleSize; i += 1) {
+		coords.x = IN.UVCoord.x + (i * sampleUV);
+		luma = tex2D(TESR_HistogramSubsampleBufferY, coords);
 		highestVal = max(luma.z, highestVal);
 		lumaSum += luma;
 	}
@@ -178,9 +221,9 @@ float4 Histogram_SampleBinsX(VSOUT IN): COLOR0 {
 	float2 coords = IN.UVCoord;
 	float highestVal = 0;
 	[unroll]
-	for(float i = 0; i < BlockSize; i += 1) {
+	for(float i = 0; i < BinSize; i += 1) {
 		coords.y = IN.UVCoord.y + (i * binUV);
-		luma = tex2D(TESR_HistogramSampleBufferXY, coords);
+		luma = tex2D(TESR_HistogramSubsampleBufferXY, coords);
 		highestVal = max(luma.z, highestVal);
 		lumaSum += luma;
 	}
@@ -197,7 +240,7 @@ float4 Histogram_SampleBinsY(VSOUT IN): COLOR0 {
 	float2 coords = IN.UVCoord;
 	float highestVal = 0;
 	[unroll]
-	for(float i = 0; i < BlockSize; i += 1) {
+	for(float i = 0; i < BinSize; i += 1) {
 		coords.x = IN.UVCoord.x + (i * binUV);
 		luma = tex2D(TESR_HistogramBinBufferY, coords);
 		highestVal = max(luma.z, highestVal);
@@ -229,7 +272,7 @@ float4 Histogram_1D(VSOUT IN): COLOR0 {
 }
 
 float4 Histogram_Display(VSOUT IN): COLOR0 {
-	float maxLuma = tex2D(TESR_AvgLumaBuffer, center).g;
+	/*float maxLuma = tex2D(TESR_AvgLumaBuffer, center).g;
 	float3 lumaSum = 0.1;
 	if (TESR_DebugVar.x > 0.0) {
 		if (TESR_DebugVar.x > 0.3) {
@@ -279,40 +322,9 @@ float4 Histogram_Display(VSOUT IN): COLOR0 {
 		lumaSum = exp2(lumaSum);
 	}
 
-	return float4(lumaSum.r, lumaSum.g, lumaSum.b, 1.0);
+	return float4(lumaSum.r, lumaSum.g, lumaSum.b, 1.0);*/
 	
-	//float sampleCount = 256;
-	
-	//float weightedAverageLuminance = exp2((weightedLogAverage * 12.0) + -10.0);
-	/*
-    uint2 BufferDim;
-    ColorBuffer.GetDimensions(BufferDim.x, BufferDim.y);
-
-    const uint2 RectCorner = uint2(BufferDim.x / 2 - 512, BufferDim.y - 256);
-    const uint2 GroupCorner = RectCorner + DTid.xy * 4;
-
-    uint height = 127 - DTid.y * 4;
-    uint threshold = histValue * 128 / max(1, maxHistValue);
-
-    float3 OutColor = (GI == (uint)Exposure[3]) ? float3(1.0, 1.0, 0.0) : float3(0.5, 0.5, 0.5);
-
-    for (uint i = 0; i < 4; ++i)
-    {
-        float3 MaskedColor = (height - i) < threshold ? OutColor : float3(0, 0, 0);
-
-        // 4-wide column with 2 pixels for the histogram bar and 2 for black spacing
-        ColorBuffer[GroupCorner + uint2(0, i)] = MaskedColor;
-        ColorBuffer[GroupCorner + uint2(1, i)] = MaskedColor;
-        ColorBuffer[GroupCorner + uint2(2, i)] = float3(0, 0, 0);
-        ColorBuffer[GroupCorner + uint2(3, i)] = float3(0, 0, 0);
-    }
-	return tex2D(TESR_HistogramBinBufferXY, IN.UVCoord).rrr;*/
-	//return maxLuma;
-	//if (weightedLogAverage != 0) {
-		//weightedLogAverage /= maxLuma;
-		//return float4(weightedLogAverage, weightedLogAverage, weightedLogAverage, 1.0);
-	//}
-	//return float4(0, 0, 0, 1);
+	return tex2D(TESR_SourceBuffer, IN.UVCoord);
 }
 
 float4 AvgLuma(VSOUT IN): COLOR0 {
@@ -366,6 +378,22 @@ technique
 	{
 		VertexShader = compile vs_3_0 FrameVS();
 		PixelShader = compile ps_3_0 Histogram_SamplePixelsY();
+	}
+}
+technique
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Histogram_SubsamplePixelsX();
+	}
+}
+technique
+{
+	pass
+	{
+		VertexShader = compile vs_3_0 FrameVS();
+		PixelShader = compile ps_3_0 Histogram_SubsamplePixelsY();
 	}
 }
 technique
