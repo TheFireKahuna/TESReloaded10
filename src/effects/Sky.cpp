@@ -8,9 +8,14 @@ void SkyShaders::RegisterConstants() {
 
 void SkyShaders::UpdateConstants() {
 	if (TheShaderManager->Shaders.Tonemapping->Enabled)
+	{
 		Constants.SunsetColor.w = TheShaderManager->GetTransitionValue(Settings.SkyMultiplierDay, Settings.SkyMultiplierNight, 1.0);
-	else
+	}
+	else {
 		Constants.SunsetColor.w = 1.0;
+	}
+	Constants.CloudData.z = TheShaderManager->GetTransitionValue(Settings.CloudTransparencyDay, Settings.CloudTransparencyNight, 1.0);
+	Constants.CloudData.w = TheShaderManager->GetTransitionValue(Settings.CloudMultiplierDay, Settings.CloudMultiplierNight, 1.0);
 }
 
 void SkyShaders::UpdateSettings() {
@@ -20,6 +25,10 @@ void SkyShaders::UpdateSettings() {
 	Settings.SkyMultiplierDay = TheSettingManager->GetSettingF("Shaders.Tonemapping.Main", "SkyMultiplier");
 	Settings.SkyMultiplierNight = TheSettingManager->GetSettingF("Shaders.Tonemapping.Night", "SkyMultiplier");
 
+	float tempVar = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalControl");
+	float tempVar2 = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalScale");
+	Constants.SunsetColor.w = TheSettingManager->GetSettingF("Shaders.Linearization.Shaders", "GlobalSky") * tempVar * pow(10, tempVar2) * 0.1;
+
 	Constants.SkyData.x = TheSettingManager->GetSettingF("Shaders.Sky.Main", "AthmosphereThickness");
 	Constants.SkyData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunInfluence");
 	Constants.SkyData.z = TheSettingManager->GetSettingF("Shaders.Sky.Main", "SunStrength");
@@ -27,8 +36,10 @@ void SkyShaders::UpdateSettings() {
 
 	Constants.CloudData.x = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "UseNormals");
 	//Constants.CloudData.y = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "SphericalNormals"); // not used much so it's disabled
-	Constants.CloudData.z = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Transparency");
-	Constants.CloudData.w = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Brightness");
+	Settings.CloudTransparencyDay = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Transparency");
+	Settings.CloudTransparencyNight = 0.5;
+	Settings.CloudMultiplierDay = TheSettingManager->GetSettingF("Shaders.Sky.Clouds", "Brightness");
+	Settings.CloudMultiplierNight = 1.0;
 
 	Constants.CloudData.y = TheSettingManager->GetSettingF("Shaders.Sky.Main", "StarTwinkle");
 
