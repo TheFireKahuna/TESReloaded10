@@ -1,20 +1,20 @@
 #include "AvgLuma.h"
 #include <algorithm>
 
-#define Histogram_SampleRes 4 //[32:253] //-Adjust sample resolution (effects performance)
-#define Histogram_SubsampleRes 8 //[32:253] //-Adjust sample resolution (effects performance)
-#define Histogram_BinCount 128 //[32:253] //-Adjust sample resolution (effects performance)
+#define Histogram_SampleRes 8 //[32:253] //-Adjust sample resolution (effects performance)
+#define Histogram_SubsampleRes 32 //[32:253] //-Adjust sample resolution (effects performance)
+#define Histogram_BinCount 256 //[32:253] //-Adjust sample resolution (effects performance)
 
 void AvgLumaEffect::RegisterTextures() {
 	TheTextureManager->InitTexture("TESR_AvgLumaBuffer", &Textures.AvgLumaTexture, &Textures.AvgLumaSurface, 1, 1, D3DFMT_A16B16G16R16F);
 	TheTextureManager->InitTexture("TESR_HistogramLumaBuffer", &Textures.HistogramLumaTexture, &Textures.HistogramLumaSurface, TheRenderManager->width / 2, TheRenderManager->height / 2, D3DFMT_A16B16G16R16F);
-	TheTextureManager->InitTexture("TESR_HistogramSampleBufferY", &Textures.HistogramSampleTextureY, &Textures.HistogramSampleSurfaceY, TheRenderManager->width, TheRenderManager->height / Histogram_SampleRes, D3DFMT_A32B32G32R32F);
-	TheTextureManager->InitTexture("TESR_HistogramSampleBufferXY", &Textures.HistogramSampleTextureXY, &Textures.HistogramSampleSurfaceXY, TheRenderManager->width / Histogram_SampleRes, TheRenderManager->height / Histogram_SampleRes, D3DFMT_A32B32G32R32F);
-	TheTextureManager->InitTexture("TESR_HistogramSubsampleBufferY", &Textures.HistogramSubsampleTextureY, &Textures.HistogramSubsampleSurfaceY, TheRenderManager->width / Histogram_SampleRes, TheRenderManager->height / Histogram_SubsampleRes, D3DFMT_A32B32G32R32F);
-	TheTextureManager->InitTexture("TESR_HistogramSubsampleBufferXY", &Textures.HistogramSubsampleTextureXY, &Textures.HistogramSubsampleSurfaceXY, TheRenderManager->width / Histogram_SubsampleRes, TheRenderManager->height / Histogram_SubsampleRes, D3DFMT_A32B32G32R32F);
-	TheTextureManager->InitTexture("TESR_HistogramBinBufferY", &Textures.HistogramBinTextureY, &Textures.HistogramBinSurfaceY, TheRenderManager->width / Histogram_SubsampleRes, TheRenderManager->height / Histogram_BinCount, D3DFMT_A32B32G32R32F);
-	TheTextureManager->InitTexture("TESR_HistogramBinBufferXY", &Textures.HistogramBinTextureXY, &Textures.HistogramBinSurfaceXY, TheRenderManager->width / Histogram_BinCount, TheRenderManager->height / Histogram_BinCount, D3DFMT_A32B32G32R32F);
-	TheTextureManager->InitTexture("TESR_HistogramBuffer", &Textures.HistogramTexture, &Textures.HistogramSurface, TheRenderManager->width / Histogram_BinCount, 1, D3DFMT_A32B32G32R32F);
+	TheTextureManager->InitTexture("TESR_HistogramSampleBufferY", &Textures.HistogramSampleTextureY, &Textures.HistogramSampleSurfaceY, TheRenderManager->width, TheRenderManager->height / Histogram_SampleRes, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_HistogramSampleBufferXY", &Textures.HistogramSampleTextureXY, &Textures.HistogramSampleSurfaceXY, TheRenderManager->width / Histogram_SampleRes, TheRenderManager->height / Histogram_SampleRes, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_HistogramSubsampleBufferY", &Textures.HistogramSubsampleTextureY, &Textures.HistogramSubsampleSurfaceY, TheRenderManager->width / Histogram_SampleRes, TheRenderManager->height / Histogram_SubsampleRes, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_HistogramSubsampleBufferXY", &Textures.HistogramSubsampleTextureXY, &Textures.HistogramSubsampleSurfaceXY, TheRenderManager->width / Histogram_SubsampleRes, TheRenderManager->height / Histogram_SubsampleRes, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_HistogramBinBufferY", &Textures.HistogramBinTextureY, &Textures.HistogramBinSurfaceY, TheRenderManager->width / Histogram_SubsampleRes, TheRenderManager->height / Histogram_BinCount, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_HistogramBinBufferXY", &Textures.HistogramBinTextureXY, &Textures.HistogramBinSurfaceXY, TheRenderManager->width / Histogram_BinCount, TheRenderManager->height / Histogram_BinCount, D3DFMT_A16B16G16R16F);
+	TheTextureManager->InitTexture("TESR_HistogramBuffer", &Textures.HistogramTexture, &Textures.HistogramSurface, TheRenderManager->width / Histogram_BinCount, 1, D3DFMT_A16B16G16R16F);
 
 	TheShaderManager->CreateFrameVertex(TheRenderManager->width / 2, TheRenderManager->height / 2, &Textures.HistogramLumaBuffer);
 	TheShaderManager->CreateFrameVertex(TheRenderManager->width, TheRenderManager->height / Histogram_SampleRes, &Textures.HistogramSampleBufferY);
