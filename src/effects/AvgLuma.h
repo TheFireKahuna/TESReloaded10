@@ -8,6 +8,7 @@ public:
 	struct AvgLumaStruct {
 		D3DXVECTOR4		BufferRes;
 		D3DXVECTOR4		BufferTexel;
+		D3DXVECTOR4		BufferExtraTexel;
 	};
 	AvgLumaStruct	Constants;
 
@@ -20,6 +21,10 @@ public:
 		IDirect3DSurface9* HistogramSampleSurfaceY;
 		IDirect3DTexture9* HistogramSampleTextureXY;
 		IDirect3DSurface9* HistogramSampleSurfaceXY;
+		IDirect3DTexture9* HistogramSubsampleTextureY;
+		IDirect3DSurface9* HistogramSubsampleSurfaceY;
+		IDirect3DTexture9* HistogramSubsampleTextureXY;
+		IDirect3DSurface9* HistogramSubsampleSurfaceXY; 
 		IDirect3DTexture9* HistogramBinTextureY;
 		IDirect3DSurface9* HistogramBinSurfaceY;
 		IDirect3DTexture9* HistogramBinTextureXY;
@@ -28,8 +33,11 @@ public:
 		IDirect3DSurface9* HistogramSurface;
 
 
+		IDirect3DVertexBuffer9* HistogramLumaBuffer;
 		IDirect3DVertexBuffer9* HistogramSampleBufferY;
 		IDirect3DVertexBuffer9* HistogramSampleBufferXY;
+		IDirect3DVertexBuffer9* HistogramSubsampleBufferY;
+		IDirect3DVertexBuffer9* HistogramSubsampleBufferXY;
 		IDirect3DVertexBuffer9* HistogramBinBufferY;
 		IDirect3DVertexBuffer9* HistogramBinBufferXY;
 		IDirect3DVertexBuffer9* HistogramBuffer;

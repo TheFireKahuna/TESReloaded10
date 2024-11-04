@@ -679,15 +679,16 @@ void ShaderManager::RenderEffectsPreTonemapping(IDirect3DSurface9* RenderTarget)
 	Effects.Flashlight->Render(Device, RenderTarget, RenderedSurface, Effects.Flashlight->selectedPass, true, SourceSurface);
 	Effects.Specular->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
 	Effects.Underwater->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
-	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+	Effects.VolumetricFog->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
 
 	// calculate average luma for use by shaders
 	if (avglumaRequired) {
 		Effects.AvgLuma->RenderAvgLumaBuffer(RenderTarget, RenderedSurface, SourceSurface);
 	}
-
 	Effects.Exposure->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
+
+	Effects.GodRays->Render(Device, RenderTarget, RenderedSurface, 0, true, SourceSurface);
+
 	Effects.Bloom->RenderBloomBuffer(RenderTarget);
 
 	Effects.Lens->Render(Device, RenderTarget, RenderedSurface, 0, false, SourceSurface);
