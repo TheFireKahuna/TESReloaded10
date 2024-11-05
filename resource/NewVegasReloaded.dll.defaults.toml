@@ -281,19 +281,19 @@ Radius = 1.5                           # Radius for the bokeh blur.
 [_Shaders.Exposure.Interiors]
 DarkAdaptSpeed = 1.0                   # Adjusts the speed of Adaptation between frames
 LightAdaptSpeed = 1.0                  # Unused
-MaxBrightness = 0.6                    # Controls the Target EV (Exposure Value), adjusts from EV100 in EV values
-MinBrightness = 0.6                    # Unused
+MaxBrightness = 0.1                    # Controls the Target EV (Exposure Value), adjusts from EV100 in EV values
+MinBrightness = 0.0                    # Unused
 
 [_Shaders.Exposure.Main]
 DarkAdaptSpeed = 1.0                   # Adjusts the speed of Adaptation between frames
 LightAdaptSpeed = 1.0                  # Unused
-MaxBrightness = -0.3                   # Controls the Target EV (Exposure Value), adjusts from EV100 in EV values
+MaxBrightness = 0.0                    # Controls the Target EV (Exposure Value), adjusts from EV100 in EV values
 MinBrightness = 1.0                    # Unused
 
 [_Shaders.Exposure.Night]
 DarkAdaptSpeed = 1.0                   # Adjusts the speed of Adaptation between frames
 LightAdaptSpeed = 1.0                  # Unused
-MaxBrightness = 0.6                    # Controls the Target EV (Exposure Value), adjusts from EV100 in EV values
+MaxBrightness = 0.3                    # Controls the Target EV (Exposure Value), adjusts from EV100 in EV values
 MinBrightness = 1.0                    # Unused
 
 [_Shaders.Exposure.Status]
