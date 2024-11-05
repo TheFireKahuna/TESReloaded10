@@ -24,7 +24,7 @@ sampler2D TESR_HistogramLumaBuffer : register(s9) = sampler_state { ADDRESSU = C
 sampler2D TESR_HistogramSubsampleBufferY : register(s10) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_HistogramSubsampleBufferXY : register(s11) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
-static const float SampleSize = 4; // TESR_HistogramBufferData.x;
+static const float SampleSize = 2; // TESR_HistogramBufferData.x;
 static const float SubsampleSize = 4; // TESR_HistogramBufferData.x;
 static const float BinSize = 8; // TESR_HistogramBufferData.y / (SampleSize * SubsampleSize
 

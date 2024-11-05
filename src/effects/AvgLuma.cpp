@@ -1,9 +1,9 @@
 #include "AvgLuma.h"
 #include <algorithm>
 
-#define Histogram_SampleRes 8 //[32:253] //-Adjust sample resolution (effects performance)
-#define Histogram_SubsampleRes 32 //[32:253] //-Adjust sample resolution (effects performance)
-#define Histogram_BinCount 256 //[32:253] //-Adjust sample resolution (effects performance)
+#define Histogram_SampleRes 4 //[32:253] //-Adjust sample resolution (effects performance)
+#define Histogram_SubsampleRes 16 //[32:253] //-Adjust sample resolution (effects performance)
+#define Histogram_BinCount 128 //[32:253] //-Adjust sample resolution (effects performance)
 
 void AvgLumaEffect::RegisterTextures() {
 	TheTextureManager->InitTexture("TESR_AvgLumaBuffer", &Textures.AvgLumaTexture, &Textures.AvgLumaSurface, 1, 1, D3DFMT_A16B16G16R16F);
