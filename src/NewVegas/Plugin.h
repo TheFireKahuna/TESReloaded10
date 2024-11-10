@@ -2,7 +2,7 @@
 
 typedef UInt32	PluginHandle;	// treat this as an opaque type
 
-class CommandInfo;
+struct CommandInfo;
 
 class PluginInterface {
 public:

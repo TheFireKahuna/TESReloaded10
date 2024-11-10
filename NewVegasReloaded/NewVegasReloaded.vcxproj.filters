@@ -178,9 +178,6 @@
     <ClInclude Include="..\src\base\PluginVersion.h">
       <Filter>Base</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\base\SafeWrite.h">
-      <Filter>Base</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\base\Types.h">
       <Filter>Base</Filter>
     </ClInclude>
@@ -289,18 +286,6 @@
     <ClInclude Include="..\src\core\TextureRecord.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\NewVegas\nvse\class_vtbls.h">
-      <Filter>NewVegas\nvse</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\NewVegas\nvse\Game.h">
-      <Filter>NewVegas\nvse</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\NewVegas\nvse\GameHavok.h">
-      <Filter>NewVegas\nvse</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\NewVegas\nvse\GameNi.h">
-      <Filter>NewVegas\nvse</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\effects\Bloom.h">
       <Filter>Effects</Filter>
     </ClInclude>
@@ -309,6 +294,66 @@
     </ClInclude>
     <ClInclude Include="..\src\effects\PBR.h">
       <Filter>Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\utility.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\base_defs.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\class_vtbls.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameNi.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\containers.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\Utilities.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\SafeWrite.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\memory_pool.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameTiles.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameRTTI.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameData.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameForms.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\..\Users\matth\Downloads\JIP-LN-NVSE-main\JIP-LN-NVSE-main\nvse\GameTypes.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\DataTypes.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameSound.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameSettings.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\DataObject.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameObjects.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\GameExtraData.h">
+      <Filter>NewVegas\nvse</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\havok.h">
+      <Filter>NewVegas\nvse</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -426,9 +471,6 @@
     <ClCompile Include="..\src\base\PluginVersion.cpp">
       <Filter>Base</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\base\SafeWrite.cpp">
-      <Filter>Base</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\core\Hooks\FormsCommon.cpp">
       <Filter>Core\Hooks</Filter>
     </ClCompile>
@@ -522,9 +564,6 @@
     <ClCompile Include="..\src\effects\Underwater.cpp">
       <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\NewVegas\nvse\GameNi.cpp">
-      <Filter>NewVegas\nvse</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\effects\Bloom.cpp">
       <Filter>Effects</Filter>
     </ClCompile>
@@ -533,6 +572,54 @@
     </ClCompile>
     <ClCompile Include="..\src\effects\PBR.cpp">
       <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\utility.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameNi.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\containers.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\Utilities.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\SafeWrite.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\memory_pool.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameTiles.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameRTTI.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameData.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameForms.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\..\Users\matth\Downloads\JIP-LN-NVSE-main\JIP-LN-NVSE-main\nvse\GameTypes.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameSound.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameSettings.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameObjects.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\GameExtraData.cpp">
+      <Filter>NewVegas\nvse</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\havok.cpp">
+      <Filter>NewVegas\nvse</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

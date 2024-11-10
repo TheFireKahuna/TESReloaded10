@@ -1,5 +1,6 @@
 #pragma once
 
+
 class Animator {
 public:
 	Animator();
@@ -8,7 +9,7 @@ public:
 	float				GetValue();
 	void				Start(float duration, float finalValue);
 
-	TimeGlobals* time;
+	GameTimeGlobals* time;
 	float				startValue;
 	float				endValue;
 	float				startTime;

@@ -28,7 +28,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -52,8 +52,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>$(WindowsSDK_IncludePath);$(IncludePath)</IncludePath>
+    <LibraryPath>$(WindowsSDK_LibraryPath_x86);$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(ProjectName)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -88,13 +88,13 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_USE_MATH_DEFINES;_CRT_SECURE_NO_WARNINGS;NEWVEGAS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;_CRT_SECURE_NO_WARNINGS;NEWVEGAS;RUNTIME_VERSION=0x040020D0;RUNTIME;WIN32_LEAN_AND_MEAN;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>$(SolutionDir)\src\NewVegas\Framework.h</ForcedIncludeFiles>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)\NewVegas\nvse;$(SolutionDir)\NewVegas\common;$(SolutionDir)\Core;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>$(SolutionDir)\src\NewVegas\Framework.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -103,6 +103,8 @@
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <EnableModules>true</EnableModules>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -116,9 +118,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\Users\matth\Downloads\JIP-LN-NVSE-main\JIP-LN-NVSE-main\nvse\GameTypes.cpp" />
     <ClCompile Include="..\src\base\Logger.cpp" />
     <ClCompile Include="..\src\base\PluginVersion.cpp" />
-    <ClCompile Include="..\src\base\SafeWrite.cpp" />
     <ClCompile Include="..\src\core\BinkManager.cpp" />
     <ClCompile Include="..\src\core\CameraManager.cpp" />
     <ClCompile Include="..\src\core\CommandManager.cpp" />
@@ -188,9 +190,9 @@
     <ClCompile Include="..\src\NewVegas\Hooks\ShaderIO.cpp" />
     <ClCompile Include="..\src\NewVegas\Hooks\Shadows.cpp" />
     <ClCompile Include="..\src\NewVegas\Managers.cpp" />
+    <ClInclude Include="..\..\..\..\..\Users\matth\Downloads\JIP-LN-NVSE-main\JIP-LN-NVSE-main\nvse\GameTypes.h" />
     <ClInclude Include="..\src\base\Logger.h" />
     <ClInclude Include="..\src\base\PluginVersion.h" />
-    <ClInclude Include="..\src\base\SafeWrite.h" />
     <ClInclude Include="..\src\base\Types.h" />
     <ClInclude Include="..\src\base\Utils.h" />
     <ClInclude Include="..\src\core\BinkManager.h" />
@@ -263,10 +265,6 @@
     <ClInclude Include="..\src\NewVegas\Base.h" />
     <ClInclude Include="..\src\NewVegas\Defines.h" />
     <ClInclude Include="..\src\NewVegas\Framework.h" />
-    <ClInclude Include="..\src\NewVegas\nvse\class_vtbls.h" />
-    <ClInclude Include="..\src\NewVegas\nvse\Game.h" />
-    <ClInclude Include="..\src\NewVegas\nvse\GameHavok.h" />
-    <ClInclude Include="..\src\NewVegas\nvse\GameNi.h" />
     <ClInclude Include="..\src\NewVegas\Hooks\FlyCam.h" />
     <ClInclude Include="..\src\NewVegas\Hooks\Game.h" />
     <ClInclude Include="..\src\NewVegas\Hooks\Hooks.h" />
@@ -275,11 +273,44 @@
     <ClInclude Include="..\src\NewVegas\Hooks\ShaderIO.h" />
     <ClInclude Include="..\src\NewVegas\Hooks\Shadows.h" />
     <ClInclude Include="..\src\NewVegas\Managers.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\base_defs.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\class_vtbls.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\containers.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\DataObject.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\DataTypes.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\GameData.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\GameExtraData.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\GameForms.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\GameNi.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\GameObjects.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\GameRTTI.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\GameSettings.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\GameSound.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\GameTiles.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\havok.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\memory_pool.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\SafeWrite.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\Utilities.h" />
+    <ClInclude Include="..\src\NewVegas\nvse\utility.h" />
     <ClInclude Include="..\src\NewVegas\Plugin.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\NewVegas\nvse\containers.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\GameData.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\GameExtraData.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\GameForms.cpp" />
     <ClCompile Include="..\src\NewVegas\nvse\GameNi.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\GameObjects.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\GameRTTI.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\GameSettings.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\GameSound.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\GameTiles.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\havok.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\memory_pool.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\SafeWrite.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\Utilities.cpp" />
+    <ClCompile Include="..\src\NewVegas\nvse\utility.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>

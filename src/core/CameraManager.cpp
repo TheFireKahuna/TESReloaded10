@@ -68,10 +68,10 @@ void CameraManager::CameraManagerCommands::Execute(NiAVObject* CameraNode) {
 
 	if (!IsTranslating && !IsRotating && !IsLookingAt && !IsTranslatingToPosition && !IsRotatingToPosition && !IsLookingAtPosition) return;
 
-	NiMatrix33* CameraRotationW = &CameraNode->m_worldTransform.rot;
-	NiPoint3* CameraPositionW = &CameraNode->m_worldTransform.pos;
-	NiMatrix33* CameraRotationL = &CameraNode->m_localTransform.rot;
-	NiPoint3* CameraPositionL = &CameraNode->m_localTransform.pos;
+	NiMatrix33* CameraRotationW = &CameraNode->m_transformWorld.rotate;
+	NiPoint3* CameraPositionW = &CameraNode->m_transformWorld.translate;
+	NiMatrix33* CameraRotationL = &CameraNode->m_transformLocal.rotate;
+	NiPoint3* CameraPositionL = &CameraNode->m_transformLocal.translate;
 	NiMatrix33* NodeRotationW = NULL;
 	NiPoint3* NodePositionW = NULL;
 	NiMatrix33 m;
@@ -81,12 +81,12 @@ void CameraManager::CameraManagerCommands::Execute(NiAVObject* CameraNode) {
 		NiNode* RootNode = Ref->GetNiNode();
 		if (Ref->IsActor() && (IsTranslating || IsLookingAt)) {
 			NiAVObject* Head = RootNode->GetObjectByName("Bip01 Head");
-			NodeRotationW = &Head->m_worldTransform.rot;
-			NodePositionW = &Head->m_worldTransform.pos;
+			NodeRotationW = &Head->m_transformWorld.rotate;
+			NodePositionW = &Head->m_transformWorld.translate;
 		}
 		else {
-			NodeRotationW = &RootNode->m_worldTransform.rot;
-			NodePositionW = &RootNode->m_worldTransform.pos;
+			NodeRotationW = &RootNode->m_transformWorld.rotate;
+			NodePositionW = &RootNode->m_transformWorld.translate;
 		}
 	}
 
@@ -195,13 +195,13 @@ bool CameraManager::InFrustum(frustum* frustum, NiNode* Node) {
 	if (!Bound) return false;
 
 	D3DXVECTOR3 Position = { 
-		Bound->Center.x - TheRenderManager->CameraPosition.x, 
-		Bound->Center.y - TheRenderManager->CameraPosition.y, 
-		Bound->Center.z - TheRenderManager->CameraPosition.z 
+		Bound->center.x - TheRenderManager->CameraPosition.x, 
+		Bound->center.y - TheRenderManager->CameraPosition.y, 
+		Bound->center.z - TheRenderManager->CameraPosition.z 
 	};
 
 	for (int i = 0; i < 6; ++i) {
-		if (D3DXPlaneDotCoord(&frustum->plane[i], &Position) <= -Bound->Radius)
+		if (D3DXPlaneDotCoord(&frustum->plane[i], &Position) <= -Bound->radius)
 			return false;
 	}
 	return true;
