@@ -40,11 +40,7 @@ sampler2D TESR_samplerWater : register(s5) < string ResourceName = "Water\water_
 
 PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     PS_OUTPUT OUT;
-
-    float4 linShallowColor = linearize(ShallowColor); 
-    float4 linDeepColor = linearize(DeepColor);
-    float4 linFogColor = linearize(FogColor);
-
+	
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
     float3 eyeDirection = normalize(eyeVector);         // normalized eye to world vector (for lighting)
     float distance = length(eyeVector.xy);              // surface distance to eye
@@ -71,16 +67,16 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
     float refractionCoeff = (waterDepth.y * depthFog) * ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff * interiorRefractionModifier );
-    //float4 reflection = linearize(tex2Dproj(ReflectionMap, reflectionPos));
+    //float4 reflection = tex2Dproj(ReflectionMap, reflectionPos);
     float4 refractionPos = reflectionPos;
     refractionPos.y = refractionPos.w - reflectionPos.y;
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb * interiorDepthModifier;
 
-    float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
-    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, 0.5, TESR_WaterSettings, color);
-    color = getTurbidityFog(refractedDepth, linShallowColor, TESR_WaterVolume, sunLuma, color);
-    //color = getDiffuse(surfaceNormal, lightDir, eyeDirection, distance, linFogColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, linFogColor, TESR_WaveParams.w, color);
+    float4 color = tex2Dproj(RefractionMap, refractionPos);
+    color = getLightTravel(refractedDepth, ShallowColor, DeepColor, 0.5, TESR_WaterSettings, color);
+    color = getTurbidityFog(refractedDepth, ShallowColor, TESR_WaterVolume, sunLuma, color);
+    //color = getDiffuse(surfaceNormal, lightDir, eyeDirection, distance, FogColor, color);
+    color = getFresnel(surfaceNormal, eyeDirection, FogColor, TESR_WaveParams.w, color);
 
 	for (int i= 0; i< 12; i++){
 	    color = getPointLightSpecular(surfaceNormal, TESR_ShadowLightPosition[i], position, eyeDirection, TESR_LightColor[i].rgb * TESR_LightColor[i].w, color);
@@ -89,7 +85,6 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
     color = getShoreFade(IN, waterDepth.x, TESR_WaterShorelineParams.x, TESR_WaterVolume.y, color);
 
-    color = delinearize(color); //delinearise
     OUT.color_0 = color;
     return OUT;
 

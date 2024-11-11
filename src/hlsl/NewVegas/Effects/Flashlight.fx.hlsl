@@ -63,7 +63,7 @@ float4 Shadows(VSOUT IN) : COLOR0
 {
 	float depth = readDepth(IN.UVCoord);
     float3 eyeVector = toWorld(IN.UVCoord);
-    float4 worldPos = float4(TESR_CameraPosition.xyz + eyeVector * depth, 1);
+    float4 worldPos = {TESR_CameraPosition.xyz + eyeVector * depth, 1};
     float3 lightToWorld = TESR_SpotLightPosition.xyz - worldPos.xyz;
 
     float radius = TESR_SpotLightPosition.w;
@@ -107,7 +107,7 @@ float4 Flashlight(VSOUT IN) : COLOR0
 	float atten = saturate(((1 - s) * (1 - s)) / (1 + 5.0 * s));
 
 	float4 lightSpaceCoord = ScreenCoordToTexCoord(mul(float4(worldPos, 1), TESR_FlashLightViewProjTransform));
-	float isShadow = tex2D(TESR_RenderedBuffer, IN.UVCoord);
+	float isShadow = tex2D(TESR_RenderedBuffer, IN.UVCoord).r;
 
 	float lightTexture = tex2D(TESR_SpotLightTexture, lightSpaceCoord.xy).r;
 
@@ -124,7 +124,7 @@ float4 Flashlight(VSOUT IN) : COLOR0
 	// if (lightSpaceCoord.x > 0.0 && lightSpaceCoord.x < 1.0 && lightSpaceCoord.y > 0.0 && lightSpaceCoord.y < 1.0) return float4(light.xxx, 1);
 	// color = displayBuffer(color, IN.UVCoord, float2(0.7, 0.15), float2(0.2, 0.2), TESR_ShadowSpotlightBuffer0);
 
-    // return delinearize(color);
+    // return color;
     return float4(light, 1);
 }
 
@@ -167,12 +167,12 @@ float4 BoxBlurAvg (VSOUT IN, uniform sampler2D buffer, uniform float scaleFactor
 
 float4 Combine (VSOUT IN) : COLOR0
 {
-	float4 color = linearize(tex2D(TESR_SourceBuffer, IN.UVCoord));
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float4 light = tex2D(TESR_RenderedBuffer, IN.UVCoord);
 
 	color.rgb += color.rgb * max(0.0, luma(exp(-color.rgb * 3.5)) * light.rgb); // modulate light with base color brightness to compensate for the post process aspect
 
-    return delinearize(color);
+    return color;
 }
 
 technique {

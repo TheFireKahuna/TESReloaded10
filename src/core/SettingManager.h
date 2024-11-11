@@ -11,6 +11,7 @@ struct SettingsMainStruct {
 		bool	ForceMSAA;
 		bool	ForceReflections;
 		bool	RemovePrecipitations;
+		bool	ReflectionFixes;
 		bool	MemoryHeapManagement;
 		bool	MemoryTextureManagement;
 		bool	ReplaceIntro;

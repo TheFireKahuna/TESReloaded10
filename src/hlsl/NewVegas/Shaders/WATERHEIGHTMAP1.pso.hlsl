@@ -10,7 +10,7 @@ float4 TESR_GameTime : register(c6);
 float4 TESR_WaveParams : register(c7);
 
 sampler2D NoiseMap : register(s0);
-sampler3D TESR_Water : register(s1) < string ResourceName = "Water\water_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; ADDRESSW = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; } ;
+sampler3D TESR_samplerWater : register(s1) < string ResourceName = "Water\water_NRM.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; ADDRESSW = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; } ;
 
 // Registers:
 //
@@ -37,7 +37,7 @@ VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
 
     float frame = TESR_GameTime.z * TESR_WaveParams.z;
-    float4 HeightMap = tex3D(TESR_Water, float3(IN.texcoord_0.xy, frac(frame)));
+    float4 HeightMap = tex3D(TESR_samplerWater, float3(IN.texcoord_0.xy, frac(frame)));
 
 	OUT.color_0 = HeightMap;
     return OUT;

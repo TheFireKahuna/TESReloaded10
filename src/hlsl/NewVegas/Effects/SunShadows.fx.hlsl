@@ -22,11 +22,11 @@ sampler2D TESR_NormalsBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; 
 sampler2D TESR_PointShadowBuffer : register(s6)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
-#define SSS_STEPNUM 5
+#define SSS_STEPNUM 32
 
 static const float DARKNESS = 1-TESR_ShadowData.y;
-static const float SSS_DIST = 2000;
-static const float SSS_THICKNESS = 20;
+static const float SSS_DIST = 4000;
+static const float SSS_THICKNESS = 10;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
 
 
@@ -146,18 +146,18 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 	// uv *= 2;
 
     float4 color = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	[branch]
 	if (!TESR_ShadowScreenSpaceData.x) return float4(1.0, color.g, 0, 1); // skip is screenspace shadows are disabled
 
-	float3 random3 = random(uv);
-	float rand = lerp(0.1, 1, random3.r); // some noise to vary the ray length
 	float3 pos = reconstructPosition(uv);// + expand(random3); 
 
 	float bias = 0.01;
+	[branch]
 	if (pos.z > SSS_MAXDEPTH) return float4(1.0, color.g, 0, 1); // early out for pixels further away than the max render distance
 
 	// scale the step with distance, and randomize length
 	float depth = getHomogenousDepth(uv) / farZ;
-	float3 step = pows(depth, 0.6) * (SSS_DIST / SSS_STEPNUM) * TESR_ViewSpaceLightDir.xyz * rand;
+	float3 step = pows(depth, 0.6) * (SSS_DIST / SSS_STEPNUM) * TESR_ViewSpaceLightDir.xyz;
 	float thickness = pows(depth, 0.6) * SSS_THICKNESS;
 
 	float occlusion = 0.0;
@@ -168,9 +168,11 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 	for (float i = 1; i < SSS_STEPNUM; i+=2){
 		float step1 = i;
 		float step2 = i + 1;
+		float3 random3 = random(uv);
+		float rand = lerp(0.1, 1, random3.r); // some noise to vary the ray length
 
-		float3 pos1 = pos + step1 * step; // we move to the light with bigger steps each time
-		float3 pos2 = pos1 + step2 * step; // we move to the light with bigger steps each time
+		float3 pos1 = pos + step1 * (step * rand); // we move to the light with bigger steps each time
+		float3 pos2 = pos1 + step2 * (step * rand); // we move to the light with bigger steps each time
 		
 		// if (screen_pos.x > 0 && screen_pos.x < 1.0 && screen_pos.y > 0 && screen_pos.y <1){
 		float2 depth = {pos1.z, pos2.z};
@@ -203,12 +205,13 @@ float4 Shadow(VSOUT IN) : COLOR0
 
 	float depth = readDepth(uv);
 	float3 camera_vector = toWorld(uv) * depth;
-	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
+	float4 world_pos = {TESR_CameraPosition.xyz + camera_vector, 1.0f};
 	float4 pos = mul(world_pos, TESR_WorldViewProjectionTransform);
 	float uniformDepth = length(camera_vector);
 
 	// Sample Screen Space shadows
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	[branch]
 	if (!TESR_ShadowFade.y) return Shadow; // disable shadow maps if ShadowFade.y == 0 (setting for shadow map disabled)
 
 	// Sample shadows from shadowmaps

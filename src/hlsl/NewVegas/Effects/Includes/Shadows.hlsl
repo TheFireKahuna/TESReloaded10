@@ -4,6 +4,7 @@ static const float BLEED_CORRECTION = 0.6;
 
 
 float GetPointLightAmountValue(samplerCUBE ShadowCubeMapBuffer, float3 LightDir, float Distance) {
+	[branch]
 	if (TESR_ShadowFade.z == 0) return 1;
 
 	float lightDepth = texCUBE(ShadowCubeMapBuffer, LightDir).r;
@@ -29,6 +30,7 @@ float GetPointLightAtten(float3 LightDir, float Distance, float4 normal) {
 
 // returns a point light contribution using a shadow map
 float GetPointLightAmount(samplerCUBE ShadowCubeMapBuffer, float4 WorldPos, float4 LightPos, float4 normal) {
+	[branch]
 	if (!LightPos.w) return 0; // w is light radius.
 
 	float3 LightDir = LightPos.xyz - WorldPos.xyz;

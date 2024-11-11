@@ -72,7 +72,7 @@ float4 getQuadrants(float2 uv){
 	float bottomLeftQuadrant = (uv.x < 0.5 && uv.y > 0.5); // bottom quadrants will be low res copies of the blur amount passes
 	float bottomRightQuadrant = (uv.x > 0.5 && uv.y > 0.5); // bottom quadrants will be low res copies of the blur amount passes
 
-	float4 quadrants = float4(topLeftQuadrant, topRightQuadrant, bottomLeftQuadrant, bottomRightQuadrant);
+	float4 quadrants = {topLeftQuadrant, topRightQuadrant, bottomLeftQuadrant, bottomRightQuadrant};
 	return quadrants;
 }
 
@@ -94,7 +94,7 @@ float4 DoF(VSOUT IN) : COLOR0
 {
 	float depth = readDepth(IN.UVCoord);
 	float3 camera_vector = toWorld(IN.UVCoord) * depth;
-	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
+	float4 world_pos = {TESR_CameraPosition.xyz + camera_vector, 1.0f};
 
 	float focalLength = 0.01; // mostly negligible and used here to avoid dividing by 0; In real life this value influences the HFD
 
@@ -136,6 +136,7 @@ float4 BokehBlur(VSOUT IN, uniform float useBokeh) : COLOR0
 	float2 uv = IN.UVCoord;
 	float4 quadrants = getQuadrants(uv);
 
+	[branch]
 	if (quadrants.w) 
 		return tex2D(TESR_RenderedBuffer, uv); // perform no blur in this quadrant
 

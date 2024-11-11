@@ -1,5 +1,6 @@
 float2 ParallaxMapping(float2 BaseUV, float3 CameraDir) {
 	
+	[branch]
 	if (TESR_ParallaxData.y == -1.0f) return BaseUV.xy;
 	
 	float2 iParallaxOffset = CameraDir.xy / length(CameraDir.xyz) * (TESR_ParallaxData.x * 0.1f);

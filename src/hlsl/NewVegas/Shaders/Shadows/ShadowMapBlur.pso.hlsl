@@ -49,6 +49,7 @@ float4 Blur(uniform float2 OffsetMask, uniform float2 uv)
 	float WeightSum = 0.114725602f;
 	float4 color = tex2D(SourceBuffer, uv) * WeightSum;
 
+	[unroll]
   for (int i = 0; i < cKernelSize; i++)
   {
 		float2 uvOff = (BlurOffsets[i] * OffsetMask) * blurRadius;

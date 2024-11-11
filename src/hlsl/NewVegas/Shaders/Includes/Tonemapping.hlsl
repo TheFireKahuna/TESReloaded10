@@ -132,11 +132,6 @@ float3 agxEotf(float3 val)
     
   // Inverse input transform (outset)
     val = mul(agx_mat_inv, val);
-  
-  // sRGB IEC 61966-2-1 2.2 Exponent Reference EOTF Display
-  // NOTE: We're linearizing the output here. Comment/adjust when
-  // *not* using a sRGB render target
-    val = pows(val, 2.2); //linearise
 
     return val;
 }
@@ -171,9 +166,7 @@ float3 agxLook(float3 val)
 }
 
 float3 agx(float3 val)
-{
-    //val = pows(val, 1.0 / 2.2);
-    
+{    
     float min_ev = -12.47393f;
     float max_ev = 4.026069f;
 
@@ -231,22 +224,22 @@ float3 VTLottes(float3 color, float contrast, float b, float c, float shoulder, 
 float ColToneB(float hdrMax, float contrast, float shoulder, float midIn, float midOut) 
 {
     return
-        -((-pow(midIn, contrast) + (midOut*(pow(hdrMax, contrast*shoulder)*pow(midIn, contrast) -
-            pow(hdrMax, contrast)*pow(midIn, contrast*shoulder)*midOut)) /
-            (pow(hdrMax, contrast*shoulder)*midOut - pow(midIn, contrast*shoulder)*midOut)) /
-            (pow(midIn, contrast*shoulder)*midOut));
+        -((-pows(midIn, contrast) + (midOut*(pows(hdrMax, contrast*shoulder)*pows(midIn, contrast) -
+            pows(hdrMax, contrast)*pows(midIn, contrast*shoulder)*midOut)) /
+            (pows(hdrMax, contrast*shoulder)*midOut - pows(midIn, contrast*shoulder)*midOut)) /
+            (pows(midIn, contrast*shoulder)*midOut));
 }
 
 // General tonemapping operator, build 'c' term.
 float ColToneC(float hdrMax, float contrast, float shoulder, float midIn, float midOut) 
 {
-    return (pow(hdrMax, contrast*shoulder)*pow(midIn, contrast) - pow(hdrMax, contrast)*pow(midIn, contrast*shoulder)*midOut) /
-        (pow(hdrMax, contrast*shoulder)*midOut - pow(midIn, contrast*shoulder)*midOut);
+    return (pows(hdrMax, contrast*shoulder)*pows(midIn, contrast) - pows(hdrMax, contrast)*pows(midIn, contrast*shoulder)*midOut) /
+        (pows(hdrMax, contrast*shoulder)*midOut - pows(midIn, contrast*shoulder)*midOut);
 }
 float ColTone(float x, float4 p) 
 { 
-    float z = pow(x, p.x); 
-    return z / (pow(z, p.y)*p.z + p.w); 
+    float z = pows(x, p.x); 
+    return z / (pows(z, p.y)*p.z + p.w); 
 }
 
 // https://gpuopen.com/wp-content/uploads/2016/03/GdcVdrLottes.pdf
@@ -261,7 +254,7 @@ float3 Lottes(float3 color, float contrast, float midOut, float midIn, float hdr
     float b = ColToneB(hdrMax, contrast, shoulder, midIn, midOut);
     float c = ColToneC(hdrMax, contrast, shoulder, midIn, midOut);
 
-    float3 peak = max(color.r, max(color.g, color.b));
+    float peak = max(color.r, max(color.g, color.b));
     peak = min(CMAX, max(EPS, peak));
 
     float3 ratio = min(CMAX, color / peak);
@@ -282,7 +275,7 @@ float3 Lottes(float3 color, float contrast, float midOut, float midIn, float hdr
 
     // wrap crosstalk in transform
     ratio = pows(abs(ratio + 0.11) * 0.90909, saturation / crossSaturation);
-    ratio = lerp(ratio, rgb, pow(peak, float3(4.0, 1.5, 1.5) * 1.0/peak));
+    ratio = lerp(ratio, rgb, pows(peak, float3(4.0, 1.5, 1.5) * 1.0/peak));
     ratio = pows(min(1.0, ratio), crossSaturation);
 
     return peak * ratio;
@@ -296,7 +289,7 @@ float UchimuraChannel(float x, float P, float a, float m, float l, float c, floa
     float C2 = (a * P) / (P - S1);
     
     float L = m + a * (x - m);
-    float T = m * pow(x / m, c);
+    float T = m * pows(x / m, c);
     float S = P - (P - S1) * exp(-C2 * (x - S0) / P);
     float w0 = 1 - smoothstep(0.0f, m, x);
     float w2 = (x < m + l0) ? 0 : 1;
@@ -320,7 +313,7 @@ float3 Uchimura(float3 x, float contrast, float brightness, float midIn, float h
 
 float rangeCompressPow(float x, float fPow /*= 1.0f*/)
 {
-    return 1.0 - pow(exp(-x), fPow);
+    return 1.0 - pows(exp(-x), fPow);
 }
 
 float lumaCompress(float val, float fMaxValue, float fShoulderStart, float fPow /*= 1.0f*/)
@@ -348,6 +341,7 @@ float3 DICE(float3 color, float contrast, float brightness, float hdrMax, float 
 float3 tonemap(float3 color)
 {
     // Vanilla like, use this for HDR output (e.g. SpecialK or DXVK) (we can't do display mapping here because this is not the last shader to run)
+	[branch]
     if (TESR_HDRData.x == 0)
     {
         return color;

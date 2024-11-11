@@ -63,13 +63,13 @@ float4 SkyMask(VSOUT IN) : COLOR0 {
 	clip((uv <= 1) - 1);
 
 	float sunset = pows(sunHeight, 8);
-    float3 sunColor = linearize(TESR_SunColor).rgb + lerp(linearize(TESR_SunsetColor.rgb), 0, sunset); // linearise
+    float3 sunColor = TESR_SunColor.rgb + lerp(TESR_SunsetColor.rgb, 0, sunset);
 
 	float glarePower = lerp(0.1, 8.0, sunset); // increase flare boost during sunrise/sunset
 
 	float depth = (readDepth(uv) / farZ) > 0.9; //only pixels belonging to the sky will register
 	float3 sunGlare = pows(dot(TESR_ViewSpaceLightDir.xyz, normalize(reconstructPosition(uv))), 180) * glarePower; // fake sunglare computed from light direction
-	float3 color = linearize(tex2D(TESR_SourceBuffer, uv)).rgb;
+	float3 color = tex2D(TESR_SourceBuffer, uv).rgb;
 	color = (color + sunGlare * sunColor) * depth * smoothstep(0, 0.01, sunHeight);
 
 	return float4(color, 1.0f);
@@ -120,7 +120,7 @@ float4 RadialBlur(VSOUT IN, uniform float step) : COLOR0 {
 
 	// sample the light clamped image from the pixel to the sun for the given amount of samples
 	float2 samplePos = uv;
-	float4 color = float4(0, 0, 0, 1);
+	float4 color = {0, 0, 0, 1};
 	float total = 1;
 	for (float i=0; i < samples; i++){
 		float length = min(stepSize * i, distance); // clamp sampling vector to the distance from the pixel to the sun
@@ -139,7 +139,7 @@ float4 RadialBlur(VSOUT IN, uniform float step) : COLOR0 {
 float4 Combine(VSOUT IN) : COLOR0
 {
 	float scale = 0.5; // godrays were rendered at smaller res
-	float4 color = linearize(tex2D(TESR_SourceBuffer, IN.UVCoord));
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float2 uv = IN.UVCoord;
 	float3 eyeDir = normalize(reconstructPosition(uv));
 	
@@ -159,20 +159,19 @@ float4 Combine(VSOUT IN) : COLOR0
 
 	// calculate sun color
     float3 sunColor = GetSunColor(shade(TESR_SunDirection.xyz, blue.xyz), 1, TESR_SunAmount.x, TESR_SunColor.rgb, TESR_SunsetColor.rgb);
-    float3 godRayColor = linearize(TESR_GodRaysRayColor).rgb;
+    float3 godRayColor = TESR_GodRaysRayColor.rgb;
 
 	//rays = pows(rays, godrayCurve); // increase response curve to extract more definition from godray pass
 	rays.rgb *= multiplier * lerp(sunColor, godRayColor, TESR_GodRaysRayColor.w);
 	rays.rgb *= attenuation;
 
 	// reduce banding by dithering areas impacted by the rays
-	//float maxDitherLuma = 0.05; // 0.2 ^ 2.2, rounded down
-	//bool useDither = (rays.r + rays.g + rays.b > 0) && (pows(tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)),2.2).x < maxDitherLuma); // only dither when there is some ray & when average luma is low
+	//float maxDitherLuma = 0.2; 
+	//bool useDither = (rays.r + rays.g + rays.b > 0) && (tex2D(TESR_AvgLumaBuffer, float2(0.5, 0.5)).x < maxDitherLuma); // only dither when there is some ray & when average luma is low
 	//uv /= TESR_ReciprocalResolution.xy;
 	//rays.rgb += (ditherMat[(uv.x)%4 ][ (uv.y)%4 ] / 255) * useDither;
 
 	color += max(rays, 0) * 5 * color + max(rays, 0) * 0.2;
-	color = delinearize(color);
 	return float4(color.rgb, 1);
 }
  

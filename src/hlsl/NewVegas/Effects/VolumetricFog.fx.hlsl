@@ -135,9 +135,9 @@ float3 mixHeightFog(float3 color, float3 fogColor, float3 extinctionColor, float
 
 
 float getSky(float2 uv) {
-	float4 color = linearize(tex2D(TESR_SourceBuffer, uv));
+	float4 color = tex2D(TESR_SourceBuffer, uv);
 
-	float distance = 0.5 * TESR_ReciprocalResolution.xy;
+	float2 distance = 0.5 * TESR_ReciprocalResolution.xy;
 	distance *= 1;
 
 	float3 coeffs = float3(float2(1, -1) * distance, 0.9961);
@@ -153,8 +153,8 @@ float getSky(float2 uv) {
 }
 
 // scale the fog color between sky, purefog, and sun contribution
-float4 fogColor (float4 skyColor, float4 pureFogColor, float fogStrength, float skyColorCoeff, float4 sunScattering, float saturation){
-	float4 fogColor = lerp(skyColor, pureFogColor, saturate(pows(fogStrength, skyColorCoeff)));    // modulate between sky and pure fog color if strength is high
+float4 fogColor (float4 skyColor, float4 TESR_FogColor, float fogStrength, float skyColorCoeff, float4 sunScattering, float saturation){
+	float4 fogColor = lerp(skyColor, TESR_FogColor, saturate(pows(fogStrength, skyColorCoeff)));    // modulate between sky and pure fog color if strength is high
 	fogColor += sunScattering;                              									   // add sun influence
 	fogColor = lerp(luma(fogColor), fogColor, saturation/(1 + fogStrength));                       // boost fog color saturation
 	return fogColor;
@@ -163,8 +163,7 @@ float4 fogColor (float4 skyColor, float4 pureFogColor, float fogStrength, float 
 
 float4 VolumetricFog(VSOUT IN) : COLOR0 
 {
-	float4 color = linearize(tex2D(TESR_SourceBuffer, IN.UVCoord));
-	float4 pureFogColor = linearize(TESR_FogColor);
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 
     float depth = readDepth(IN.UVCoord);
     float isDayTime = smoothstep(0.4, 0.8, TESR_SunAmount.x);
@@ -188,7 +187,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
    
 	// default values used by interiors
 	float isSky, distantFog, distantHeightFade = 0.0; 
-	float4 skyColor = pureFogColor;
+	float4 skyColor = TESR_FogColor;
 	float inScattering = Inscattering;
 	float extinction = Extinction;
 	float4 sun = black;
@@ -201,7 +200,7 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 		float sunHeight = shade(TESR_SunPosition.xyz, up);
 		float sunDir = dot(eyeDirection, TESR_SunPosition.xyz);
 		float sunInfluence = pows(compress(sunDir), SUNINFLUENCE);
-		float4 sunColor = float4(GetSunColor(sunHeight, 1, TESR_SunAmount.x, TESR_SunDiskColor.rgb, TESR_SunsetColor.rgb), 1);
+		float4 sunColor = {GetSunColor(sunHeight, 1, TESR_SunAmount.x, TESR_SunDiskColor.rgb, TESR_SunsetColor.rgb), 1};
 		sunColor *= isDayTime * isExterior; // set nighttime sun color
 
 		skyColor.rgb = GetSkyColor(0.5, 1, sunHeight, sunInfluence, TESR_SkyData.z, TESR_SkyColor.rgb, TESR_SkyLowColor.rgb, TESR_HorizonColor.rgb, black.rgb) * TESR_SunsetColor.w; // remove the sun influence as we add it in the scattering
@@ -225,19 +224,19 @@ float4 VolumetricFog(VSOUT IN) : COLOR0
 		extinction *= (!isSky) * (1 - distantFog * isDayTimeFog);             // only apply extinction on No sky zones, and not in the range of distant fog during the day
 	}
 
-	float4 simpleFogColor = fogColor(skyColor, pureFogColor, strength, SimpleFogSkyColor, black, FogSaturation);
+	float4 simpleFogColor = fogColor(skyColor, TESR_FogColor, strength, SimpleFogSkyColor, black, FogSaturation);
 	float3 simpleFog = mixFog(finalColor.rgb, simpleFogColor.rgb, extinction, inScattering, fogDepth, strength * heightFade);
 	finalColor = lerp(finalColor, float4(simpleFog, 1), saturate(SimpleFogBlend) * (1 - isSky));
 
 	finalColor = lerp (finalColor, skyColor, distantFog * saturate(DistantFogBlend) * distantHeightFade * isExterior);
 
-	float4 heightFogColor = fogColor(skyColor, pureFogColor, strength, HeightFogSkyColor, sun, FogSaturation);
+	float4 heightFogColor = fogColor(skyColor, TESR_FogColor, strength, HeightFogSkyColor, sun, FogSaturation);
 	float3 heightFog = mixHeightFog(finalColor.rgb, heightFogColor.rgb, extinction, inScattering, fogDepth, strength * HeightFogDensity, 1.5 / (fogPower * HeightFogFalloff), worldPos, HeightFogHeight);
 	finalColor = lerp(finalColor, float4(heightFog, 1), saturate(HeightFogBlend));
 
 	finalColor = lerp(color, finalColor, FogAmount);
 
-	return delinearize(finalColor);
+	return finalColor;
 }
 
 technique

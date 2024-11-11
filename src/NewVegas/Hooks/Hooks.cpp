@@ -60,13 +60,15 @@ void AttachHooks() {
 	SafeWriteCall(Jumpers::MainMenuMusic::Fix1, (UInt32)MainMenuMusicFix);
 	SafeWriteCall(Jumpers::MainMenuMusic::Fix2, (UInt32)MainMenuMusicFix);
 
-	SafeWriteJump(0x004E4C3B, 0x004E4C42); // Fixes reflections when cell water height is not like worldspace water height
-	SafeWriteJump(0x004E4DA4, 0x004E4DAC); // Fixes reflections on the distant water
+	if (TheSettingManager->SettingsMain.Main.ReflectionFixes) {
+		SafeWriteJump(0x004E4C3B, 0x004E4C42); // Fixes reflections when cell water height is not like worldspace water height
+		SafeWriteJump(0x004E4DA4, 0x004E4DAC); // Fixes reflections on the distant 
+	}
 	SafeWriteCall(0x00875B86, 0x00710AB0); // Sets the world fov at the end of 1st person rendering
 	SafeWriteCall(0x00875B9D, 0x00710AB0); // Sets the world fov at the end of 1st person rendering
 	SafeWriteJump(0x00C03F49, 0x00C03F5A); // Fixes wrong rendering for image space effects
-
 	SafeWriteCall(0x9BB158, (UInt32)MuzzleLightCullingFix);
+
 	SafeWriteCall(0x879061, (UInt32)CreateSaveTextureHook); // Fixes image corruption in save screenshots when using DXVK with the HDR mod 
 
 	if (TheSettingManager->SettingsMain.Main.ReplaceIntro) SafeWriteJump(Jumpers::SetTileShaderConstants::Hook, (UInt32)SetTileShaderConstantsHook);

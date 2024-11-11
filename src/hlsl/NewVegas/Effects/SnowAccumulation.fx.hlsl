@@ -115,11 +115,12 @@ float noise( float3 x )
 
 // returns a point light contribution with no shadow map sampling
 float GetPointLightContribution(float4 worldPos, float4 LightPos, float4 normal){
+	[branch]
 	if (LightPos.w == 0) return 0;
 
 	float3 LightDir = LightPos.xyz - worldPos.xyz;
 	float Distance = length(LightDir) / LightPos.w; // normalize distance over light range
-	float4 light = float4(LightDir, Distance);
+	float4 light = {LightDir, Distance};
 
 	// radius based attenuation based on https://lisyarus.github.io/blog/graphics/2022/07/30/point-light-attenuation.html
 	float s = Distance * Distance; 
@@ -141,15 +142,17 @@ float4 SnowCoverage( VSOUT IN ) : COLOR0
 {
 	// compute at quarter scale
 	float2 uv = IN.UVCoord * 4;
+	[branch]
 	if (uv.x > 1 || uv.y > 1) return white;
 
 	float3 world = toWorld(uv);
 	float depth = readDepth(uv);
 
+	[branch]
 	if (depth > TESR_OrthoData.x) return white; // early out for the sky pixels
 
 	float3 camera_vector = world * depth;
-	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
+	float4 worldPos = {TESR_CameraPosition.xyz + camera_vector, 1.0f};
 
 	// sample an average ortho
 	float ortho = GetOrtho(worldPos);
@@ -183,7 +186,7 @@ float4 Snow( VSOUT IN ) : COLOR0
 	float depth = readDepth(IN.UVCoord);
 	float3 camera_vector = world * depth;
 	float3 eyeDirection = -1 * normalize(world);
-	float4 worldPos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
+	float4 worldPos = {TESR_CameraPosition.xyz + camera_vector, 1.0f};
 
 	float ortho = tex2D(TESR_RenderedBuffer, IN.UVCoord).x;
 	float3 norm = GetWorldNormal(IN.UVCoord);
@@ -191,40 +194,38 @@ float4 Snow( VSOUT IN ) : COLOR0
 	// early out for the character gun, water surfaces/areas and surfaces above the ortho map (such as actors)
 	float waterTreshold = (depth/farZ) * 200;
 	float isWaterSurface = (dot(norm, float3(0, 0, 1)) > 0.9) && (worldPos.z > TESR_WaterSettings.x - waterTreshold) && (worldPos.z < TESR_WaterSettings.x + waterTreshold);
+	[branch]
 	if (isWaterSurface || !(ortho > 0)) return color;
-	
-    color = linearize(color);
-	float3 sunColor = linearize(TESR_SunColor).rgb;
 
 	float2 uv = worldPos.xy / 200.0f;
 	float3 localNorm = expand(tex2D(TESR_SnowNormSampler, uv).xyz);
 	float3 surfaceNormal = normalize(float3(localNorm.xy + norm.xy, localNorm.z * norm.z));
-	float4 normal =  float4(surfaceNormal, 1);
+	float4 normal =  {surfaceNormal, 1};
 
 	float3 snow_tex = TESR_SnowAccumulationColor.rgb;
 
 	float fresnelCoeff = saturate(pow(1 - shade(eyeDirection, surfaceNormal), 5));
 	float3 snowSpec = pows(shades(normalize(TESR_SunDirection.xyz + eyeDirection), surfaceNormal), 20) * fresnelCoeff;
 
-	float3 ambient = snow_tex * pows(TESR_SunAmbient.rgb,2.2); // linearise
+	float3 ambient = snow_tex * TESR_SunAmbient.rgb;
 	float2 shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).rg;
 	shadow.r = lerp(1.0f, shadow.r, useShadows); // disable shadow sampling if shadows are disabled in game
 	shadow.r = lerp(shadow.r, 1.0f, TESR_ShadowFade.x);	// fade shadows to light when sun is low
 
-	float3 diffuse = snow_tex * shade(TESR_SunDirection, normal) * sunColor * diffusePower * shadow.r;
-	float3 spec = snowSpec * sunColor * specularPower * shadow.r;
-	float3 fresnel = fresnelCoeff * sunColor * fresnelPower;
+	float3 diffuse = snow_tex * shade(TESR_SunDirection, normal) * TESR_SunColor.rgb * diffusePower * shadow.r;
+	float3 spec = snowSpec * TESR_SunColor.rgb * specularPower * shadow.r;
+	float3 fresnel = fresnelCoeff * TESR_SunColor.rgb * fresnelPower;
 	float3 sparkles = pows(shades(eyeDirection, normalize(expand(tex2D(TESR_BlueNoiseSampler, worldPos.xy / 200).rgb))), 1000) * 0.2 * shadow.r;
 
 	// float4 snowColor = float4(ambient + diffuse + spec + fresnel, 1);
-	float4 snowColor = float4(ambient + diffuse + spec + fresnel + sparkles, 1);
+	float4 snowColor = {ambient + diffuse + spec + fresnel + sparkles, 1};
 	float pointLightsPower = 0.5;
 
 	shadow.g = 1; // disable point light shadows for debug
 
 	for (int i = 0; i<12; i++){
-		snowColor.rgb += GetPointLightContribution(worldPos, TESR_ShadowLightPosition[i], normal) * linearize(float4(TESR_LightColor[i].rgb * TESR_LightColor[i].a, 1)) * pointLightsPower * shadow.g;
-		snowColor.rgb += GetPointLightContribution(worldPos, TESR_LightPosition[i], normal) * linearize(float4(TESR_LightColor[12 + i].rgb * TESR_LightColor[12 + i].a, 1)) * pointLightsPower * shadow.g;
+		snowColor.rgb += GetPointLightContribution(worldPos, TESR_ShadowLightPosition[i], normal) * float4(TESR_LightColor[i].rgb * TESR_LightColor[i].a, 1) * pointLightsPower * shadow.g;
+		snowColor.rgb += GetPointLightContribution(worldPos, TESR_LightPosition[i], normal) * float4(TESR_LightColor[12 + i].rgb * TESR_LightColor[12 + i].a, 1) * pointLightsPower * shadow.g;
 	}
 
 	// create a noisy pattern of accumulation over time
@@ -235,7 +236,6 @@ float4 Snow( VSOUT IN ) : COLOR0
 	color = lerp(color, snowColor, coverage * min(vertical, ortho));
 	color.a = 1;
 
-    color.rgb = delinearize(color);
 	return color;
 }
 

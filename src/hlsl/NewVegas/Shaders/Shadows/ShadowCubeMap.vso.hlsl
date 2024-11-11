@@ -35,6 +35,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 	float4 r1 = 0.0f;
 	float4 r0 = IN.position;
 	
+	[branch]
 	if (TESR_ShadowData.x == 1.0f) { // Skinned (Actors)
 		offset.xyzw = IN.blendindexes.zyxw * const_0.y;
 		r0.w = 1;

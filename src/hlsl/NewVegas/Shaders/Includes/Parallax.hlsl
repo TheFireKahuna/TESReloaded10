@@ -15,6 +15,7 @@ float getTerrainHeight(float2 coords, float2 dx, float2 dy, float blendFactor, i
     float total = 0;
     [unroll] for (int i = 0; i < texCount; i++){
         weights[i] = pow(abs(blends[i]), 1 + 1 * blendFactor);
+	    [branch]
         if (weights[i] > 0.0) {
             weights[i] *= 0.001 + pow(abs(tex2Dgrad(tex[i], coords, dx, dy).a), blendPower);
         }
@@ -39,6 +40,7 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
 #endif
     #ifdef TERRAIN
         // Check if parallax is active first.
+	    [branch]
         if (!TESR_TerrainParallaxData.x) {
             weights = blends;
             return coords;
@@ -73,10 +75,12 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
     float minHeight = maxHeight * 0.5;
 
     float2 output;
+	[branch]
     if (distanceBlend < 1.0)
     {
         int numSteps;
         
+	    [branch]
         if (highQuality) {
             numSteps = lerp(4, 64, quality);
             numSteps = clamp((numSteps / 4) * 4, 4, 64);
@@ -122,17 +126,17 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
 
             [branch] if (any(testResult))
             {
-                [flatten] if (testResult.w)
+                [branch] if (testResult.w)
                 {
                     pt1 = float2(currentBound.w, currHeight.w);
                     pt2 = float2(currentBound.z, currHeight.z);
                 }
-                [flatten] if (testResult.z)
+                [branch] if (testResult.z)
                 {
                     pt1 = float2(currentBound.z, currHeight.z);
                     pt2 = float2(currentBound.y, currHeight.y);
                 }
-                [flatten] if (testResult.y)
+                [branch] if (testResult.y)
                 {
                     pt1 = float2(currentBound.y, currHeight.y);
                     pt2 = float2(currentBound.x, currHeight.x);
@@ -180,6 +184,7 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
 
 #ifdef TERRAIN
 float getParallaxShadowMultipler(float distance, float2 coords, float2 dx, float2 dy, float3 lightTS, int texCount, float blends[7], sampler2D tex[7]) {
+	[branch]
     if (!TESR_TerrainParallaxData.y)
         return 1.0;
     
@@ -188,6 +193,7 @@ float getParallaxShadowMultipler(float distance, float2 coords, float2 dx, float
     
     float quality = 1.0 - distance / maxDistance;
     
+	[branch]
     if (quality > 0.0)
     {
         float weights[7] = { 0, 0, 0, 0, 0, 0, 0 };
@@ -197,10 +203,13 @@ float getParallaxShadowMultipler(float distance, float2 coords, float2 dx, float
         float4 multipliers = rcp((float4(1, 2, 3, 4)));
 
         float4 sh = getTerrainHeight(coords + rayDir * multipliers.x, dx, dy, quality, texCount, tex, blends, weights);
+	    [branch]
         if (quality > 0.25)
             sh.y = getTerrainHeight(coords + rayDir * multipliers.y, dx, dy, quality, texCount, tex, blends, weights);
+	    [branch]
         if (quality > 0.5)
             sh.z = getTerrainHeight(coords + rayDir * multipliers.z, dx, dy, quality, texCount, tex, blends, weights);
+	    [branch]
         if (quality > 0.75)
             sh.w = getTerrainHeight(coords + rayDir * multipliers.w, dx, dy, quality, texCount, tex, blends, weights);
         

@@ -42,11 +42,6 @@ sampler2D TESR_RippleSampler : register(s6) < string ResourceName = "Precipitati
 PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     PS_OUTPUT OUT;
 
-    float4 linSunColor = linearize(SunColor);
-    float4 linShallowColor = linearize(ShallowColor);
-    float4 linDeepColor = linearize(DeepColor);
-    float4 linHorizonColor = linearize(TESR_HorizonColor);
-
     float alpha = IN.LTEXCOORD_6.w; // color alpha?
 
     float3 eyeVector = EyePos.xyz - IN.LTEXCOORD_0.xyz; // vector of camera position to point being shaded
@@ -54,7 +49,7 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
     float distance = length(eyeVector.xy);              // surface distance to eye
     float depth = length(eyeVector);                    // depth distance to eye
 
-	float sunLuma = luma(linSunColor);
+	float sunLuma = luma(SunColor);
 	float placedWaterRefractionModifier = TESR_PlacedWaterSettings.w;		// reduce refraction because of the way placed depth is encoded
 	float placedWaterDepthModifier = 0.2;			// reduce depth value for fog because of the way placed depth is encoded
 
@@ -72,19 +67,18 @@ PS_OUTPUT main(PS_INPUT IN, float2 PixelPos : VPOS) {
 
     float refractionCoeff = (waterDepth.y * depthFog) * ((saturate(distance * 0.002) * (-4 + VarAmounts.w)) + 4);
     float4 reflectionPos = getReflectionSamplePosition(IN, surfaceNormal, refractionCoeff * placedWaterRefractionModifier );
-    //float4 reflection = linearize(tex2Dproj(ReflectionMap, reflectionPos));
+    //float4 reflection = tex2Dproj(ReflectionMap, reflectionPos);
     float4 refractionPos = reflectionPos;
     refractionPos.y = refractionPos.w - reflectionPos.y;
     float3 refractedDepth = tex2Dproj(DepthMap, refractionPos).rgb * placedWaterDepthModifier;
 
-    float4 color = linearize(tex2Dproj(RefractionMap, refractionPos));
-    color = getLightTravel(refractedDepth, linShallowColor, linDeepColor, sunLuma, TESR_PlacedWaterSettings, color);
+    float4 color = tex2Dproj(RefractionMap, refractionPos);
+    color = getLightTravel(refractedDepth, ShallowColor, DeepColor, sunLuma, TESR_PlacedWaterSettings, color);
     color = getTurbidityFog(refractedDepth, ShallowColor, TESR_PlacedWaterVolume, sunLuma, color);
-    //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, linShallowColor, color);
-    color = getFresnel(surfaceNormal, eyeDirection, linHorizonColor, TESR_PlacedWaveParams.w, color);
-    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, linSunColor.rgb, color);
+    //color = getDiffuse(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, distance, ShallowColor, color);
+    color = getFresnel(surfaceNormal, eyeDirection, TESR_HorizonColor, TESR_PlacedWaveParams.w, color);
+    color = getSpecular(surfaceNormal, TESR_SunDirection.xyz, eyeDirection, SunColor.rgb, color);
 
-    color = delinearize(color);
     OUT.color_0 = color;
     OUT.color_0.a = 1;
     return OUT;

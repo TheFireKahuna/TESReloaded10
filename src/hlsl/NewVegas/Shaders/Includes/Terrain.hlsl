@@ -41,6 +41,7 @@ float3 blendNormalMaps(float2 uv, int texCount, sampler2D tex[7], float blends[7
 float3 getPointLightLighting(float3 lightDir, float radius, float3 lightColor, float3 eyeDir, float3 normal, float3 albedo, float roughness = 1.0, float metallicness = 1.0) {
     float3 pointlightColor = lightColor * TESR_TerrainData.z;
 
+    [branch]
     if (TESR_TerrainExtraData.x){
         // PBR.
         float att = vanillaAtt(lightDir, radius);

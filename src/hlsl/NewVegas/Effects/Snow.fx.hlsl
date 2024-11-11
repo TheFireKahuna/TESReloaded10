@@ -69,15 +69,14 @@ float GetOrtho(float4 OrthoPos) {
 float4 Snow( VSOUT IN ) : COLOR0
 {
 	float4 color = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-    color.rgb = pows(color.rgb, 2.2); // linearise
 
 	// calculating the ray along which the volumetric snow will be calculated
 	float3 world = toWorld(IN.UVCoord);
-	float4 rayStart = float4(TESR_CameraPosition.xyz + world, 1.0f);
+	float4 rayStart = {TESR_CameraPosition.xyz + world, 1.0f};
 	float4 rayStartPos = mul(rayStart, TESR_WorldViewProjectionTransform);
 	float4 orthoStart = mul(rayStartPos, TESR_ShadowCameraToLightTransformOrtho);	
 	float3 camera_vectorS = world * (DEPTH * SnowLayers);
-	float4 rayEnd = float4(TESR_CameraPosition.xyz + camera_vectorS, 1.0f);
+	float4 rayEnd = {TESR_CameraPosition.xyz + camera_vectorS, 1.0f};
 	float4 rayEndPos = mul(rayEnd, TESR_WorldViewProjectionTransform);
 	float4 orthoEnd = mul(rayEndPos, TESR_ShadowCameraToLightTransformOrtho);
 	float4 step = (orthoEnd - orthoStart) / SnowLayers;
@@ -114,10 +113,9 @@ float4 Snow( VSOUT IN ) : COLOR0
 
 	// a rain tint color that scales with the sun direction
 	//float4 rainColor = lerp(TESR_SunColor, TESR_SkyColor * 0.5, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
-	float4 snowColor = max(float4(pows(TESR_SunAmbient.rgb,2.2),TESR_SunAmbient.a), float4(pows(TESR_SunColor.rgb,2.2),TESR_SunColor.a));
+	float4 snowColor = max(TESR_SunAmbient, TESR_SunColor);
 
 	color = lerp(color, snowColor, totalSnow);
-    color.rgb = pows(color.rgb, 1.0/2.2); // delinearise
 
 	return color;
 }

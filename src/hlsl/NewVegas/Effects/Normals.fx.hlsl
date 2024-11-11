@@ -106,20 +106,20 @@ float4 ComputeNormals(VSOUT IN) :COLOR0
 	float depth = readDepth(uv);
 
 	// get depth values at 1 & 2 pixels offsets from current along the horizontal axis
-	float4 H = float4(
+	float4 H = {
 		readDepth(rightUv.xy),
 		readDepth(leftUv.xy),
 		readDepth(rightUv.zw),
 		readDepth(leftUv.zw)
-	);
+	};
 
 	// get depth values at 1 & 2 pixels offsets from current along the vertical axis
-	float4 V = float4(
+	float4 V = {
 		readDepth(topUv.xy),
 		readDepth(bottomUv.xy),
 		readDepth(topUv.zw),
 		readDepth(bottomUv.zw)
-	);
+	};
 
 	float2 he = abs((2 * H.xy - H.zw) - depth);
 	float2 ve = abs((2 * V.xy - V.zw) - depth);

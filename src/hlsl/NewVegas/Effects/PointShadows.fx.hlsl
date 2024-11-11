@@ -69,8 +69,8 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 	float2 uv = IN.UVCoord;
 	float depth = readDepth(uv);
     float3 camera_vector = toWorld(uv) * depth;
-    float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);	
-	float4 normal = float4(GetWorldNormal(uv), 1);
+    float4 world_pos = {TESR_CameraPosition.xyz + camera_vector, 1.0f};	
+	float4 normal = {GetWorldNormal(uv), 1};
 	// float Shadow = 0.0;
 
 	float Shadow = GetPointLightAmount(TESR_ShadowCubeMapBuffer0, world_pos, TESR_ShadowLightPosition[0], normal) * luma(TESR_LightColor[0].rgb) * TESR_LightColor[0].w;
@@ -82,6 +82,7 @@ float4 Shadow( VSOUT IN ) : COLOR0 {
 
 	Shadow += GetSpotLightAmount(world_pos, TESR_SpotLightPosition, TESR_SpotLightDirection, normal) * luma(TESR_SpotLightColor.rgb) * TESR_SpotLightColor.w;
 	
+	[unroll]
 	for (int i = 0; i< 12; i++){
 		Shadow += GetPointLightContribution(world_pos, TESR_LightPosition[i], normal) * luma(TESR_LightColor[i + 12].rgb) * TESR_LightColor[i + 12].w;
 	}

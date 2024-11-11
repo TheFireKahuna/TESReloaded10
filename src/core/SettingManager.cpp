@@ -367,6 +367,7 @@ void SettingManager::LoadSettings() {
 
 	SettingsMain.Main.RemoveUnderwater = GetSettingI("Main.Main.Water", "RemoveUnderwater");
 	SettingsMain.Main.RemovePrecipitations = GetSettingI("Main.Main.Precipitations", "RemovePrecipitations");
+	SettingsMain.Main.ReflectionFixes = GetSettingI("Main.Main.Misc", "ReflectionFixes");
 	SettingsMain.Main.ForceReflections = GetSettingI("Main.Main.Water", "ForceReflections");
 	SettingsMain.Main.MemoryHeapManagement = GetSettingI("Main.Main.Memory", "HeapManagement");
 	SettingsMain.Main.MemoryTextureManagement = GetSettingI("Main.Main.Memory", "TextureManagement");

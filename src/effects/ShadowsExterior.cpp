@@ -14,7 +14,7 @@ void ShadowsExteriorEffect::UpdateConstants() {
 			// moonphase goes from 0 to 8
 			float MoonPhase = (fmod(DaysPassed, 8 * Tes->sky->firstClimate->phaseLength & 0x3F)) / (Tes->sky->firstClimate->phaseLength & 0x3F);
 
-			float PI = 3.1416f; // use cos curve to fade moon light shadows strength
+			float PI = 3.1415926538; // use cos curve to fade moon light shadows strength
 			MoonPhase = std::lerp(-PI, PI, MoonPhase / 8) - PI / 4; // map moonphase to 1/2PI/2PI + 1/2
 
 			// map MoonVisibility to MinNightDarkness/1 range
@@ -172,7 +172,28 @@ void ShadowsExteriorEffect::RegisterConstants() {
 }
 
 void ShadowsExteriorEffect::RegisterTextures() {
+
+	bool highResShadowDepth = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "HighResDepth");
+	bool highResShadowBuffers = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "HighResSurface");
+	bool highResPointBuffer = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "HighResPointBuffer");
 	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
+	D3DFORMAT depthType;
+	D3DFORMAT bufferType1;
+	D3DFORMAT bufferType2;
+
+	if (highResShadowDepth)
+		depthType = D3DFMT_D32F_LOCKABLE;
+	else
+		depthType = D3DFMT_D24S8;
+
+	if (highResShadowBuffers) {
+		bufferType1 = D3DFMT_G32R32F;
+		bufferType2 = D3DFMT_R32F;
+	}
+	else {
+		bufferType1 = D3DFMT_G16R16F;
+		bufferType2 = D3DFMT_R16F;
+	}
 
 	// initialize cascade shadowmaps
 	std::vector<const char*>ShadowBufferNames = {
@@ -186,8 +207,8 @@ void ShadowsExteriorEffect::RegisterTextures() {
 		float multiple = (i == MapLod && Settings.Exteriors.ShadowMapResolution <= 2048) ? 2.0f : 1.0f; // double the size of lod map only
 		ULONG ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
 
-		TheTextureManager->InitTexture(ShadowBufferNames[i], &ShadowMaps[i].ShadowMapTexture, &ShadowMaps[i].ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
-		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[i].ShadowMapDepthSurface, NULL);
+		TheTextureManager->InitTexture(ShadowBufferNames[i], &ShadowMaps[i].ShadowMapTexture, &ShadowMaps[i].ShadowMapSurface, ShadowMapSize, ShadowMapSize, bufferType1);
+		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, depthType, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[i].ShadowMapDepthSurface, NULL);
 		
 		// initialize the frame vertices for future shadow blurring
 		TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &ShadowMaps[i].BlurShadowVertexBuffer);
@@ -197,8 +218,8 @@ void ShadowsExteriorEffect::RegisterTextures() {
 
 	// ortho texture
 	ULONG orthoMapRes = Settings.Exteriors.OrthoMapResolution;
-	TheTextureManager->InitTexture("TESR_OrthoMapBuffer", &ShadowMaps[MapOrtho].ShadowMapTexture, &ShadowMaps[MapOrtho].ShadowMapSurface, orthoMapRes, orthoMapRes, D3DFMT_G32R32F);
-	TheRenderManager->device->CreateDepthStencilSurface(orthoMapRes, orthoMapRes, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[MapOrtho].ShadowMapDepthSurface, NULL);
+	TheTextureManager->InitTexture("TESR_OrthoMapBuffer", &ShadowMaps[MapOrtho].ShadowMapTexture, &ShadowMaps[MapOrtho].ShadowMapSurface, orthoMapRes, orthoMapRes, bufferType1);
+	TheRenderManager->device->CreateDepthStencilSurface(orthoMapRes, orthoMapRes, depthType, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[MapOrtho].ShadowMapDepthSurface, NULL);
 	ShadowMaps[MapOrtho].ShadowMapViewPort = { 0, 0, orthoMapRes, orthoMapRes, 0.0f, 1.0f };
 	ShadowMaps[MapOrtho].ShadowMapInverseResolution = 1.0f / (float)orthoMapRes;
 
@@ -206,13 +227,13 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	// initialize spot lights maps
 	for (int i = 0; i < SpotLightsMax; i++) {
 		std::string textureName = "TESR_ShadowSpotlightBuffer" + std::to_string(i);
-		TheTextureManager->InitTexture(textureName.c_str(), &Textures.ShadowSpotlightTexture[i], &Textures.ShadowSpotlightSurface[i], ShadowCubeMapSize, ShadowCubeMapSize, D3DFMT_R32F);
+		TheTextureManager->InitTexture(textureName.c_str(), &Textures.ShadowSpotlightTexture[i], &Textures.ShadowSpotlightSurface[i], ShadowCubeMapSize, ShadowCubeMapSize, bufferType2);
 	}
 
 
 	// initialize point lights cubemaps
 	for (int i = 0; i < ShadowCubeMapsMax; i++) {
-		TheRenderManager->device->CreateCubeTexture(ShadowCubeMapSize, 1, D3DUSAGE_RENDERTARGET, D3DFMT_R32F, D3DPOOL_DEFAULT, &Textures.ShadowCubeMapTexture[i], NULL);
+		TheRenderManager->device->CreateCubeTexture(ShadowCubeMapSize, 1, D3DUSAGE_RENDERTARGET, bufferType2, D3DPOOL_DEFAULT, &Textures.ShadowCubeMapTexture[i], NULL);
 		for (int j = 0; j < 6; j++) {
 			Textures.ShadowCubeMapTexture[i]->GetCubeMapSurface((D3DCUBEMAP_FACES)j, 0, &Textures.ShadowCubeMapSurface[i][j]);
 		}
@@ -220,13 +241,16 @@ void ShadowsExteriorEffect::RegisterTextures() {
 		TheTextureManager->RegisterTexture(textureName.c_str(), (IDirect3DBaseTexture9**)&Textures.ShadowCubeMapTexture[i]);
 	}
 	// Create the stencil surface used for rendering cubemaps
-	TheRenderManager->device->CreateDepthStencilSurface(ShadowCubeMapSize, ShadowCubeMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &Textures.ShadowCubeMapDepthSurface, NULL);
+	TheRenderManager->device->CreateDepthStencilSurface(ShadowCubeMapSize, ShadowCubeMapSize, depthType, D3DMULTISAMPLE_NONE, 0, true, &Textures.ShadowCubeMapDepthSurface, NULL);
 
 	//TheShadowManager->ShadowCubeMapViewPort = { 0, 0, ShadowCubeMapSize, ShadowCubeMapSize, 0.0f, 1.0f };
 	//memset(TheShadowManager->ShadowCubeMapLights, NULL, sizeof(ShadowCubeMapLights));
 
 	// Initialize shadow buffer
-	TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width / 2, TheRenderManager->height / 2, D3DFMT_G16R16);
+	if (highResPointBuffer)
+		TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width, TheRenderManager->height, bufferType1);
+	else
+		TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width / 2, TheRenderManager->height / 2, bufferType1);
 }
 
 

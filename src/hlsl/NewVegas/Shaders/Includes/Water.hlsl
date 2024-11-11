@@ -145,8 +145,8 @@ float4 getFresnel(float3 surfaceNormal, float3 eyeDirection, float4 reflection, 
     float reflectionLuma = luma(reflection);
     float lumaDiff = saturate(reflectionLuma - luma(color));
 
-    //float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma * VarAmounts.y) * 0.7;
-    float4 reflectionColor = lerp (reflectionLuma * linearize(ReflectionColor), reflection, reflectionLuma) * 0.7;
+    //float4 reflectionColor = lerp (reflectionLuma * ReflectionColor, reflection, reflectionLuma * VarAmounts.y) * 0.7;
+    float4 reflectionColor = lerp (reflectionLuma * ReflectionColor, reflection, reflectionLuma) * 0.7;
 	float3 result = lerp(color.rgb, reflection.rgb , saturate((fresnelCoeff * 0.8 + 0.2 * lumaDiff) * reflectivity));
 
     return float4(result, 1);
@@ -161,6 +161,7 @@ float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, f
     float NdotH = shades(normal, halfway);
 
     float3 result;
+	[branch]
     if (true){
         float NdotL = shades(normal, lightDir);
         float NdotV = shades(normal, eyeDirection);
@@ -177,6 +178,7 @@ float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, f
 }
 
 float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 worldPosition, float3 eyeDirection, float3 specColor, float4 color){
+	[branch]
     if (lightPosition.w == 0) return color;
 
     float specularBoost = 1;
@@ -198,7 +200,7 @@ float4 getPointLightSpecular(float3 surfaceNormal, float4 lightPosition, float3 
 
     float3 Ks = FresnelShlick(0.08, H, eyeDirection);
     color.rgb += BRDF(0.02, Ks, NdotV, NdotL, NdotH) * specColor * atten * NdotL;
-    // color.rgb += pows(shades(H, surfaceNormal), glossiness) * linearize(float4(specColor, 1)).rgb * specularBoost * atten;
+    // color.rgb += pows(shades(H, surfaceNormal), glossiness) * specColor * specularBoost * atten;
 
     // color.rgb += pows(shades(H, surfaceNormal), 100) * specColor * 10 * atten;
     return color;
@@ -238,6 +240,7 @@ float3 ComputeRipple(sampler2D puddlesSampler, float2 UV, float CurrentTime, flo
 float3 getRipples(PS_INPUT IN, sampler2D puddlesSampler, float3 surfaceNormal, float distance, float rainCoeff){
     float distanceFade = 1 - saturate(invlerp(0, 3500, distance));
 
+	[branch]
     if (!rainCoeff || !distanceFade) return surfaceNormal;
 
     // sample and combine rain ripples

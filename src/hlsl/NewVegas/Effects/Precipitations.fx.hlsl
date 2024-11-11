@@ -70,16 +70,16 @@ float GetOrtho(float4 OrthoPos) {
 
 float4 Rain( VSOUT IN ) : COLOR0
 {
-	float4 color = linearize(tex2D(TESR_SourceBuffer, IN.UVCoord));
+	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	int iterations = RainLayers;
 
 	// calculating the ray along which the  volumetric rain will be calculated
 	float3 world = toWorld(IN.UVCoord);
-	float4 rayStart = float4(TESR_CameraPosition.xyz + world, 1.0f);
+	float4 rayStart = {TESR_CameraPosition.xyz + world, 1.0f};
 	float4 rayStartPos = mul(rayStart, TESR_WorldViewProjectionTransform);
 	float4 orthoStart = mul(rayStartPos, TESR_ShadowCameraToLightTransformOrtho);	
 	float3 camera_vectorS = world * (DEPTH * iterations);
-	float4 rayEnd = float4(TESR_CameraPosition.xyz + camera_vectorS, 1.0f);
+	float4 rayEnd = {TESR_CameraPosition.xyz + camera_vectorS, 1.0f};
 	float4 rayEndPos = mul(rayEnd, TESR_WorldViewProjectionTransform);
 	float4 orthoEnd = mul(rayEndPos, TESR_ShadowCameraToLightTransformOrtho);
 	float4 step = (orthoEnd - orthoStart) / iterations;
@@ -112,15 +112,14 @@ float4 Rain( VSOUT IN ) : COLOR0
 	}
 
 	// a rain tint color that scales with the sun direction
-	float4 sunColor = linearize(TESR_SunColor);
-	float4 rainColor = lerp(float(0.5).xxxx, sunColor * 2, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
+	float4 rainColor = lerp(float(0.5).xxxx, TESR_SunColor * 2, pow(shades(normalize(world), TESR_SunDirection.xyz), 2));
 
 	// sample the bloom buffer and the source buffer with refracted UV to shade the rain with
 	float2 refractedUV = IN.UVCoord + float2(totalRain * TESR_RainAspect.x, -totalRain * TESR_RainAspect.x);
-	float4 refractedColor = linearize(tex2D(TESR_SourceBuffer, refractedUV));
+	float4 refractedColor = tex2D(TESR_SourceBuffer, refractedUV);
 	refractedColor += tex2D(TESR_BloomBuffer, refractedUV);
 
-	return delinearize(lerp(color, refractedColor + rainColor * TESR_RainAspect.y * 0.02, totalRain* TESR_RainData.w));
+	return lerp(color, refractedColor + rainColor * TESR_RainAspect.y * 0.02, totalRain* TESR_RainData.w);
 }
 
 

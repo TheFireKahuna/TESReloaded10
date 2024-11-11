@@ -65,10 +65,11 @@ float4 specularHighlight( VSOUT IN) : COLOR0
 
 	float3 positionVector = toWorld(IN.UVCoord);
 	float3 camera_vector = positionVector * depth;
-	float4 world_pos = float4(TESR_CameraPosition.xyz + camera_vector, 1.0f);
+	float4 world_pos = {TESR_CameraPosition.xyz + camera_vector, 1.0f};
 
 	float waterTreshold = (depth/farZ) * 200;
 	float isWaterSurface = (dot(worldNormal, float3(0, 0, 1)) > 0.9) && (world_pos.z > TESR_WaterSettings.x - waterTreshold) && (world_pos.z < TESR_WaterSettings.x + waterTreshold);
+	[branch]
 	if (isWaterSurface) return float4(0, 0, 0, 1); // no effect on water surface
 
 	float3 viewRay = normalize(positionVector * -1);
@@ -98,36 +99,28 @@ float4 CombineSpecular(VSOUT IN) :COLOR0
 	float depth = smoothstep(0, farZ / 4, readDepth(IN.UVCoord));
 	float4 color = tex2D(TESR_SourceBuffer, IN.UVCoord);
 	float4 light = tex2D(TESR_RenderedBuffer, IN.UVCoord);
-    color.rgb = pows(color.rgb, 2.2); // linearise
-
-	float4 result = color;
-
-	float4 skyColor_t = float4(pows(TESR_SkyColor.rgb, 2.2),TESR_SkyColor.a); // linearise
-	float4 horizonColor = float4(pows(TESR_HorizonColor.rgb, 2.2),TESR_HorizonColor.a); // linearise
-	float4 sunColor = float4(pows(TESR_SunColor.rgb, 2.2),TESR_SunColor.a); // linearise
 
 	float luminance = luma(color);
-	float sunLuma = luma(sunColor);
+	float sunLuma = luma(TESR_SunColor);
 	float invLuma = saturate(1 - sunLuma);
 	float sunSetFade = 1 - TESR_ShadowFade.x;
 
-	float shadows = tex2D(TESR_PointShadowBuffer, IN.UVCoord); // fade shadows to light when sun is low
+	float shadows = tex2D(TESR_PointShadowBuffer, IN.UVCoord).r; // fade shadows to light when sun is low
 	shadows = lerp(TESR_ShadowFade.x, 1.0f, shadows); // fade shadows to light when sun is low
 
 	// skylight
-	float4 skyColor = lerp(skyColor_t, horizonColor, depth);
+	float4 skyColor = lerp(TESR_SkyColor, TESR_HorizonColor, depth);
 	skyColor = lerp(luma(skyColor).rrrr, skyColor, SkySaturation);
 
 	// fresnel
-	result += light.b * color * saturate(luminance * 2) * FresnelStrength * max(0.0,invLuma * sunSetFade); //fresnel scales with the luminance, but reaches full power at half max luminance
+	float4 result = light.b * color * saturate(luminance * 2) * FresnelStrength * max(0.0,invLuma * sunSetFade); //fresnel scales with the luminance, but reaches full power at half max luminance
 
 	// return skyColor;
 	result += SkyStrength * light.g * skyColor * 0.01 * saturate(smoothstep(0.4, 0, luminance)) * max(0.0,invLuma * sunSetFade); // skylight is more pronounced in darker areas
 
 	// specular
-	result += lerp(0, light.r * SpecStrength * 10.0 * sunColor * color * shadows, smoothstep(LumTreshold * 0.8, LumTreshold * 1.2, luminance)); // specular will boost areas above treshold
+	result += lerp(0, light.r * SpecStrength * 10.0 * TESR_SunColor * color * shadows, smoothstep(LumTreshold * 0.8, LumTreshold * 1.2, luminance)); // specular will boost areas above treshold
 
-    result.rgb = pows(result.rgb, 1.0/2.2); // delinearise
 	return float4 (result.rgb, 1.0f);
 }
  

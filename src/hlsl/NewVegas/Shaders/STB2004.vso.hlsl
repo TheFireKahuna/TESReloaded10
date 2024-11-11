@@ -55,24 +55,23 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float3 l8;
     float4 mdl11;
-    float1 q1;
     float4 q3;
     float4 r0;
 	
 #define	TanSpaceProj	float3x3(IN.LTANGENT.xyz, IN.LBINORMAL.xyz, IN.LNORMAL.xyz)
 
-    r0.w = dot(WindMatrices[3 + IN.LBLENDINDICES.y].xyzw, IN.LPOSITION.xyzw);
-    r0.z = dot(WindMatrices[2 + IN.LBLENDINDICES.y].xyzw, IN.LPOSITION.xyzw);
-    r0.y = dot(WindMatrices[1 + IN.LBLENDINDICES.y].xyzw, IN.LPOSITION.xyzw);
-    r0.x = dot(WindMatrices[0 + IN.LBLENDINDICES.y].xyzw, IN.LPOSITION.xyzw);
-	OUT.color_0.rgba = (IN.LBLENDINDICES.z * const_4.yyyx) + const_4.xxxy;
-	q3.xyzw = (IN.LBLENDINDICES.x * (r0.xyzw - IN.LPOSITION.xyzw)) + IN.LPOSITION.xyzw;
-    mdl11 = mul(ModelViewProj, q3.xyzw);
-    q1.x = log2(1 - saturate((FogParam.x - length(mdl11.xyz)) / FogParam.y));
+    r0.w = dot(WindMatrices[3 + IN.LBLENDINDICES.y], IN.LPOSITION);
+    r0.z = dot(WindMatrices[2 + IN.LBLENDINDICES.y], IN.LPOSITION);
+    r0.y = dot(WindMatrices[1 + IN.LBLENDINDICES.y], IN.LPOSITION);
+    r0.x = dot(WindMatrices[0 + IN.LBLENDINDICES.y], IN.LPOSITION);
+	OUT.color_0 = (IN.LBLENDINDICES.z * const_4.yyyx) + const_4.xxxy;
+	q3 = (IN.LBLENDINDICES.x * (r0 - IN.LPOSITION)) + IN.LPOSITION;
+    mdl11 = mul(ModelViewProj, q3);
+    float q1 = log2(1 - saturate((FogParam.x - length(mdl11.xyz)) / FogParam.y));
     l8.xyz = mul(TanSpaceProj, LightData[0].xyz);
     OUT.color_1.rgb = FogColor.rgb;
     OUT.texcoord_1.xyz = normalize(l8.xyz);
-    OUT.color_1.a = exp2(q1.x * FogParam.z);
+    OUT.color_1.a = exp2(q1 * FogParam.z);
     OUT.position = mdl11;
     OUT.texcoord_0.xy = IN.LTEXCOORD_0.xy;
     OUT.texcoord_1.w = 1;
