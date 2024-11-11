@@ -128,7 +128,7 @@ float getFocalDistance() {
 float4 Histogram_GetLuma(VSOUT IN): COLOR0 {
 	float lum = luma(tex2D(TESR_SourceBuffer, IN.UVCoord).rgb);
 	// Avoid taking the log of zero
-	[flatten]
+	[branch]
 	if (lum < 0.005) {
 		return float4(0.0, 1.0, 0.0, 0.0);
 	}
