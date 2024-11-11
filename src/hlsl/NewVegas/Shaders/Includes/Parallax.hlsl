@@ -15,7 +15,7 @@ float getTerrainHeight(float2 coords, float2 dx, float2 dy, float blendFactor, i
     float total = 0;
     [unroll] for (int i = 0; i < texCount; i++){
         weights[i] = pow(abs(blends[i]), 1 + 1 * blendFactor);
-	    [branch]
+	    //disablebranching
         if (weights[i] > 0.0) {
             weights[i] *= 0.001 + pow(abs(tex2Dgrad(tex[i], coords, dx, dy).a), blendPower);
         }
@@ -80,7 +80,7 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
     {
         int numSteps;
         
-	    [branch]
+	    //disablebranching
         if (highQuality) {
             numSteps = lerp(4, 64, quality);
             numSteps = clamp((numSteps / 4) * 4, 4, 64);
@@ -124,24 +124,29 @@ float2 getParallaxCoords(float distance, float2 coords, float2 dx, float2 dy, fl
 
             bool4 testResult = currHeight >= currentBound;
 
-            [branch] if (any(testResult))
+	        [branch]
+            if (any(testResult))
             {
-                [branch] if (testResult.w)
+                //disablebranching 
+                if (testResult.w)
                 {
                     pt1 = float2(currentBound.w, currHeight.w);
                     pt2 = float2(currentBound.z, currHeight.z);
                 }
-                [branch] if (testResult.z)
+                //disablebranching 
+                if (testResult.z)
                 {
                     pt1 = float2(currentBound.z, currHeight.z);
                     pt2 = float2(currentBound.y, currHeight.y);
                 }
-                [branch] if (testResult.y)
+                //disablebranching 
+                if (testResult.y)
                 {
                     pt1 = float2(currentBound.y, currHeight.y);
                     pt2 = float2(currentBound.x, currHeight.x);
                 }
-                [flatten] if (testResult.x)
+                //disablebranching 
+                if (testResult.x)
                 {
                     pt1 = float2(currentBound.x, currHeight.x);
                     pt2 = float2(prevBound, prevHeight);
@@ -203,13 +208,13 @@ float getParallaxShadowMultipler(float distance, float2 coords, float2 dx, float
         float4 multipliers = rcp((float4(1, 2, 3, 4)));
 
         float4 sh = getTerrainHeight(coords + rayDir * multipliers.x, dx, dy, quality, texCount, tex, blends, weights);
-	    [branch]
+	    //disablebranching
         if (quality > 0.25)
             sh.y = getTerrainHeight(coords + rayDir * multipliers.y, dx, dy, quality, texCount, tex, blends, weights);
-	    [branch]
+	    //disablebranching
         if (quality > 0.5)
             sh.z = getTerrainHeight(coords + rayDir * multipliers.z, dx, dy, quality, texCount, tex, blends, weights);
-	    [branch]
+	    //disablebranching
         if (quality > 0.75)
             sh.w = getTerrainHeight(coords + rayDir * multipliers.w, dx, dy, quality, texCount, tex, blends, weights);
         

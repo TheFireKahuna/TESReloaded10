@@ -161,7 +161,7 @@ float4 getSpecular(float3 surfaceNormal, float3 lightDir, float3 eyeDirection, f
     float NdotH = shades(normal, halfway);
 
     float3 result;
-	[branch]
+	//disablebranching
     if (true){
         float NdotL = shades(normal, lightDir);
         float NdotV = shades(normal, eyeDirection);

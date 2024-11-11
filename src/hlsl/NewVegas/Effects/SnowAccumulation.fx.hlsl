@@ -142,13 +142,13 @@ float4 SnowCoverage( VSOUT IN ) : COLOR0
 {
 	// compute at quarter scale
 	float2 uv = IN.UVCoord * 4;
-	[branch]
+	//disablebranching
 	if (uv.x > 1 || uv.y > 1) return white;
 
 	float3 world = toWorld(uv);
 	float depth = readDepth(uv);
 
-	[branch]
+	//disablebranching
 	if (depth > TESR_OrthoData.x) return white; // early out for the sky pixels
 
 	float3 camera_vector = world * depth;

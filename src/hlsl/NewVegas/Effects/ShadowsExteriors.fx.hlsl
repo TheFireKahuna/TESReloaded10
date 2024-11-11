@@ -62,7 +62,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float3 world_normal = GetWorldNormal(IN.UVCoord);
 
 	// early out for underwater surface (if camera is underwater and surface to shade is close to water level with normal pointing downward)
-	[branch]
+	//disablebranching
 	if (TESR_WaterSettings.z == 1 && world_pos.z < (TESR_WaterSettings.x + 2) && world_pos.z > (TESR_WaterSettings.x - 2) && dot(world_normal, float3(0, 0, -1)) > 0.999) return color;
 
 	float2 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord).rg;

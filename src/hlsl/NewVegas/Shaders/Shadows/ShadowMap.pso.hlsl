@@ -35,18 +35,20 @@ PS_OUTPUT main(VS_OUTPUT IN) {
 	// 2: simple ESM
 	// 3: filtered ESM
 	// 4: PCF or Orthomap
-	float dx = ddx(depth);
-	float dy = ddy(depth);
+	float dx;
+	float dy;
 	float moment2;
 	float k;
 	float esm;
-	[branch]
+	//disablebranching
 	if (TESR_ShadowData.w == 1.0f && !TESR_ShadowData.z){
 	// 	shadowMode = (1 - TESR_ShadowData.z) * shadowMode + float4(0, 0, 0, 1) * TESR_ShadowData.z; //will cancel out shadowData.w if ortho map and replace by PCF mode
 	// }
 	// float4 shadowMode = {TESR_ShadowData.w == 1.0f, TESR_ShadowData.w == 2.0f, TESR_ShadowData.w == 3.0f, (TESR_ShadowData.w == 4.0f)};
 	// shadowMode = (1 - TESR_ShadowData.z) * shadowMode + float4(0, 0, 0, 1) * TESR_ShadowData.z; //will cancel out shadowData.w if ortho map and replace by PCF mode
 
+		dx = ddx(depth);
+		dy = ddy(depth);
 		// VSM
 		//cheat to reduce shadow acne in variance maps
 		moment2 = depth * depth + 0.25 * (dx * dx + dy * dy);

@@ -60,7 +60,7 @@
  *
  * The shader has three passes, chained together as follows:
  *
- *                           |input|------------------·
+ *                           |input|------------------ï¿½
  *                              v                     |
  *                    [ SMAA*EdgeDetection ]          |
  *                              v                     |
@@ -70,7 +70,7 @@
  *                              v                     |
  *                          |blendTex|                |
  *                              v                     |
- *                [ SMAANeighborhoodBlending ] <------·
+ *                [ SMAANeighborhoodBlending ] <------ï¿½
  *                              v
  *                           |output|
  *
@@ -298,7 +298,7 @@
 #define SMAASaturate(a) saturate(a)
 #define SMAAMad(a, b, c) mad(a, b, c)
 #define SMAA_FLATTEN [flatten]
-#define SMAA_BRANCH [branch]
+#define SMAA_BRANCH //disablebranching
 #endif
 #if SMAA_HLSL_4 == 1 || SMAA_HLSL_4_1 == 1
 SamplerState LinearSampler { Filter = MIN_MAG_LINEAR_MIP_POINT; AddressU = Clamp; AddressV = Clamp; };
@@ -314,7 +314,7 @@ SamplerState PointSampler { Filter = MIN_MAG_MIP_POINT; AddressU = Clamp; Addres
 #define SMAASaturate(a) saturate(a)
 #define SMAAMad(a, b, c) mad(a, b, c)
 #define SMAA_FLATTEN [flatten]
-#define SMAA_BRANCH [branch]
+#define SMAA_BRANCH //disablebranching
 #define SMAATexture2DMS2 Texture2DMS<float4, 2>
 #define SMAALoad(tex, pos, sample) tex.Load(pos, sample)
 #endif

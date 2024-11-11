@@ -108,7 +108,7 @@ float4 ShadeSun(SunValues Sun, float4 texColor, float4 vertexColor){
     float isSunOrMoon = saturate(smoothstep(0.9, 1.0, texColor.w)) * smoothstep(0.9, 1, sunTexLuma) * Sun.isDayTime;
     float isSun = isSunOrMoon * Sun.isDayTime;
 
-	[branch]
+	//disablebranching
     if (isSun){
         float isSunset = smoothstep(0.3, 0.0, Sun.sunHeight);
         texColor.rgb += isSunset * Sun.sunColor;

@@ -12,6 +12,7 @@ float4 TESR_ShadowScreenSpaceData; // x: Enabled, y: blurRadius, z: renderDistan
 float4 TESR_ShadowRadius; // radius of the 4 cascades
 float4 TESR_SunAmbient;
 float4 TESR_ShadowFade; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
+float4 TESR_DebugVar; // x: sunset attenuation, y: shadows maps active, z: point lights shadows active
 
 sampler2D TESR_DepthBuffer : register(s0) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
 sampler2D TESR_ShadowMapBufferNear : register(s1) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = ANISOTROPIC; MIPFILTER = LINEAR; };
@@ -22,13 +23,13 @@ sampler2D TESR_NormalsBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; 
 sampler2D TESR_PointShadowBuffer : register(s6)  = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NoiseSampler : register(s7) < string ResourceName = "Effects\bluenoise256.dds"; > = sampler_state { ADDRESSU = WRAP; ADDRESSV = WRAP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 
-#define SSS_STEPNUM 32
 
 static const float DARKNESS = 1-TESR_ShadowData.y;
-static const float SSS_DIST = 4000;
-static const float SSS_THICKNESS = 10;
 static const float SSS_MAXDEPTH = TESR_ShadowScreenSpaceData.z * TESR_ShadowScreenSpaceData.x;
+static const int SSS_STEPNUM = 32;
 
+static const float SSS_DIST = 2000;
+static const float SSS_THICKNESS = 40;
 
 struct VSOUT
 {
@@ -135,9 +136,13 @@ float GetLightAmount(float4 coord, float depth)
 // tailored to return a different value for each uv coord of the screen.
 float3 random(float2 seed)
 {
-	return tex2D(TESR_NoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy).xyz;
+	return tex2Dgrad(TESR_NoiseSampler, (seed/256 + 0.5) / TESR_ReciprocalResolution.xy,0,0).xyz;
 }
 
+float IGN(float2 uv)
+{
+    return frac(52.9829189f * frac(0.06711056f*uv.x + 0.00583715f*uv.y));
+}
 float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 {	
 	// calculates wether a point is in shadow based on screen depth
@@ -157,28 +162,34 @@ float4 ScreenSpaceShadow(VSOUT IN) : COLOR0
 
 	// scale the step with distance, and randomize length
 	float depth = getHomogenousDepth(uv) / farZ;
-	float3 step = pows(depth, 0.6) * (SSS_DIST / SSS_STEPNUM) * TESR_ViewSpaceLightDir.xyz;
+
+	float3 random3 = random(uv);
+	float rand = lerp(0.6, 1, random3.r); // some noise to vary the ray length
+	float3 step = pows(depth, 0.6) * (SSS_DIST / SSS_STEPNUM) * TESR_ViewSpaceLightDir.xyz * rand;
 	float thickness = pows(depth, 0.6) * SSS_THICKNESS;
 
 	float occlusion = 0.0;
 	float total = 0;
 
 	// Doing two steps at once to optimize the depth march
+	//[loop][fastopt]
 	[unroll]
 	for (float i = 1; i < SSS_STEPNUM; i+=2){
 		float step1 = i;
 		float step2 = i + 1;
-		float3 random3 = random(uv);
-		float rand = lerp(0.1, 1, random3.r); // some noise to vary the ray length
 
-		float3 pos1 = pos + step1 * (step * rand); // we move to the light with bigger steps each time
-		float3 pos2 = pos1 + step2 * (step * rand); // we move to the light with bigger steps each time
+		float3 pos1 = step1 * step; // we move to the light with bigger steps each time
+		float3 pos2 = step2 * step; // we move to the light with bigger steps each time
+		pos1 *= lerp(0.75, 1.0, IGN(projectPosition(pos1).xy)); // we move to the light with bigger steps each time
+		pos2 *= lerp(0.75, 1.0, IGN(projectPosition(pos2).xy)); // we move to the light with bigger steps each time
+		pos1 += pos; // we move to the light with bigger steps each time
+		pos2 += pos1; // we move to the light with bigger steps each time
 		
 		// if (screen_pos.x > 0 && screen_pos.x < 1.0 && screen_pos.y > 0 && screen_pos.y <1){
 		float2 depth = {pos1.z, pos2.z};
 		float2 depthCompare = {
-			readDepth(projectPosition(pos1).xy),
-			readDepth(projectPosition(pos2).xy),
+			tex2Dgrad(TESR_DepthBuffer, projectPosition(pos1).xy,0,0).x * farZ,
+			tex2Dgrad(TESR_DepthBuffer, projectPosition(pos2).xy,0,0).x * farZ
 		};
 
 		float2 depthDelta = depth - depthCompare;

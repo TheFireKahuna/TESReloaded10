@@ -61,7 +61,8 @@ float4 Upsample(VSOUT IN, uniform sampler2D buffer, uniform sampler2D addBuffer)
     float4 upsample = UpsampleTent9(buffer, uv, filterRadius);
     float4 nextMip = tex2D(addBuffer, uv);
     
-    [branch] if (TESR_BloomData.z > 0.0) {
+	[branch]
+    if (TESR_BloomData.z > 0.0) {
         return float4(lerp(nextMip.rgb, upsample.rgb, TESR_BloomData.z), 1);
     } else {
         return float4(upsample.rgb + nextMip.rgb, 1);
@@ -77,7 +78,8 @@ float4 UpsampleLast(VSOUT IN, uniform sampler2D buffer, uniform sampler2D addBuf
     float4 upsample = UpsampleTent9(buffer, uv, filterRadius);
     float4 nextMip = tex2D(addBuffer, uv);
     
-    [branch] if (TESR_BloomData.z > 0.0) {
+	[branch]
+    if (TESR_BloomData.z > 0.0) {
         return float4(lerp(nextMip.rgb, upsample.rgb, TESR_BloomData.z), 1);
     } else {
         return float4((upsample.rgb + nextMip.rgb) * TESR_BloomData.w, 1);
