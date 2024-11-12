@@ -19,7 +19,7 @@ void ShadowRenderPass::RenderNormalPass(ShadowMapTypeEnum ShadowMapType) {
 
 	for (std::tuple<NiGeometry*, UInt32>& obj : GeometryList) {
 		NiGeometry* Geo = obj._Myfirst._Val;
-		//if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
+		if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			NiGeometryData* ModelData = Geo->geomData;
@@ -44,7 +44,7 @@ void ShadowRenderPass::RenderNormalPass(ShadowMapTypeEnum ShadowMapType) {
 				Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, GeoData->VertCount, StartIndex, PrimitiveCount);
 				StartIndex += PrimitiveCount + 2;
 			}
-		//}
+		}
 	}
 }
 

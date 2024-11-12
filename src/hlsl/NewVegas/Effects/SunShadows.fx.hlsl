@@ -231,6 +231,10 @@ float4 Shadow(VSOUT IN) : COLOR0
 
 	Shadow.r = min(Shadow.r, sunShadows); // get the darkest between Screenspace & Sun shadows
 
+
+	//float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
+	//Shadow.r = 0.0;
+
 	return Shadow;
 }
 

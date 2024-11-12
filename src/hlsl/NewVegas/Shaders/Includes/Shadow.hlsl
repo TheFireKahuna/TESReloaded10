@@ -43,7 +43,6 @@ float Lookup(float4 ShadowPos, float2 OffSet) {
 
 float GetLightAmount(float4 ShadowPos, float4 ShadowPosFar) {
 	
-	[branch]
 	if (TESR_ShadowData.x == -1.0f) return 1.0f; // Shadows are applied in post processing (ShadowsExteriors.fx.hlsl)
 	
 	float Shadow = 0.0f;
@@ -58,6 +57,7 @@ float GetLightAmount(float4 ShadowPos, float4 ShadowPosFar) {
  
     ShadowPos.x = ShadowPos.x *  0.5f + 0.5f;
     ShadowPos.y = ShadowPos.y * -0.5f + 0.5f;
+	[branch]
 	if (TESR_ShadowData.x == 0.0f) {
 		for (y = -0.5f; y <= 0.5f; y += 0.5f) {
 			for (x = -0.5f; x <= 0.5f; x += 0.5f) {

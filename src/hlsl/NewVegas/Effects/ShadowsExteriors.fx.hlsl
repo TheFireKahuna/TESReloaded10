@@ -78,7 +78,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 	Shadow.r = saturate(Shadow.r);
 
 #if viewshadows == 1
-	return Shadow;
+	return float4(Shadow.r, Shadow.r, Shadow.r, 1.0);
 #else
 	// tint shadowed areas with Sky color before blending
 	float4 colorShadow = luma(color.rgb) * Shadow.r * TESR_SkyColor;
