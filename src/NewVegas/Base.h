@@ -65,6 +65,7 @@ public:
 		static const UInt32 RenderShadowMapReturn		= 0x00870C41;
 		static const UInt32 RenderShadowMap1Hook		= 0x0087084E;
 		static const UInt32 RenderShadowMap1Return		= 0x00870856;
+		static const UInt32 OriginalRenderShadowPass	= 0x004073D0;
 		static const UInt32 AddCastShadowFlagHook		= 0x0050DD06;
 		static const UInt32 AddCastShadowFlagReturn		= 0x0050DD0B;
 		static const UInt32 LeavesNodeNameHook			= 0x0066A112;
