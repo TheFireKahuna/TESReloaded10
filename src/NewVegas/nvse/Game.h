@@ -2212,6 +2212,11 @@ public:
 	NiNode*					GetNode()		{ return structC4 ? structC4->niNode : NULL; }
 	NiNode*					GetChildNode(CellNodes aeNode);
 	bool					IsInterior() { return (flags0 & kFlags0_Interior) != 0; }
+	std::vector<NiNode*> GetTerrainNodes() {
+		std::vector<NiNode*> nodes;
+		nodes.push_back((NiNode*)structC4->niNode->m_children.data[2]);
+		return nodes;
+	}
 
 	TESFullName				fullName;			// 018	// 030 in GECK
 	UInt8					flags0;				// 024
@@ -5386,6 +5391,8 @@ namespace Pointers {
         static const void* BSDismemberSkinInstance = (void*) 0x01069A84;
 		static const void* BSMultiBoundNode   = (void*)0x010C1D14;
 		static const void* NiParticleNode     = (void*)0x010BD44C;
+		static const void* NiBillBoardNode = (void*)0x0102BF44;
+		static const void* NiParticleSystem = (void*)0x010BD44C;
 
 	}
 	namespace Settings {
@@ -5587,9 +5594,9 @@ public:
 	};
 
 	UInt32					unk07C;
-	UInt32					unk080;
+	float					fMorphDistance;
 	NiColorAlpha			kHairTint;
-	NiColorAlpha			kLandBlendParams;
+	NiVector4				kLandBlendParams;
 	BSShaderTextureSet*		spTextureSet;
 	UInt16					usLandscapeTextures;
 	NiSourceTexture**		ppTextures[6];
@@ -5606,8 +5613,11 @@ public:
 	float					fParallaxScale;
 	NiVector4				kLODTextureParams;
 	BSRenderPass* pDepthPass;
+
+	bool IsRefractive() { return false; }
 };
 assert(sizeof(BSShaderPPLightingProperty) == 0x104);
+assert(offsetof(BSShaderPPLightingProperty, kHairTint) == 0x84);
 
 class SpeedTreeShaderLightingProperty : public BSShaderLightingProperty {
 public:

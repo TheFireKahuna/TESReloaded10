@@ -4,32 +4,37 @@
 class ShadowManager { // Never disposed
 public:
 	static void Initialize();
-    
-	enum ShadowMapTypeEnum {
-		MapNear = 0,
-		MapMiddle = 1,
-		MapFar = 2,
-		MapLod = 3,
-		MapOrtho = 4,
+
+	enum PlaneEnum {
+		PlaneNear = 0,
+		PlaneFar = 1,
+		PlaneLeft = 2,
+		PlaneRight = 3,
+		PlaneTop = 4,
+		PlaneBottom = 5,
 	};
 
 
-	NiNode*					GetRefNode(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms);
-	void					AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand);
-	void					AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms);
-	void					RenderAccums(D3DVIEWPORT9* Viewport, IDirect3DSurface9* RenderTarget, IDirect3DSurface9* DepthSurface);
 	D3DXMATRIX				GetViewMatrix(D3DXVECTOR3* At, D3DXVECTOR4* Dir);
-	void					RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, D3DMATRIX* ViewProj);
-	void					AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
 	void					RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightIndex);
 	void					RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightIndex);
 	void					RenderShadowMaps();
     void                    BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
+	void					RenderShadowExteriorMaps(D3DXVECTOR3* At);
+	TESObjectREFR*			GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms);
+	void					AccumulateGeometry(NiAVObject* accum);
+	void					SelectGeometry(NiGeometry* geo);
+	bool					IsOutAllFrustums(NiNode* node);
+	bool					ExcludeFromAllRadius(NiAVObject* node);
+	void					RenderInterior(NiAVObject* Object, float MinRadius);
+	void					RenderGeometry(NiGeometry* Geo);
 
-	ShadowRenderPass*				geometryPass;
-	AlphaShadowRenderPass*			alphaPass;
-	SkinnedGeoShadowRenderPass*		skinnedGeoPass;
-	SpeedTreeShadowRenderPass*		speedTreePass;
+	ShadowRenderPass*				 geometryPass;
+	AlphaShadowRenderPass*			 alphaPass;
+	SkinnedGeoShadowRenderPass*		 skinnedGeoPass;
+	SkinnedAlphaGeoShadowRenderPass* skinnedAlphaPass;
+	SpeedTreeShadowRenderPass*		 speedTreePass;
+	InteriorShadowRenderPass*		 interiorPass;
 
 	NiVector4				BillboardRight;
 	NiVector4				BillboardUp;

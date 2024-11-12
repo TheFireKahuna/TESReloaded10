@@ -1632,6 +1632,8 @@ public:
 	void							PackGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiD3DShaderDeclaration* ShaderDeclaration);
 	void							PackSkinnedGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiSkinPartition::Partition* Partition, NiD3DShaderDeclaration* ShaderDeclaration);
 	void							CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransform* WorldTrasform);
+	void							AddGeometryToUnsharedGroup(NiGeometryData* data) {}
+	void							OriginalShadowPass() {}   //Stubbed
 
 	LPDIRECT3D9						ms_pkD3D9;
 	UInt32							unk284;

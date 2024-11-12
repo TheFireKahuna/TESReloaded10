@@ -1,5 +1,21 @@
 #pragma once
 
+
+enum ShadowMapTypeEnum {
+	MapNear = 0,
+	MapMiddle = 1,
+	MapFar = 2,
+	MapLod = 3,
+	MapOrtho = 4,
+};
+enum ShadowMapVisibility {
+	None = 0x0,
+	Near = 0x1,
+	Middle = 0x10,
+	Far = 0x100,
+	Lod = 0x1000,
+	Ortho = 0x10000
+};
 class RenderPass {
 public:
 	RenderPass() {};
@@ -11,14 +27,10 @@ public:
 	ShaderRecordVertex* VertexShader;
 	ShaderRecordPixel* PixelShader;
 
-	std::stack<NiGeometry*>	GeometryList;
-	virtual bool AccumObject(NiGeometry* Geo) { return true; };
+	std::vector<std::tuple<NiGeometry*, UInt32>> GeometryList;
 	virtual void UpdateConstants(NiGeometry* Geo) {};
-	virtual void RenderGeometry(NiGeometry* Geo);
 	virtual void RegisterConstants() {};
-
-	void DrawGeometryBuffer(NiGeometryBufferData* GeoData, UINT verticesCount);
-	void RenderAccum();
+	bool IsVisible(ShadowMapTypeEnum type, UInt32 visibility);
 };
 
 
@@ -30,9 +42,23 @@ public:
 	};
 	ConstantsStruct Constants;
 
-	bool AccumObject(NiGeometry* Geo);
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
+	void RenderNormalPass(ShadowMapTypeEnum ShadowMapType);
+};
+
+
+class InteriorShadowRenderPass : public RenderPass {
+public:
+	InteriorShadowRenderPass();
+
+	struct ConstantsStruct {
+	};
+	ConstantsStruct Constants;
+
+	void RegisterConstants() {};
+	void UpdateConstants(NiGeometry* Geo) {};
+	void RenderInteriorPass(NiGeometry* Geo);
 };
 
 class AlphaShadowRenderPass : public RenderPass {
@@ -44,9 +70,9 @@ public:
 	};
 	ConstantsStruct Constants;
 
-	bool AccumObject(NiGeometry* Geo);
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
+	void RenderAlphaPass(ShadowMapTypeEnum ShadowMapType);
 };
 
 
@@ -59,10 +85,24 @@ public:
 	};
 	ConstantsStruct Constants;
 
-	bool AccumObject(NiGeometry* Geo);
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
-	void RenderGeometry(NiGeometry* Geo);
+	void RenderSkinnedPass(ShadowMapTypeEnum ShadowMapType);
+};
+
+
+class SkinnedAlphaGeoShadowRenderPass: public RenderPass{
+public:
+	SkinnedAlphaGeoShadowRenderPass();
+
+	struct ConstantsStruct {
+		D3DXVECTOR4* BoneMatrices;
+	};
+	ConstantsStruct Constants;
+
+	void RegisterConstants();
+	void UpdateConstants(NiGeometry* Geo);
+	void RenderSkinnedAlphaPass(ShadowMapTypeEnum ShadowMapType);
 };
 
 
@@ -78,7 +118,7 @@ public:
 	};
 	ConstantsStruct Constants;
 
-	bool AccumObject(NiGeometry* Geo);
 	void RegisterConstants(); 
 	void UpdateConstants(NiGeometry* Geo);
+	void RenderSpeedTreePass(ShadowMapTypeEnum ShadowMapType);
 };
