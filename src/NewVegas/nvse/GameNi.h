@@ -716,6 +716,7 @@ public:
 	UInt8			CanCarry;		// 9F	JIP only
 	SInt32			iIndex;			// A0
 	UInt32			pushCount;		// A4
+	UInt32			revID;			// A8
 	DList<NiNode>	shadowGenerator;// AC
 	DList<NiNode>	unaffectedNodes;// B8
 
