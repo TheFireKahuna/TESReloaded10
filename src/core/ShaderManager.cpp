@@ -251,7 +251,7 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.GameTime.z = (float)TheFrameRateManager->Time;
 	ShaderConst.GameTime.w = TheFrameRateManager->ElapsedTime; // frameTime in seconds
 
-	ShaderConst.SunPosition = SunRoot->m_localTransform.pos.toD3DXVEC4();
+	ShaderConst.SunPosition = SunRoot->m_localTransform.translate.toD3DXVEC4();
 	D3DXVec4Normalize(&ShaderConst.SunPosition, &ShaderConst.SunPosition);
 	ShaderConst.SunDir = Tes->directionalLight->direction.toD3DXVEC4() * -1.0f;
 
@@ -395,7 +395,7 @@ ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 
 	if (!memcmp(Name, "WATER", 5)) return Shaders.Water;
 	if (!memcmp(Name, "GRASS", 5)) return Shaders.Grass;
-	if (!memcmp(Name, "ISHDR", 5) || !memcmp(Name, "HDR", 3)) return Shaders.Tonemapping; // tonemapping shaders have different names between New vegas and Oblivion
+	if (!memcmp(Name, "ISHDR", 5) || !memcmp(Name, "HDR", 3)) return Shaders.Tonemapping; // tonemapping shaders have diffuseColorerent names between New vegas and Oblivion
 	if (!memcmp(Name, "PAR", 3)) return Shaders.POM;
 	if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin;
 	if (!memcmp(Name, "SKY", 3)) return Shaders.Sky;
@@ -464,7 +464,7 @@ bool ShaderManager::LoadShader(NiD3DPixelShader* Shader) {
 
 
 void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPointLight* LightsList[], NiSpotLight* SpotLightList[]) {
-	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
+	D3DXVECTOR4 PlayerPosition = Player->position.toD3DXVEC4();
 	//Logger::Log(" ==== Getting lights ====");
 	auto timer = TimeLogger();
 
@@ -478,10 +478,10 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 	// Creating list of lights in order of distance to the player
 	while (Entry) {
 		NiPointLight* Light = Entry->data->sourceLight;
-		D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
+		D3DXVECTOR4 LightPosition = Light->m_worldTransform.translate.toD3DXVEC4();
 
 		bool lightCulled = Light->m_flags & NiAVObject::NiFlags::APP_CULLED;
-		bool lightOn = (Light->Diff.r + Light->Diff.g + Light->Diff.b) * Light->Dimmer > 5.0 / 255.0; // Check for low values in case of human error
+		bool lightOn = (Light->diffuseColor.r + Light->diffuseColor.g + Light->diffuseColor.b) * Light->fadeValue > 5.0 / 255.0; // Check for low values in case of human error
 		if (lightCulled || !lightOn) {
 			Entry = Entry->next;
 			continue;
@@ -490,8 +490,8 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 		D3DXVECTOR4 LightVector = LightPosition - PlayerPosition;
 		D3DXVec4Normalize(&LightVector, &LightVector);
 		bool inFront = D3DXVec4Dot(&LightVector, &TheRenderManager->CameraForward) > 0;
-		float Distance = Light->GetDistance(&Player->pos);
-		float radius = Light->Spec.r * Settings->LightRadiusMult;
+		float Distance = Light->GetDistance(&Player->position);
+		float radius = Light->radius * Settings->LightRadiusMult;
 
 		// select lights that will be tracked by removing culled lights and lights behind the player further away than their radius
 		// TODO: handle using frustum check
@@ -530,14 +530,14 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 
 	//Setting constants
 	if (SpotLightList[0] != nullptr) {
-		TheShaderManager->SpotLightPosition[0] = SpotLightList[0]->m_worldTransform.pos.toD3DXVEC4();
-		TheShaderManager->SpotLightPosition[0].w = SpotLightList[0]->Spec.r; // radius
+		TheShaderManager->SpotLightPosition[0] = SpotLightList[0]->m_worldTransform.translate.toD3DXVEC4();
+		TheShaderManager->SpotLightPosition[0].w = SpotLightList[0]->radius; // radius
 		TheShaderManager->SpotLightDirection[0] = D3DXVECTOR4(
-			SpotLightList[0]->m_worldTransform.rot.data[0][0],
-			SpotLightList[0]->m_worldTransform.rot.data[1][0], 
-			SpotLightList[0]->m_worldTransform.rot.data[2][0], 
+			SpotLightList[0]->m_worldTransform.rotate.data[0][0],
+			SpotLightList[0]->m_worldTransform.rotate.data[1][0], 
+			SpotLightList[0]->m_worldTransform.rotate.data[2][0], 
 			SpotLightList[0]->OuterSpotAngle); // outside angle of the light cone
-		TheShaderManager->SpotLightColor[0] = D3DXVECTOR4(SpotLightList[0]->Diff.r, SpotLightList[0]->Diff.g, SpotLightList[0]->Diff.b, SpotLightList[0]->Dimmer);
+		TheShaderManager->SpotLightColor[0] = D3DXVECTOR4(SpotLightList[0]->diffuseColor.r, SpotLightList[0]->diffuseColor.g, SpotLightList[0]->diffuseColor.b, SpotLightList[0]->fadeValue);
 	}
 	else {
 		TheShaderManager->SpotLightPosition[0] = Empty;
@@ -585,15 +585,15 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 				if (Process->OnBeltState == HighProcessEx::State::In) CastShadow = false;
 		}
 #endif
-			float radius = Light->Spec.r * Settings->LightRadiusMult;
-			D3DXVECTOR4 LightPos = Light->m_worldTransform.pos.toD3DXVEC4();
+			float radius = Light->radius * Settings->LightRadiusMult;
+			D3DXVECTOR4 LightPos = Light->m_worldTransform.translate.toD3DXVEC4();
 			LightPos.w = radius;
 
 			if (CastShadow && ShadowIndex < ShadowCubeMapsMax && radius > 10) {
 				// add found light to list of lights that cast shadows
 				ShadowLightsList[ShadowIndex] = v->second;
 				ShadowsConstants->ShadowLightPosition[ShadowIndex] = LightPos;
-				LightColor[ShadowIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
+				LightColor[ShadowIndex] = D3DXVECTOR4(Light->diffuseColor.r, Light->diffuseColor.g, Light->diffuseColor.b, Light->fadeValue);
 
 				ShadowIndex++;
 				TheShadowManager->PointLightsNum++; // Constant to track number of shadow casting lights are present
@@ -601,7 +601,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 			else if (LightIndex < TrackedLightsMax) {
 				LightsList[LightIndex] = Light;
 				LightPosition[LightIndex] = LightPos;
-				LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(Light->Diff.r, Light->Diff.g, Light->Diff.b, Light->Dimmer);
+				LightColor[ShadowCubeMapsMax + LightIndex] = D3DXVECTOR4(Light->diffuseColor.r, Light->diffuseColor.g, Light->diffuseColor.b, Light->fadeValue);
 				LightIndex++;
 			};
 		}

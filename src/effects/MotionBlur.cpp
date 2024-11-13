@@ -4,8 +4,8 @@ void MotionBlurEffect::UpdateConstants() {
 	ValuesStruct category = Settings.FirstPerson;
 	if (!TheCameraManager->IsFirstPerson()) category = Settings.ThirdPerson;
 
-	float AngleZ = D3DXToDegree(Player->rot.z);
-	float AngleX = D3DXToDegree(Player->rot.x);
+	float AngleZ = D3DXToDegree(Player->rotation.z);
+	float AngleX = D3DXToDegree(Player->rotation.x);
 	float fMotionBlurAmtX = Constants.oldAngleZ - AngleZ;
 	float fMotionBlurAmtY = Constants.oldAngleX - AngleX;
 	float fBlurDistScratchpad = fMotionBlurAmtX + 360.0f;

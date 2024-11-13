@@ -68,10 +68,10 @@ void CameraManager::CameraManagerCommands::Execute(NiAVObject* CameraNode) {
 
 	if (!IsTranslating && !IsRotating && !IsLookingAt && !IsTranslatingToPosition && !IsRotatingToPosition && !IsLookingAtPosition) return;
 
-	NiMatrix33* CameraRotationW = &CameraNode->m_worldTransform.rot;
-	NiPoint3* CameraPositionW = &CameraNode->m_worldTransform.pos;
-	NiMatrix33* CameraRotationL = &CameraNode->m_localTransform.rot;
-	NiPoint3* CameraPositionL = &CameraNode->m_localTransform.pos;
+	NiMatrix33* CameraRotationW = &CameraNode->m_worldTransform.rotate;
+	NiPoint3* CameraPositionW = &CameraNode->m_worldTransform.translate;
+	NiMatrix33* CameraRotationL = &CameraNode->m_localTransform.rotate;
+	NiPoint3* CameraPositionL = &CameraNode->m_localTransform.translate;
 	NiMatrix33* NodeRotationW = NULL;
 	NiPoint3* NodePositionW = NULL;
 	NiMatrix33 m;
@@ -80,13 +80,14 @@ void CameraManager::CameraManagerCommands::Execute(NiAVObject* CameraNode) {
 	if (Ref) {
 		NiNode* RootNode = Ref->GetNiNode();
 		if (Ref->IsActor() && (IsTranslating || IsLookingAt)) {
-			NiAVObject* Head = RootNode->GetObjectByName("Bip01 Head");
-			NodeRotationW = &Head->m_worldTransform.rot;
-			NodePositionW = &Head->m_worldTransform.pos;
+			NiFixedString headObject = "Bip01 Head";
+			NiAVObject* Head = RootNode->GetObjectByName(&headObject);
+			NodeRotationW = &Head->m_worldTransform.rotate;
+			NodePositionW = &Head->m_worldTransform.translate;
 		}
 		else {
-			NodeRotationW = &RootNode->m_worldTransform.rot;
-			NodePositionW = &RootNode->m_worldTransform.pos;
+			NodeRotationW = &RootNode->m_worldTransform.rotate;
+			NodePositionW = &RootNode->m_worldTransform.translate;
 		}
 	}
 
@@ -101,7 +102,7 @@ void CameraManager::CameraManagerCommands::Execute(NiAVObject* CameraNode) {
 
 	if (IsRotating) {
 		m.GenerateRotationMatrixZXY(&Rotation, 1);
-		m = *NodeRotationW * m;
+		m *= *NodeRotationW;
 		memcpy(CameraRotationW, &m, sizeof(NiMatrix33));
 		memcpy(CameraRotationL, &m, sizeof(NiMatrix33));
 	}

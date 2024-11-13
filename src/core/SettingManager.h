@@ -57,9 +57,9 @@ struct SettingsMainStruct {
 		bool		ChasingFirst;
 		bool		ChasingThird;
 		UInt8		Crosshair;
-		NiPoint3	Offset;
-		NiPoint3	AimingOffset;
-		NiPoint3	DialogOffset;
+		NiVector3	Offset;
+		NiVector3	AimingOffset;
+		NiVector3	DialogOffset;
 		float		FoV;
 	};
 	
@@ -79,18 +79,18 @@ struct SettingsMainStruct {
 		UInt16		TorchKey;
 		UInt16		CombatEquipmentKey;
 		float		DualBlockDelay;
-		NiPoint3	ShieldOnBackPos;
-		NiPoint3	ShieldOnBackRot;
-		NiPoint3	WeaponOnBackPos;
-		NiPoint3	WeaponOnBackRot;
-		NiPoint3	TwoHandWeaponOnBackPos;
-		NiPoint3	TwoHandWeaponOnBackRot;
-		NiPoint3	BowOnBackPos;
-		NiPoint3	BowOnBackRot;
-		NiPoint3	StaffOnBackPos;
-		NiPoint3	StaffOnBackRot;
-		NiPoint3	TorchOnBeltPos;
-		NiPoint3	TorchOnBeltRot;
+		NiVector3	ShieldOnBackPos;
+		NiVector3	ShieldOnBackRot;
+		NiVector3	WeaponOnBackPos;
+		NiVector3	WeaponOnBackRot;
+		NiVector3	TwoHandWeaponOnBackPos;
+		NiVector3	TwoHandWeaponOnBackRot;
+		NiVector3	BowOnBackPos;
+		NiVector3	BowOnBackRot;
+		NiVector3	StaffOnBackPos;
+		NiVector3	StaffOnBackRot;
+		NiVector3	TorchOnBeltPos;
+		NiVector3	TorchOnBeltRot;
 	};
 
 	struct GrassModeStruct {
@@ -99,14 +99,14 @@ struct SettingsMainStruct {
 
 	struct MountedCombatStruct {
 		bool		Enabled;
-		NiPoint3	WeaponOnBackPos;
-		NiPoint3	WeaponOnBackRot;
-		NiPoint3	TwoHandWeaponOnBackPos;
-		NiPoint3	TwoHandWeaponOnBackRot;
-		NiPoint3	BowOnBackPos;
-		NiPoint3	BowOnBackRot;
-		NiPoint3	StaffOnBackPos;
-		NiPoint3	StaffOnBackRot;
+		NiVector3	WeaponOnBackPos;
+		NiVector3	WeaponOnBackRot;
+		NiVector3	TwoHandWeaponOnBackPos;
+		NiVector3	TwoHandWeaponOnBackRot;
+		NiVector3	BowOnBackPos;
+		NiVector3	BowOnBackRot;
+		NiVector3	StaffOnBackPos;
+		NiVector3	StaffOnBackRot;
 	};
 	
 	struct SleepingModeStruct {
@@ -116,9 +116,9 @@ struct SettingsMainStruct {
 	
 	struct WeatherModeStruct {
 		bool		Enabled;
-		NiPoint3	CoeffNight;
-		NiPoint3	CoeffFog;
-		NiPoint3	CoeffSun;
+		NiVector3	CoeffNight;
+		NiVector3	CoeffFog;
+		NiVector3	CoeffSun;
 	};
 	
 	struct ShadowModeStruct {

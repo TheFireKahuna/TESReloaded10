@@ -14,10 +14,10 @@ public:
 		bool			IsTranslatingToPosition;
 		bool			IsRotatingToPosition;
 		bool			IsLookingAtPosition;
-		NiPoint3		Position;
-		NiPoint3		Rotation;
-		NiPoint3		LookingAtOffset;
-		NiPoint3		LookingAtPosition;
+		NiVector3		Position;
+		NiVector3		Rotation;
+		NiVector3		LookingAtOffset;
+		NiVector3		LookingAtPosition;
 		TESObjectREFR*	Ref;
 
 		void			Execute(NiAVObject* CameraNode);

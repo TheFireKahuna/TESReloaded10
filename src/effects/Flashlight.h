@@ -14,7 +14,7 @@ public:
 		float		ConeAngle;
 		float		Distance;
 		bool		renderShadows;
-		NiPoint3	Offset;
+		NiVector3	Offset;
 		bool		attachToWeapon;
 	};
 	FlashlightSettingsStruct	Settings;

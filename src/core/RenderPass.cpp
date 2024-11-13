@@ -23,14 +23,14 @@ void ShadowRenderPass::RenderNormalPass(ShadowMapTypeEnum ShadowMapType) {
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			NiGeometryData* ModelData = Geo->geomData;
-			NiGeometryBufferData* GeoData = ModelData->BuffData;
+			NiGeometryBufferData* GeoData = ModelData->bufferData;
 			NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
 			TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
 			for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
 				Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
 			}
-			//			Logger::Log("%s %s  %08X", Geo->m_pcName, Geo->m_parent, GeoData->VBChip[0]->VB);
+			//			Logger::Log("%s %s  %08X", Geo->m_blockName, Geo->m_parent, GeoData->VBChip[0]->VB);
 			Device->SetIndices(GeoData->IB);
 			if (GeoData->FVF)
 				RenderState->SetFVF(GeoData->FVF, false);
@@ -60,7 +60,7 @@ void SpeedTreeShadowRenderPass::RenderSpeedTreePass(ShadowMapTypeEnum ShadowMapT
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			NiGeometryData* ModelData = Geo->geomData;
-			NiGeometryBufferData* GeoData = ModelData->BuffData;
+			NiGeometryBufferData* GeoData = ModelData->bufferData;
 			NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
 			TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
@@ -95,7 +95,7 @@ void AlphaShadowRenderPass::RenderAlphaPass(ShadowMapTypeEnum ShadowMapType) {
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			NiGeometryData* ModelData = Geo->geomData;
-			NiGeometryBufferData* GeoData = ModelData->BuffData;
+			NiGeometryBufferData* GeoData = ModelData->bufferData;
 			NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
 			TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
@@ -132,7 +132,7 @@ void SkinnedAlphaGeoShadowRenderPass::RenderSkinnedAlphaPass(ShadowMapTypeEnum S
 			int PrimitiveCount = 0;
 			int StartRegister = 9;
 			NiGeometryData* ModelData = Geo->geomData;
-			NiGeometryBufferData* GeoData = ModelData->BuffData;
+			NiGeometryBufferData* GeoData = ModelData->bufferData;
 			NiSkinInstance* SkinInstance = Geo->skinInstance;
 			NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 			NiSkinPartition* SkinPartition = SkinInstance->SkinPartition;
@@ -153,7 +153,7 @@ void SkinnedAlphaGeoShadowRenderPass::RenderSkinnedAlphaPass(ShadowMapTypeEnum S
 					Device->SetVertexShaderConstantF(StartRegister, ((float*)SkinInstance->BoneMatrixes) + (NewIndex * 3 * 4), 3);
 					StartRegister += 3;
 				}
-				GeoData = Partition->BuffData;
+				GeoData = Partition->bufferData;
 				TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
 				for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
 					Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
@@ -189,7 +189,7 @@ void SkinnedGeoShadowRenderPass::RenderSkinnedPass(ShadowMapTypeEnum ShadowMapTy
 			int PrimitiveCount = 0;
 			int StartRegister = 9;
 			NiGeometryData* ModelData = Geo->geomData;
-			NiGeometryBufferData* GeoData = ModelData->BuffData;
+			NiGeometryBufferData* GeoData = ModelData->bufferData;
 			NiSkinInstance* SkinInstance = Geo->skinInstance;
 			NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 			NiSkinPartition* SkinPartition = SkinInstance->SkinPartition;
@@ -209,7 +209,7 @@ void SkinnedGeoShadowRenderPass::RenderSkinnedPass(ShadowMapTypeEnum ShadowMapTy
 					Device->SetVertexShaderConstantF(StartRegister, ((float*)SkinInstance->BoneMatrixes) + (NewIndex * 3 * 4), 3);
 					StartRegister += 3;
 				}
-				GeoData = Partition->BuffData;
+				GeoData = Partition->bufferData;
 				TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
 				for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
 					Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
@@ -273,7 +273,7 @@ void AlphaShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
-	NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0];
+	NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->srcTextures[0];
 
 	if (Texture && Texture->rendererData->dTexture) {
 
@@ -329,7 +329,7 @@ void SkinnedAlphaGeoShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowConstants->Data.y = 0.0f; // Alpha control
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
-	NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0];
+	NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->srcTextures[0];
 
 	if (Texture && Texture->rendererData->dTexture) {
 
@@ -426,17 +426,17 @@ void InteriorShadowRenderPass::RenderInteriorPass(NiGeometry* Geo) {
 	int PrimitiveCount = 0;
 	int StartRegister = 9;
 	NiGeometryData* ModelData = Geo->geomData;
-	NiGeometryBufferData* GeoData = ModelData->BuffData;
+	NiGeometryBufferData* GeoData = ModelData->bufferData;
 	NiSkinInstance* SkinInstance = Geo->skinInstance;
 	NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
 
-	if (Geo->m_pcName && !memcmp(Geo->m_pcName, "Torch", 5)) return; // No torch geo, it is too near the light and a bad square is rendered.
+	if (Geo->m_blockName && !memcmp(Geo->m_blockName, "Torch", 5)) return; // No torch geo, it is too near the light and a bad square is rendered.
 
 	Shadows->Constants.Data.x = 0.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
 	Shadows->Constants.Data.y = 0.0f; // Alpha control
 	if (GeoData) {
 		TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
-		if (Geo->m_parent->m_pcName && !memcmp(Geo->m_parent->m_pcName, "Leaves", 6)) {
+		if (Geo->m_parent->m_blockName && !memcmp(Geo->m_parent->m_blockName, "Leaves", 6)) {
 			SpeedTreeLeafShaderProperty* STProp = (SpeedTreeLeafShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 			BSTreeNode* Node = (BSTreeNode*)Geo->m_parent->m_parent;
 			NiDX9SourceTextureData* Texture = (NiDX9SourceTextureData*)Node->TreeModel->LeavesTexture->rendererData;
@@ -458,7 +458,7 @@ void InteriorShadowRenderPass::RenderInteriorPass(NiGeometry* Geo) {
 		else {
 			BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 			if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return;
-			NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0];
+			NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->srcTextures[0];
 			if (AlphaEnabled) {
 				NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
 				if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) {
@@ -475,7 +475,7 @@ void InteriorShadowRenderPass::RenderInteriorPass(NiGeometry* Geo) {
 			}
 		}
 		TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
-		if (GeoData->StreamCount != 1) Logger::Log("%s %s  %i", Geo->m_pcName, Geo->m_parent->m_pcName, GeoData->StreamCount);
+		if (GeoData->StreamCount != 1) Logger::Log("%s %s  %i", Geo->m_blockName, Geo->m_parent->m_blockName, GeoData->StreamCount);
 		for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
 			Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
 		}
@@ -498,7 +498,7 @@ void InteriorShadowRenderPass::RenderInteriorPass(NiGeometry* Geo) {
 
 		BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 		if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return;
-		NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->ppTextures[0];
+		NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->srcTextures[0];
 
 		if (AlphaEnabled) {
 			NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
@@ -530,7 +530,7 @@ void InteriorShadowRenderPass::RenderInteriorPass(NiGeometry* Geo) {
 				Device->SetVertexShaderConstantF(StartRegister, ((float*)SkinInstance->BoneMatrixes) + (NewIndex * 3 * 4), 3);
 				StartRegister += 3;
 			}
-			GeoData = Partition->BuffData;
+			GeoData = Partition->bufferData;
 			TheRenderManager->PackSkinnedGeometryBuffer(GeoData, ModelData, SkinInstance, Partition, ShaderDeclaration);
 			for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
 				Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);

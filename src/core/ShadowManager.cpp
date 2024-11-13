@@ -67,12 +67,12 @@ void ShadowManager::RenderGeometry(NiGeometry* Geo) {
 	NiGeometryBufferData* GeoData = NULL;
 
 	if (Geo->shader) {
-		GeoData = Geo->geomData->BuffData;
+		GeoData = Geo->geomData->bufferData;
 		if (GeoData) {
 			interiorPass->RenderInteriorPass(Geo);
 		}
 		else if (Geo->skinInstance && Geo->skinInstance->SkinPartition && Geo->skinInstance->SkinPartition->Partitions) {
-			GeoData = Geo->skinInstance->SkinPartition->Partitions[0].BuffData;
+			GeoData = Geo->skinInstance->SkinPartition->Partitions[0].bufferData;
 			if (GeoData) interiorPass->RenderInteriorPass(Geo);
 		}
 	}
@@ -96,10 +96,10 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 
 	NiPointLight* pNiLight = Lights[LightIndex]->sourceLight;
 
-	LightPos = &pNiLight->m_worldTransform.pos;
-	Radius = pNiLight->Spec.r * Shadows->Settings.Interiors.LightRadiusMult;
-	if (pNiLight->CanCarry)
-		Radius = 256.0f;
+	LightPos = &pNiLight->m_worldTransform.translate;
+	Radius = pNiLight->radius *Shadows->Settings.Interiors.LightRadiusMult;
+	//if (pNiLight->CanCarry)
+	//	Radius = 256.0f;
 	Eye.x = LightPos->x - TheRenderManager->CameraPosition.x;
 	Eye.y = LightPos->y - TheRenderManager->CameraPosition.y;
 	Eye.z = LightPos->z - TheRenderManager->CameraPosition.z;
@@ -147,7 +147,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
 		TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
 		while (Entry) {
-			if (TESObjectREFR* Ref = GetRef(Entry->item, &Settings->Forms)) {
+			if (TESObjectREFR* Ref = GetRef(Entry->data, &Settings->Forms)) {
 				NiNode* RefNode = Ref->GetNode();
 				if (RefNode->GetDistance(LightPos) <= Radius * 1.2f) RenderInterior(RefNode, MinRadius);
 			}
@@ -161,39 +161,22 @@ static void FlagShaderPropertyRecurse(NiAVObject* apObject, UInt32 auiFlags, boo
 	if (!apObject)
 		return;
 
-	if (apObject->IsGeometry()) {
+	if (apObject->GetNiGeometry()) {
 		NiGeometry* pGeometry = static_cast<NiGeometry*>(apObject);
-		NiShadeProperty* shaderProperty = static_cast<NiShadeProperty*>(pGeometry->GetProperty(NiProperty::kType_Shade));
+		BSShaderProperty* shaderProperty = static_cast<BSShaderProperty*>(pGeometry->GetProperty(NiProperty::kType_Shade));
 		if (shaderProperty) {
 			if (abSet)
-				shaderProperty->flags |= auiFlags;
+				shaderProperty->flags1 |= auiFlags;
 			else
-				shaderProperty->flags &= ~auiFlags;
+				shaderProperty->flags1 &= ~auiFlags;
 		}
 
 	}
-	else if (apObject->IsNiNode()) {
+	else if (apObject->GetNiNode()) {
 		NiNode* pNiNode = static_cast<NiNode*>(apObject);
 		for (UInt32 i = 0; i < pNiNode->m_children.end; i++) {
 			FlagShaderPropertyRecurse(pNiNode->m_children.data[i], auiFlags, abSet);
 		}
-	}
-}
-
-static SInt32 frames = -1;
-static void FlagPlayerGeometry() {
-	frames++;
-
-	// Run this function every 50 frames, or on launch
-	if (frames > 50 || frames == -1) {
-		if (Player->firstPersonNiNode)
-			FlagShaderPropertyRecurse(Player->firstPersonNiNode, NiShadeProperty::kFirstPerson, true);
-
-		NiNode* node = Player->GetNode();
-		if (node)
-			FlagShaderPropertyRecurse(node, NiShadeProperty::kThirdPerson, true);
-
-		frames = 0;
 	}
 }
 
@@ -241,7 +224,7 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::
 
 	if (Ref && Ref->GetNode()) {
 		TESForm* Form = Ref->baseForm;
-		ExtraRefractionProperty* RefractionExtraProperty = (ExtraRefractionProperty*)Ref->extraDataList.GetExtraData(BSExtraData::ExtraDataType::kExtraData_RefractionProperty);
+		ExtraRefractionProperty* RefractionExtraProperty = GetExtraType(&Ref->extraDataList, ExtraRefractionProperty);
 		float Refraction = RefractionExtraProperty ? (1 - RefractionExtraProperty->refractionAmount) : 0.0f;
 		if (Refraction > 0.5) return NULL;
 
@@ -292,23 +275,23 @@ void ShadowManager::SelectGeometry(NiGeometry* Geo) {
 		if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) alphaObject = true;
 	}
 	//	if (alphaObject && !haveLightingProperty) return;
-	if (Geo->skinInstance && !Geo->geomData->BuffData && Geo->skinInstance->SkinPartition->Partitions[0].BuffData) {
+	if (Geo->skinInstance && !Geo->geomData->bufferData && Geo->skinInstance->SkinPartition->Partitions[0].bufferData) {
 		if (alphaObject) TheShadowManager->skinnedAlphaPass->GeometryList.push_back(std::make_tuple(Geo, visibility));
 		else TheShadowManager->skinnedGeoPass->GeometryList.push_back(std::make_tuple(Geo, visibility));
 		return;
 	}
-	else if (Geo->skinInstance && !Geo->geomData->BuffData) {
+	else if (Geo->skinInstance && !Geo->geomData->bufferData) {
 		//		Logger::Log("Skinned but no partition: %s   %s", Geo->m_pcName, Geo->m_parent ? Geo->m_parent->m_pcName : "<No parent>");
 		return;
 	}
 	//if(!Geo->geomData->BuffData) TheRenderManager->AddGeometryToUnsharedGroup(Geo->geomData);  //TODO Oblivion only for now. Find new vegas?
-	if (Geo->geomData->BuffData) {
-		if (Geo->m_parent->m_pcName && !memcmp(Geo->m_parent->m_pcName, "Leaves", 6)) TheShadowManager->speedTreePass->GeometryList.push_back(std::make_tuple(Geo, visibility));
+	if (Geo->geomData->bufferData) {
+		if (Geo->m_parent->m_blockName && !memcmp(Geo->m_parent->m_blockName, "Leaves", 6)) TheShadowManager->speedTreePass->GeometryList.push_back(std::make_tuple(Geo, visibility));
 		else if (alphaObject) TheShadowManager->alphaPass->GeometryList.push_back(std::make_tuple(Geo, visibility));
 		else TheShadowManager->geometryPass->GeometryList.push_back(std::make_tuple(Geo, visibility));
 	}
 	else {
-		//	Logger::Log("%s   %s", Geo->m_pcName, Geo->m_parent ? Geo->m_parent->m_pcName : "<No parent>");
+		//	Logger::Log("%s   %s", Geo->m_blockName, Geo->m_parent ? Geo->m_parent->m_pcName : "<No parent>");
 	}
 }
 
@@ -338,7 +321,7 @@ void ShadowManager::AccumulateGeometry(NiAVObject* accum) {
 
 void ShadowManager::RenderShadowExteriorMaps(D3DXVECTOR3* At) {
 	GridCellArray* CellArray = Tes->gridCellArray;
-	UInt32 CellArraySize = CellArray->size * CellArray->size;
+	UInt32 CellArraySize = CellArray->gridSize * CellArray->gridSize;
 
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 
@@ -376,7 +359,7 @@ void ShadowManager::RenderShadowExteriorMaps(D3DXVECTOR3* At) {
 			} */
 			TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 			while (Entry) {
-				if (TESObjectREFR* Ref = GetRef(Entry->item, &Shadows->ShadowMaps[MapNear].Forms)) {
+				if (TESObjectREFR* Ref = GetRef(Entry->data, &Shadows->ShadowMaps[MapNear].Forms)) {
 					NiNode* RefNode = Ref->GetNode();
 					AccumulateGeometry(RefNode);
 				}
@@ -492,19 +475,19 @@ void ShadowManager::RenderShadowMaps() {
 	TheRenderManager->UpdateSceneCameraData();
 	TheRenderManager->SetupSceneCamera();
 	
-	D3DXVECTOR4 PlayerPosition = Player->pos.toD3DXVEC4();
+	D3DXVECTOR4 PlayerPosition = Player->position.toD3DXVEC4();
 	TESObjectCELL* currentCell = Player->parentCell;
 
 	// Flag player geometry so we can control if it should be rendered in shadow cubemaps
-	FlagPlayerGeometry();
+	//FlagPlayerGeometry();
 
 	// Render directional shadows for Sun/Moon
 	ShadowData->w = ShadowsExteriors->ShadowMode;	// Mode (0:off, 1:VSM, 2:ESM, 3: ESSM);
 	NiNode* PlayerNode = Player->GetNode();
 	D3DXVECTOR3 At;
-	At.x = PlayerNode->m_worldTransform.pos.x - TheRenderManager->CameraPosition.x;
-	At.y = PlayerNode->m_worldTransform.pos.y - TheRenderManager->CameraPosition.y;
-	At.z = PlayerNode->m_worldTransform.pos.z - TheRenderManager->CameraPosition.z;
+	At.x = PlayerNode->m_worldTransform.translate.x - TheRenderManager->CameraPosition.x;
+	At.y = PlayerNode->m_worldTransform.translate.y - TheRenderManager->CameraPosition.y;
+	At.z = PlayerNode->m_worldTransform.translate.z - TheRenderManager->CameraPosition.z;
 
 	// Render all shadow maps
 	D3DXVECTOR4* SunDir = &TheShaderManager->ShaderConst.SunDir;

@@ -310,6 +310,9 @@
     <ClInclude Include="..\src\effects\PBR.h">
       <Filter>Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\NewVegas\nvse\DataTypes.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -533,6 +536,10 @@
     </ClCompile>
     <ClCompile Include="..\src\effects\PBR.cpp">
       <Filter>Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\DataTypes.cpp" />
+    <ClCompile Include="..\src\base\Types.cpp">
+      <Filter>Base</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -462,7 +462,7 @@ void __fastcall NiD3DVertexShaderEx::Free(NiD3DVertexShaderEx* shader) {
 	ShaderCollection* Collection = TheShaderManager->GetShaderCollection(shader->Name);
 	std::vector<NiD3DVertexShaderEx*>* pList = &Collection->VertexShaderList;
 	pList->erase(std::remove(pList->begin(), pList->end(), shader), pList->end());
-	ThisCall(0xE89B70, shader);
+	ThisStdCall(0xE89B70, shader);
 }
 
 
@@ -512,7 +512,7 @@ void __fastcall NiD3DPixelShaderEx::Free(NiD3DPixelShaderEx* shader) {
 	ShaderCollection* Collection = TheShaderManager->GetShaderCollection(shader->Name);
 	std::vector<NiD3DPixelShaderEx*>* pList = &Collection->PixelShaderList;
 	pList->erase(std::remove(pList->begin(), pList->end(), shader), pList->end());
-	ThisCall(0xE89970, shader);
+	ThisStdCall(0xE89970, shader);
 }
 
 ShaderRecordVertex::ShaderRecordVertex(const char* shaderName) {

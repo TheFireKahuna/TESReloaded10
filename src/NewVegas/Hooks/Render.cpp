@@ -42,7 +42,7 @@ void __fastcall SetShadersHook(BSShader* This, UInt32 edx, UInt32 PassIndex) {
 	// trace pipeline active shaders
 	if (TheSettingManager->SettingsMain.Develop.DebugMode && !InterfaceManager->IsActive(Menu::MenuType::kMenuType_Console) && Global->OnKeyDown(TheSettingManager->SettingsMain.Develop.TraceShaders)) {
 		char Name[256];
-		sprintf(Name, "Pass %i %s, %s (%s %s)", PassIndex, Pointers::Functions::GetPassDescription(PassIndex), Geometry->m_pcName, VertexShader->Name, PixelShader->Name);
+		sprintf(Name, "Pass %i %s, %s (%s %s)", PassIndex, Pointers::Functions::GetPassDescription(PassIndex), Geometry->m_blockName, VertexShader->Name, PixelShader->Name);
 		if (VertexShader->ShaderHandle == VertexShader->ShaderHandleBackup) strcat(Name, " - Vertex: vanilla");
 		if (PixelShader->ShaderHandle == PixelShader->ShaderHandleBackup) strcat(Name, " - Pixel: vanilla");
 		Logger::Log("%s", Name);
@@ -83,7 +83,7 @@ void (__thiscall* RenderFirstPerson)(Main*, NiDX9Renderer*, NiGeometry*, Sun*, B
 void __fastcall RenderFirstPersonHook(Main* This, UInt32 edx, NiDX9Renderer* Renderer, NiGeometry* Geo, Sun* SkySun, BSRenderedTexture* RenderedTexture) {
 	// Clear the depth buffer before rendering first person model to prevent clipping with world objects & other artefacts
 	TheRenderManager->Clear(NULL, NiRenderer::kClear_ZBUFFER);
-	//ThisCall(0x00874C10, Global);
+	//ThisStdCall(0x00874C10, Global);
 	(*RenderFirstPerson)(This, Renderer, Geo, SkySun, RenderedTexture);
 	TheRenderManager->ResolveDepthBuffer(TheTextureManager->DepthTextureViewModel);
 }
@@ -311,7 +311,7 @@ void __fastcall MuzzleLightCullingFix(MuzzleFlash* This) {
 			This->light->m_flags &= ~1;
 		}
 	}
-	ThisCall(0x9BB8A0, This);
+	ThisStdCall(0x9BB8A0, This);
 }
 
 NiPoint2* __fastcall WaterFogRemover(NiPoint2* point, void*, float x, float y)
@@ -360,7 +360,7 @@ BSRenderedTexture* __cdecl CreateSaveTextureHook(BSString* apName, const UInt32 
 //}
 //
 //void __fastcall ShadowLightShader__UpdateLights(void* apThis, void*, void* apShaderProp, void* apRenderPass, D3DXMATRIX aMatrix, void* apTransform, UInt32 aeRenderPassType, void* apSkinInstance) {
-//	ThisCall(0xB78A90, apThis, apShaderProp, apRenderPass, aMatrix, apTransform, aeRenderPassType, apSkinInstance);
+//	ThisStdCall(0xB78A90, apThis, apShaderProp, apRenderPass, aMatrix, apTransform, aeRenderPassType, apSkinInstance);
 	//Logger::Log("scaling light by %f", TheShaderManager->ShaderConst.HDR.PointLightMult);
 	//NiColorAlpha* pColor;
 

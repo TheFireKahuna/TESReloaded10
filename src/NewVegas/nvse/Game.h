@@ -1,165 +1,33 @@
 #pragma once
+#include "class_vtbls.h"
 
-class DetectorWindow;
-class INISettingCollection;
-class ModInfo;
-class Actor;
-class ActorAnimData;
-class MagicItem;
-class MagicTarget;
-class CombatController;
-class SpellItem;
-class EffectNode;
-class DialoguePackage;
-class BirthSign;
-class AlchemyItem;
-class ActiveEffect;
-class ModelKF;
-class Creature;
-class SkinInfo;
-class BoundObjectListHead;
-class Character;
-class WaterManager;
-class WaterPlaneData;
-class Script;
-class EnchantmentItem;
-class ScriptEventList;
-class Menu;
-class InventoryMenu;
-class ExtraDataList;
-class Tile;
-class TileText;
-class Projectile;
-class MediaSet;
-class MediaLocationController;
 
-class TESSaveLoadGame;
-class TESForm;
-class TESObjectREFR;
-class TESObjectCELL;
-class TESObjectBOOK;
-class TESObjectARMO;
-class TESObjectANIO;
-class TESObjectLAND;
-class TESObjectACTI;
-class TESObjectCONT;
-class TESObjectDOOR;
-class TESObjectMISC;
-class TESObjectSTAT;
-class TESObjectTREE;
-class TESObjectARMA;
-class TESFlora;
-class TESFurniture;
-class TESAmmo;
-class TESPathGrid;
-class TESTopic;
-class TESTopicInfo;
-class TESRegion;
-class TESRegionList;
-class TESClass;
-class TESNPC;
-class TESSound;
-class TESHair;
-class TESEyes;
-class TESRace;
-class TESLandTexture;
-class TESFaction;
-class TESCombatStyle;
-class TESLoadScreen;
-class TESEffectShader;
-class TESRegionDataManager;
-class TESPackageData;
-class TESChildCell { public: virtual TESObjectCELL* GetChildCell(); }; assert(sizeof(TESChildCell) == 0x004);
-class TESImageSpace;
-class TESImageSpaceModifier;
-class TESReputation;
-class TESChallenge;
-class TESRecipe;
-class TESRecipeCategory;
-class TESAmmoEffect;
-class TESCasino;
-class TESCaravanDeck;
-class TESLoadScreenType;
-class TESGrass;
-class TESLevCharacter;
-class TESKey;
-class TESLevSpell;
-class TESShout;
-class TESWordOfPower;
-class TESSoulGem;
-class TESLevItem;
+void __fastcall NiReleaseObject(NiRefObject* toRelease);
 
-class BSBound;
-class BSFogProperty;
-class BSRenderedTexture;
-class BSTempNodeManager;
-class BSAnimGroupSequence;
-class BSFile;
-class BSGameSound;
-class BSSoundInfo;
+NiRefObject** __stdcall NiReplaceObject(void* toRelease, NiRefObject* toAdd);
+// 0C
+struct Sound
+{
+	UInt32		soundKey;	// 00
+	UInt8		byte04;		// 04
+	UInt8		pad05[3];	// 05
+	UInt32		unk08;		// 08
 
-class BGSHeadPart;
-class BGSEncounterZone;
-class BGSCameraShot;
-class BGSAcousticSpace;
-class BGSRagdoll;
-class BGSVoiceType;
-class BGSImpactData;
-class BGSImpactDataSet;
-class BGSProjectile;
-class BGSExplosion;
-class BGSRadiationStage;
-class BGSDehydrationStage;
-class BGSHungerStage;
-class BGSSleepDeprivationStage;
-class BGSDebris;
-class BGSBodyPartData;
-class BGSNote;
-class BGSListForm;
-class BGSMenuIcon;
-class BGSMessage;
-class BGSLightingTemplate;
-class BGSMusicType;
-class BGSAddonNode;
-class BGSKeyword;
-class BGSLocationRefType;
-class BGSAction;
-class BGSTextureSet;
-class BGSTalkingActivator;
-class BGSApparatus;
-class BGSEquipSlot;
-class BGSRelationship;
-class BGSScene;
-class BGSAssociationType;
-class BGSOutfit;
-class BGSArtObject;
-class BGSMaterialObject;
-class BGSMovementType;
-class BGSSoundDescriptorForm;
-class BGSDualCastData;
-class BGSSoundCategory;
-class BGSSoundOutput;
-class BGSCollisionLayer;
-class BGSColorForm;
-class BGSReverbParameters;
-class BGSFootstep;
-class BGSFootstepSet;
-class BGSStoryManagerBranchNode;
-class BGSStoryManagerQuestNode;
-class BGSStoryManagerEventNode;
-class BGSDialogueBranch;
-class BGSMusicTrackFormWrapper;
-class BGSCameraPath;
-class BGSMaterialType;
-class BGSLocation;
-class BGSConstructibleObject;
-class BGSHazard;
-class BGSShaderParticleGeometryData;
-class BGSReferenceEffect;
-class BGSMovableStatic;
-class BGSStaticCollection;
-class BGSIdleMarker;
-class BGSSkillPerkTreeNode;
+	Sound() : soundKey(0xFFFFFFFF), byte04(0), unk08(0) {}
+
+	__forceinline void SetPos(const NiVector3& posVec)
+	{
+		ThisCall(0xAD8B60, this, posVec.x, posVec.y, posVec.z);
+	}
+	__forceinline void SetNiNode(NiNode* node)
+	{
+		ThisCall(0xAD8F20, this, node);
+	}
+	__forceinline void Play()
+	{
+		ThisCall(0xAD8830, this, 0);
+	}
+};
 
 class CommandParam {
 public:
@@ -174,7 +42,7 @@ public:
 	UInt32		typeID;		// ParamType
 	UInt32		isOptional;
 };
-assert(sizeof(CommandParam) == 0x00C);
+static_assert(sizeof(CommandParam) == 0x00C);
 
 class CommandArgs {
 public:
@@ -187,7 +55,7 @@ public:
 	double*			 result;		// 18
 	UInt32*			 opcodeOffset;	// 1C
 };
-assert(sizeof(CommandArgs) == 0x020);
+static_assert(sizeof(CommandArgs) == 0x020);
 
 class CommandInfo {
 public:
@@ -203,41 +71,10 @@ public:
 	void*			eval;			// 20
 	UInt32			flags;			// 24
 };
-assert(sizeof(CommandInfo) == 0x028);
+static_assert(sizeof(CommandInfo) == 0x028);
 
-template <typename T>
-class TList {
-public:
-	struct Entry {
-		T*		item;
-		Entry*	next;
 
-		T*		Item() const { return item; }
-		Entry*	Next() const { return next; }
-	};
 
-	class Iterator {
-	public:
-		Entry* m_cur;
-
-		Iterator() : m_cur(NULL) {}
-		Iterator(Entry* entry) : m_cur(entry) {}
-		Iterator operator ++ () { if (!End()) m_cur = m_cur->Next(); return *this; }
-		bool End() { return m_cur == NULL; }
-		const T* operator -> () { return (m_cur) ? m_cur->Item() : NULL; }
-		const T* operator * () { return (m_cur) ? m_cur->Item() : NULL; }
-		const Iterator& operator = (const Iterator& rhs) {
-			m_cur = rhs.m_cur;
-			return *this;
-		}
-		T* Get() { return (m_cur) ? m_cur->Item() : NULL; }
-	};
-
-	const Iterator Begin() const { return Iterator(const_cast<Entry*>(&First)); }
-
-	Entry First;
-};
-assert(sizeof(TList<void>) == 0x008);
 
 template <typename T>
 class TArray {
@@ -247,7 +84,7 @@ public:
 	UInt32	capacity;	// 08
 	UInt32	count;		// 0C
 };
-assert(sizeof(TArray<void>) == 0x10);
+static_assert(sizeof(TArray<void>) == 0x10);
 
 class RGBA {
 public:
@@ -260,17 +97,17 @@ public:
 		return D3DXVECTOR4(r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f);
 	}
 };
-assert(sizeof(RGBA) == 0x004);
+static_assert(sizeof(RGBA) == 0x004);
 
 class BSString {
 public:
-	bool Set(const char* src) { return ThisCall(0x004037F0, this, src, 0); }
+	bool Set(const char* src) { return ThisStdCall<bool>(0x004037F0, this, src, 0); }
 
 	const char* m_data;		// 00
 	UInt16		m_dataLen;  // 04
 	UInt16		m_bufLen;	// 06
 };
-assert(sizeof(BSString) == 0x008);
+static_assert(sizeof(BSString) == 0x008);
 
 class BSFixedString {
 public:
@@ -279,154 +116,241 @@ public:
 	bool operator == (const BSFixedString& lhs) const { return m_data == lhs.m_data; }
 	bool operator < (const BSFixedString& lhs) const { return m_data < lhs.m_data; }
 };
-assert(sizeof(BSFixedString) == 0x04);
+static_assert(sizeof(BSFixedString) == 0x04);
 
-class BSExtraData {
+enum
+{
+	/*00*/kXData_ExtraUnknown00,
+	/*01*/kXData_ExtraHavok,
+	/*02*/kXData_ExtraCell3D,
+	/*03*/kXData_ExtraCellWaterType,
+	/*04*/kXData_ExtraRegionList,
+	/*05*/kXData_ExtraSeenData,
+	/*06*/kXData_ExtraEditorID,
+	/*07*/kXData_ExtraCellMusicType,
+	/*08*/kXData_ExtraCellClimate,
+	/*09*/kXData_ExtraProcessMiddleLow,
+	/*0A*/kXData_ExtraCellCanopyShadowMask,
+	/*0B*/kXData_ExtraDetachTime,
+	/*0C*/kXData_ExtraPersistentCell,
+	/*0D*/kXData_ExtraScript,
+	/*0E*/kXData_ExtraAction,
+	/*0F*/kXData_ExtraStartingPosition,
+	/*10*/kXData_ExtraAnim,
+	/*11*/kXData_ExtraUnknown11,
+	/*12*/kXData_ExtraUsedMarkers,
+	/*13*/kXData_ExtraDistantData,
+	/*14*/kXData_ExtraRagdollData,
+	/*15*/kXData_ExtraContainerChanges,
+	/*16*/kXData_ExtraWorn,
+	/*17*/kXData_ExtraWornLeft,
+	/*18*/kXData_ExtraPackageStartLocation,
+	/*19*/kXData_ExtraPackage,
+	/*1A*/kXData_ExtraTrespassPackage,
+	/*1B*/kXData_ExtraRunOncePacks,
+	/*1C*/kXData_ExtraReferencePointer,
+	/*1D*/kXData_ExtraFollower,
+	/*1E*/kXData_ExtraLevCreaModifier,
+	/*1F*/kXData_ExtraGhost,
+	/*20*/kXData_ExtraOriginalReference,
+	/*21*/kXData_ExtraOwnership,
+	/*22*/kXData_ExtraGlobal,
+	/*23*/kXData_ExtraRank,
+	/*24*/kXData_ExtraCount,
+	/*25*/kXData_ExtraHealth,
+	/*26*/kXData_ExtraUses,
+	/*27*/kXData_ExtraTimeLeft,
+	/*27*/kXData_ExtraJIP = kXData_ExtraTimeLeft,
+	/*28*/kXData_ExtraCharge,
+	/*29*/kXData_ExtraLight,
+	/*2A*/kXData_ExtraLock,
+	/*2B*/kXData_ExtraTeleport,
+	/*2C*/kXData_ExtraMapMarker,
+	/*2D*/kXData_ExtraUnknown2D,
+	/*2E*/kXData_ExtraLeveledCreature,
+	/*2F*/kXData_ExtraLeveledItem,
+	/*30*/kXData_ExtraScale,
+	/*31*/kXData_ExtraSeed,
+	/*32*/kXData_ExtraNonActorMagicCaster,
+	/*33*/kXData_ExtraNonActorMagicTarget,
+	/*34*/kXData_ExtraUnknown34,
+	/*35*/kXData_ExtraPlayerCrimeList,
+	/*36*/kXData_ExtraUnknown36,
+	/*37*/kXData_ExtraEnableStateParent,
+	/*38*/kXData_ExtraEnableStateChildren,
+	/*39*/kXData_ExtraItemDropper,
+	/*3A*/kXData_ExtraDroppedItemList,
+	/*3B*/kXData_ExtraRandomTeleportMarker,
+	/*3C*/kXData_ExtraMerchantContainer,
+	/*3D*/kXData_ExtraSavedHavokData,
+	/*3E*/kXData_ExtraCannotWear,
+	/*3F*/kXData_ExtraPoison,
+	/*40*/kXData_ExtraUnknown40,
+	/*41*/kXData_ExtraLastFinishedSequence,
+	/*42*/kXData_ExtraSavedAnimation,
+	/*43*/kXData_ExtraNorthRotation,
+	/*44*/kXData_ExtraXTarget,
+	/*45*/kXData_ExtraFriendHits,
+	/*46*/kXData_ExtraHeadingTarget,
+	/*47*/kXData_ExtraUnknown47,
+	/*48*/kXData_ExtraRefractionProperty,
+	/*49*/kXData_ExtraStartingWorldOrCell,
+	/*4A*/kXData_ExtraHotkey,
+	/*4B*/kXData_ExtraUnknown4B,
+	/*4C*/kXData_ExtraEditorRefMovedData,
+	/*4D*/kXData_ExtraInfoGeneralTopic,
+	/*4E*/kXData_ExtraHasNoRumors,
+	/*4F*/kXData_ExtraSound,
+	/*50*/kXData_ExtraTerminalState,
+	/*51*/kXData_ExtraLinkedRef,
+	/*52*/kXData_ExtraLinkedRefChildren,
+	/*53*/kXData_ExtraActivateRef,
+	/*54*/kXData_ExtraActivateRefChildren,
+	/*55*/kXData_ExtraTalkingActor,
+	/*56*/kXData_ExtraObjectHealth,
+	/*57*/kXData_ExtraDecalRefs,
+	/*58*/kXData_ExtraUnknown58,
+	/*59*/kXData_ExtraCellImageSpace,
+	/*5A*/kXData_ExtraNavMeshPortal,
+	/*5B*/kXData_ExtraModelSwap,
+	/*5C*/kXData_ExtraRadius,
+	/*5D*/kXData_ExtraRadiation,
+	/*5E*/kXData_ExtraFactionChanges,
+	/*5F*/kXData_ExtraDismemberedLimbs,
+	/*60*/kXData_ExtraActorCause,
+	/*61*/kXData_ExtraMultiBound,
+	/*62*/kXData_ExtraMultiBoundData,
+	/*63*/kXData_ExtraMultiBoundRef,
+	/*64*/kXData_ExtraUnknown64,
+	/*65*/kXData_ExtraReflectedRefs,
+	/*66*/kXData_ExtraReflectorRefs,
+	/*67*/kXData_ExtraEmittanceSource,
+	/*68*/kXData_ExtraRadioData,
+	/*69*/kXData_ExtraCombatStyle,
+	/*6A*/kXData_ExtraUnknown6A,
+	/*6B*/kXData_ExtraPrimitive,
+	/*6C*/kXData_ExtraOpenCloseActivateRef,
+	/*6D*/kXData_ExtraAnimNoteReciever,
+	/*6E*/kXData_ExtraAmmo,
+	/*6F*/kXData_ExtraPatrolRefData,
+	/*70*/kXData_ExtraPackageData,
+	/*71*/kXData_ExtraOcclusionPlane,
+	/*72*/kXData_ExtraCollisionData,
+	/*73*/kXData_ExtraSayTopicInfoOnceADay,
+	/*74*/kXData_ExtraEncounterZone,
+	/*75*/kXData_ExtraSayToTopicInfo,
+	/*76*/kXData_ExtraOcclusionPlaneRefData,
+	/*77*/kXData_ExtraPortalRefData,
+	/*78*/kXData_ExtraPortal,
+	/*79*/kXData_ExtraRoom,
+	/*7A*/kXData_ExtraHealthPerc,
+	/*7B*/kXData_ExtraRoomRefData,
+	/*7C*/kXData_ExtraGuardedRefData,
+	/*7D*/kXData_ExtraCreatureAwakeSound,
+	/*7E*/kXData_ExtraWaterZoneMap,
+	/*7F*/kXData_ExtraUnknown7F,
+	/*80*/kXData_ExtraIgnoredBySandbox,
+	/*81*/kXData_ExtraCellAcousticSpace,
+	/*82*/kXData_ExtraReservedMarkers,
+	/*83*/kXData_ExtraWeaponIdleSound,
+	/*84*/kXData_ExtraWaterLightRefs,
+	/*85*/kXData_ExtraLitWaterRefs,
+	/*86*/kXData_ExtraWeaponAttackSound,
+	/*87*/kXData_ExtraActivateLoopSound,
+	/*88*/kXData_ExtraPatrolRefInUseData,
+	/*89*/kXData_ExtraAshPileRef,
+	/*8A*/kXData_ExtraCreatureMovementSound,
+	/*8B*/kXData_ExtraFollowerSwimBreadcrumbs,
+	/*8C*/kXData_ExtraCellImpactSwap,
+	/*8D*/kXData_ExtraWeaponModFlags,
+	/*8E*/kXData_ExtraModdingItem,
+	/*8F*/kXData_ExtraSecuritronFace,
+	/*90*/kXData_ExtraAudioMarker,
+	/*91*/kXData_ExtraAudioBuoyMarker,
+	/*92*/kXData_ExtraSpecialRenderFlags,
+	kXData_ExtraMax
+};
+
+#define GetExtraType(xDataList, Type) (Type*)(xDataList)->GetByType(kXData_ ## Type)
+#define CreateExtraType(Type) \
+	UInt32 *dataPtr = (UInt32*)Game_HeapAlloc<Type>(); \
+	dataPtr[0] = kVtbl_ ## Type; \
+	dataPtr[1] = kXData_ ## Type; \
+	dataPtr[2] = 0;
+
+#define XDATA_CS ScopedLightCS cs((LightCS*)EXTRA_DATA_CS);
+// 0C
+class BSExtraData
+{
 public:
-	enum ExtraDataType {
-		kExtraData_Havok = 0x01,
-		kExtraData_Cell3D = 0x02,
-		kExtraData_CellWaterType = 0x03,
-		kExtraData_RegionList = 0x04,
-		kExtraData_SeenData = 0x05,
-		kExtraData_CellMusicType = 0x07,
-		kExtraData_CellClimate = 0x08,
-		kExtraData_ProcessMiddleLow = 0x09,
-		kExtraData_CellCanopyShadowMask = 0x0A,
-		kExtraData_DetachTime = 0x0B,
-		kExtraData_PersistentCell = 0x0C,
-		kExtraData_Script = 0x0D,
-		kExtraData_Action = 0x0E,
-		kExtraData_StartingPosition = 0x0F,
-		kExtraData_Anim = 0x10,
-		kExtraData_UsedMarkers = 0x12,
-		kExtraData_DistantData = 0x13,
-		kExtraData_RagdollData = 0x14,
-		kExtraData_InventoryChanges = 0x15,
-		kExtraData_Worn = 0x16,
-		kExtraData_WornLeft = 0x17,
-		kExtraData_PackageStartLocation = 0x18,
-		kExtraData_Package = 0x19,
-		kExtraData_TrespassPackage = 0x1A,
-		kExtraData_RunOncePacks = 0x1B,
-		kExtraData_ReferencePointer = 0x1C,
-		kExtraData_Follower = 0x1D,
-		kExtraData_LevCreaModifier = 0x1E,
-		kExtraData_Ghost = 0x1F,
-		kExtraData_OriginalReference = 0x20,
-		kExtraData_Ownership = 0x21,
-		kExtraData_Global = 0x22,
-		kExtraData_Rank = 0x23,
-		kExtraData_Count = 0x24,
-		kExtraData_Health = 0x25,
-		kExtraData_Uses = 0x26,
-		kExtraData_TimeLeft = 0x27,
-		kExtraData_Charge = 0x28,
-		kExtraData_Light = 0x29,
-		kExtraData_Lock = 0x2A,
-		kExtraData_Teleport = 0x2B,
-		kExtraData_MapMarker = 0x2C,
-		kExtraData_LeveledCreature = 0x2E,
-		kExtraData_LeveledItem = 0x2F,
-		kExtraData_Scale = 0x30,
-		kExtraData_Seed = 0x31,
-		kExtraData_NonActorMagicCaster = 0x32,
-		kExtraData_NonActorMagicTarget = 0x33,
-		kExtraData_PlayerCrimeList = 0x35,
-		kExtraData_EnableStateParent = 0x37,
-		kExtraData_EnableStateChildren = 0x38,
-		kExtraData_ItemDropper = 0x39,
-		kExtraData_DroppedItemList = 0x3A,
-		kExtraData_RandomTeleportMarker = 0x3B,
-		kExtraData_MerchantContainer = 0x3C,
-		kExtraData_SavedHavokData = 0x3D,
-		kExtraData_CannotWear = 0x3E,
-		kExtraData_Poison = 0x3F,
-		kExtraData_Unk040 = 0x40,	// referenced during LoadFormInModule (in oposition to kExtraData_Light)
-		kExtraData_LastFinishedSequence = 0x41,
-		kExtraData_SavedAnimation = 0x42,
-		kExtraData_NorthRotation = 0x43,
-		kExtraData_XTarget = 0x44,
-		kExtraData_FriendHits = 0x45,
-		kExtraData_HeadingTarget = 0x46,
-		kExtraData_RefractionProperty = 0x48,
-		kExtraData_StartingWorldOrCell = 0x49,
-		kExtraData_Hotkey = 0x4A,
-		kExtraData_EditorRefMovedData = 0x4C,
-		kExtraData_InfoGeneralTopic = 0x4D,
-		kExtraData_HasNoRumors = 0x4E,
-		kExtraData_Sound = 0x4F,
-		kExtraData_TerminalState = 0x50,
-		kExtraData_LinkedRef = 0x51,
-		kExtraData_LinkedRefChildren = 0x52,
-		kExtraData_ActivateRef = 0x53,
-		kExtraData_ActivateRefChildren = 0x54,
-		kExtraData_TalkingActor = 0x55,
-		kExtraData_ObjectHealth = 0x56,
-		kExtraData_DecalRefs = 0x57,
-		kExtraData_CellImageSpace = 0x59,
-		kExtraData_NavMeshPortal = 0x5A,
-		kExtraData_ModelSwap = 0x5B,
-		kExtraData_Radius = 0x5C,
-		kExtraData_Radiation = 0x5D,
-		kExtraData_FactionChanges = 0x5E,
-		kExtraData_DismemberedLimbs = 0x5F,
-		kExtraData_MultiBound = 0x61,
-		kExtraData_MultiBoundData = 0x62,
-		kExtraData_MultiBoundRef = 0x63,
-		kExtraData_ReflectedRefs = 0x65,
-		kExtraData_ReflectorRefs = 0x66,
-		kExtraData_EmittanceSource = 0x67,
-		kExtraData_RadioData = 0x68,
-		kExtraData_CombatStyle = 0x69,
-		kExtraData_Primitive = 0x6B,
-		kExtraData_OpenCloseActivateRef = 0x6C,
-		kExtraData_AnimNoteReciever = 0x6D,
-		kExtraData_Ammo = 0x6E,
-		kExtraData_PatrolRefData = 0x6F,
-		kExtraData_PackageData = 0x70,
-		kExtraData_OcclusionPlane = 0x71,
-		kExtraData_CollisionData = 0x72,
-		kExtraData_SayTopicInfoOnceADay = 0x73,
-		kExtraData_EncounterZone = 0x74,
-		kExtraData_SayToTopicInfo = 0x75,
-		kExtraData_OcclusionPlaneRefData = 0x76,
-		kExtraData_PortalRefData = 0x77,
-		kExtraData_Portal = 0x78,
-		kExtraData_Room = 0x79,
-		kExtraData_HealthPerc = 0x7A,
-		kExtraData_RoomRefData = 0x7B,
-		kExtraData_GuardedRefData = 0x7C,
-		kExtraData_CreatureAwakeSound = 0x7D,
-		kExtraData_WaterZoneMap = 0x7E,
-		kExtraData_IgnoredBySandbox = 0x80,
-		kExtraData_CellAcousticSpace = 0x81,
-		kExtraData_ReservedMarkers = 0x82,
-		kExtraData_WeaponIdleSound = 0x83,
-		kExtraData_WaterLightRefs = 0x84,
-		kExtraData_LitWaterRefs = 0x85,
-		kExtraData_WeaponAttackSound = 0x86,
-		kExtraData_ActivateLoopSound = 0x87,
-		kExtraData_PatrolRefInUseData = 0x88,
-		kExtraData_AshPileRef = 0x89,
-		kExtraData_CreatureMovementSound = 0x8A,
-		kExtraData_FollowerSwimBreadcrumbs = 0x8B,
-		//										= 0x8C,
-		kExtraData_WeaponModFlags = 0x8D,
-		//
-		kExtraData_0x90 = 0x90,	// referenced in LoadGame but no data
-		kExtraData_0x91 = 0x91,	// referenced in LoadGame but no data
-		kExtraData_SpecialRenderFlags = 0x92
+	virtual void	Destroy(bool doFree) = 0;
+	virtual bool	Differs(BSExtraData* compareTo) = 0;
+
+	UInt8			type;		// 04
+	UInt8			pad05[3];	// 05
+	BSExtraData* next;		// 08
+};
+
+
+// 020
+struct BaseExtraList
+{
+	virtual void	Destroy(bool doFree);
+
+	BSExtraData* m_data;					// 04
+	UInt8				m_presenceBitfield[0x13];	// 08 - if a bit is set, then the extralist should contain that extradata
+	UInt8				jipRefFlags5F;				// 1B	0x5F in TESObjectREFR
+	union											// 1C	JIP only!
+	{
+		NPCPerksInfo* perksInfo;
+		TESAmmo* ammo;		//	Stored for projectile refs
 	};
 
-	virtual bool	Compare(BSExtraData* compareWith);	// compare type, data, return true if not equal
-
-	UInt8			type;		// 004
-	UInt8			pad[3];		// 005
-	BSExtraData*	next;		// 008
+	bool HasType(UInt32 type) const;
+	void __fastcall SetTypePresent(UInt32 type, bool present);
+	BSExtraData* GetByType(UInt32 xType) const;
+	__forceinline BSExtraData* AddExtra(BSExtraData* toAdd)
+	{
+		return ThisCall<BSExtraData*>(ADDR_AddExtraData, this, toAdd);
+	}
+	__forceinline void RemoveExtra(BSExtraData* toRemove, bool doFree)
+	{
+		ThisCall(0x410020, this, toRemove, doFree);
+	}
+	__forceinline void RemoveByType(UInt8 xType)
+	{
+		ThisCall(ADDR_RemoveExtraType, this, xType);
+	}
+	__forceinline void RemoveAll(bool doFree)
+	{
+		ThisCall(0x40FAE0, this, doFree);
+	}
+	__forceinline void CopyFrom(const BaseExtraList* sourceList, bool bCopyAndRemove)
+	{
+		ThisCall(0x412490, this, sourceList, bCopyAndRemove);
+	}
+	char __fastcall GetExtraFactionRank(TESFaction* faction) const;
+	SInt32 GetCount() const;
 };
-assert(sizeof(BSExtraData) == 0x0C);
 
+// 10
+class ExtraCount : public BSExtraData
+{
+public:
+	SInt16		count;		// 0C
+	UInt8		pad0E[2];	// 0E
+
+	static ExtraCount* __stdcall Create(SInt32 count = 0);
+};
+
+struct ExtraDataList : public BaseExtraList
+{
+	ExtraDataList* CreateCopy(bool bCopyAndRemove = false);
+	static ExtraDataList* Create();
+
+	ExtraCount* AddExtraCount(SInt32 count);
+};
+static_assert(sizeof(ExtraDataList) == 0x20);
 class InventoryChanges : public BSExtraData {
 public:
 	class EntryData {
@@ -446,14 +370,14 @@ public:
 
 	Data*	data;			// 00C
 };
-assert(sizeof(InventoryChanges) == 0x10);
+static_assert(sizeof(InventoryChanges) == 0x10);
 
 class ExtraHavok : public BSExtraData {
 public:
 	bhkRefObject*	world;	// 00C bhkWorld
 	UInt32			unk10;	// 010
 };
-assert(sizeof(ExtraHavok) == 0x014);
+static_assert(sizeof(ExtraHavok) == 0x014);
 
 
 class ExtraRefractionProperty : public BSExtraData
@@ -461,22 +385,7 @@ class ExtraRefractionProperty : public BSExtraData
 public:
 	float		refractionAmount;		// range of 0-1
 };
-assert(sizeof(ExtraRefractionProperty) == 0x010);  //TODO check
 //
-class ExtraDataList {
-public:
-	virtual	void				Destroy(bool bNoDealloc);	// removes and frees all of m_data
-
-	BSExtraData*				GetExtraData(BSExtraData::ExtraDataType DataType) { return (BSExtraData*)ThisCall(0x00410220, this, DataType); }
-	bool						IsWorn(bool Left) { return (UInt8)ThisCall(0x00418AB0, this, Left) == 1; }
-	bool						IsWorn() { return IsWorn(0) || IsWorn(1); }
-	InventoryChanges::Data*		GetInventoryChangesData() { return (InventoryChanges::Data*)ThisCall(0x00418520, this); }
-
-	BSExtraData*				m_data;						// 004
-	UInt8						m_presenceBitfield[0x15];	// 008 - if a bit is set, then the extralist should contain that extradata - bits are numbered starting from the lsb
-	UInt8						pad[3];
-};
-assert(sizeof(ExtraDataList) == 0x20);
 
 class MagicCaster {
 public:
@@ -503,7 +412,7 @@ public:
 
 	UInt32	unk04[2];	// 04
 };
-assert(sizeof(MagicCaster) == 0xC);
+static_assert(sizeof(MagicCaster) == 0xC);
 
 class MagicTarget {
 public:
@@ -522,7 +431,7 @@ public:
 
 	UInt32	unk04[3];	// 04
 };
-assert(sizeof(MagicTarget) == 0x10);
+static_assert(sizeof(MagicTarget) == 0x10);
 
 class BaseFormComponent {
 public:
@@ -531,7 +440,7 @@ public:
 	virtual void	CopyFromBase(BaseFormComponent* component);
 	virtual bool	CompareWithBase(BaseFormComponent* src);
 };
-assert(sizeof(BaseFormComponent) == 0x004);
+static_assert(sizeof(BaseFormComponent) == 0x004);
 
 class TESDescription : public BaseFormComponent {
 public:
@@ -539,7 +448,7 @@ public:
 
 	UInt32	formDiskOffset;	// 04
 };
-assert(sizeof(TESDescription) == 0x008);
+static_assert(sizeof(TESDescription) == 0x008);
 
 class TESModel : public BaseFormComponent {
 public:
@@ -560,10 +469,10 @@ public:
 	UInt8		facegenFlags;	// 14
 	UInt8		pad15[3];		// 15
 };
-assert(sizeof(TESModel) == 0x018);
+static_assert(sizeof(TESModel) == 0x018);
 
 class TESModelAnim : public TESModel {};
-assert(sizeof(TESModelAnim) == 0x018);
+static_assert(sizeof(TESModelAnim) == 0x018);
 
 class TESScriptableForm : public BaseFormComponent {
 public:
@@ -571,7 +480,7 @@ public:
 	UInt8	unk1;		// 008
 	UInt8	pad[3];		// 009
 };
-assert(sizeof(TESScriptableForm) == 0x00C);
+static_assert(sizeof(TESScriptableForm) == 0x00C);
 
 class TESEnchantableForm : public BaseFormComponent {
 public:
@@ -580,88 +489,88 @@ public:
 	UInt16			 unk1;			// 0A
 	UInt32			 unk2;			// 0C
 };
-assert(sizeof(TESEnchantableForm) == 0x010);
+static_assert(sizeof(TESEnchantableForm) == 0x010);
 
 class TESValueForm : public BaseFormComponent {
 public:
 	UInt32	value;
 };
-assert(sizeof(TESValueForm) == 0x008);
+static_assert(sizeof(TESValueForm) == 0x008);
 
 class TESWeightForm : public BaseFormComponent {
 public:
 	float	weight;
 };
-assert(sizeof(TESWeightForm) == 0x008);
+static_assert(sizeof(TESWeightForm) == 0x008);
 
 class TESHealthForm : public BaseFormComponent {
 public:
 	UInt32	health;
 };
-assert(sizeof(TESHealthForm) == 0x008);
+static_assert(sizeof(TESHealthForm) == 0x008);
 
 class TESAttackDamageForm : public BaseFormComponent {
 public:
 	UInt16	damage;
 	UInt16	unk0;	// bitmask? perhaps 2 UInt8s?
 };
-assert(sizeof(TESAttackDamageForm) == 0x008);
+static_assert(sizeof(TESAttackDamageForm) == 0x008);
 
 class BGSAmmoForm : public BaseFormComponent {
 public:
 	TESForm* ammo; // 04	either TESAmmo or BGSListForm
 };
-assert(sizeof(BGSAmmoForm) == 0x008);
+static_assert(sizeof(BGSAmmoForm) == 0x008);
 
 class BGSClipRoundsForm : public BaseFormComponent {
 public:
 	UInt8	clipRounds;
 	UInt8	padding[3];
 };
-assert(sizeof(BGSClipRoundsForm) == 0x008);
+static_assert(sizeof(BGSClipRoundsForm) == 0x008);
 
 class BGSDestructibleObjectForm : public BaseFormComponent {
 public:
 	void*	data;			// 04 DestructibleData*
 };
-assert(sizeof(BGSDestructibleObjectForm) == 0x08);
+static_assert(sizeof(BGSDestructibleObjectForm) == 0x08);
 
 class BGSRepairItemList : public BaseFormComponent {
 public:
 	void*	listForm;	// 04 BGSListForm*
 };
-assert(sizeof(BGSRepairItemList) == 0x08);
+static_assert(sizeof(BGSRepairItemList) == 0x08);
 
 class BGSEquipType : public BaseFormComponent {
 public:
 	UInt32	equipType;	// 04
 };
-assert(sizeof(BGSEquipType) == 0x08);
+static_assert(sizeof(BGSEquipType) == 0x08);
 
 class BGSPreloadable : public BaseFormComponent {
 public:
 	virtual void	Fn_04();
 };
-assert(sizeof(BGSPreloadable) == 0x04);
+static_assert(sizeof(BGSPreloadable) == 0x04);
 
 class BGSMessageIcon : public BaseFormComponent {
 public:
 	UInt32	icon[3];		// 004 TESIcon class
 };
-assert(sizeof(BGSMessageIcon) == 0x10);
+static_assert(sizeof(BGSMessageIcon) == 0x10);
 
 class BGSBipedModelList : public BaseFormComponent {
 public:
 	void*	models;		// 004 BGSListForm*
 };
-assert(sizeof(BGSBipedModelList) == 0x08);
+static_assert(sizeof(BGSBipedModelList) == 0x08);
 
 class BGSPickupPutdownSounds : public BaseFormComponent {
 public:
 	TESSound* pickupSound;		// 004
 	TESSound* putdownSound;		// 008
 };
-assert(sizeof(BGSPickupPutdownSounds) == 0x0C);
+static_assert(sizeof(BGSPickupPutdownSounds) == 0x0C);
 
 class TESModelTextureSwap : public TESModel {
 public:
@@ -679,7 +588,7 @@ public:
 
 	TList<Texture>	textureList;	// 018
 };
-assert(sizeof(TESModelTextureSwap) == 0x020);
+static_assert(sizeof(TESModelTextureSwap) == 0x020);
 
 class TESForm : public BaseFormComponent {
 public:
@@ -907,7 +816,7 @@ public:
 	UInt32				refID;					// 00C
 	TList<ModInfo>		modRefList;				// 010
 };
-assert(sizeof(TESForm) == 0x018);
+static_assert(sizeof(TESForm) == 0x018);
 
 class TESPackage : public TESForm {
 public:
@@ -1169,9 +1078,9 @@ public:
 	TargetData*			target;				// 030	target ?
 	UInt32				unk034;				// 034	idles
 	PackageTime			time;				// 038
-	UInt32				unk040[(0x80 - 0x40) >> 2];		// 040	040 is a tList of Condition, 7C is an Interlocked counter
+	UInt32				unk040[(0x80 - 0x40) >> 2];		// 040	040 is a TList of Condition, 7C is an Interlocked counter
 };
-assert(sizeof(TESPackage) == 0x80);
+static_assert(sizeof(TESPackage) == 0x80);
 
 class PackageInfo {
 public:
@@ -1182,7 +1091,63 @@ public:
 	float			unk10;			// 10	Initialized to -1.0	. Set to GameHour on start so some time
 	UInt32			flags;			// 14	Flags, bit0 would be not created and initialized
 };
-assert(sizeof(PackageInfo) == 0x18);
+static_assert(sizeof(PackageInfo) == 0x18);
+
+struct Condition
+{
+	enum ComparisonType
+	{
+		kComp_OR = 1,
+		kComp_UseGlobal = 4,
+		kComp_NEQ = 0x20,
+		kComp_GT = 0x40,
+		kComp_GE = 0x60,
+		kComp_LT = 0x80,
+		kComp_LE = 0xA0
+	};
+
+	enum RunOnType
+	{
+		kRunOn_Subject,
+		kRunOn_Target,
+		kRunOn_Reference,
+		kRunOn_CombatTarget,
+		kRunOn_LinkedReference
+	};
+
+	union Parameter
+	{
+		float		fltVal;
+		SInt32		intVal;
+		TESForm* form;
+	};
+
+	UInt8			type;				// 00
+	UInt8			pad01[3];			// 01
+	union
+	{
+		float		value;
+		TESGlobal* global;
+	}				comparisonValue;	// 04
+	UInt32			opcode;				// 08
+	Parameter		parameter1;			// 0C
+	Parameter		parameter2;			// 10
+	UInt32			runOnType;			// 14
+	TESObjectREFR* reference;			// 18
+
+	__forceinline bool Evaluate(TESObjectREFR* runOnRef, TESForm* arg2, bool* result)
+	{
+		return ThisCall<bool>(0x681600, this, runOnRef, arg2, result);
+	}
+};
+
+struct ConditionList : TList<Condition>
+{
+	__forceinline bool Evaluate(TESObjectREFR* runOnRef, TESForm* arg2, bool* result, bool arg4)
+	{
+		return ThisCall<bool>(0x680C60, this, runOnRef, arg2, result, arg4);
+	}
+};
 
 class TESIdleForm : public TESForm {
 public:
@@ -1201,38 +1166,43 @@ public:
 		kAnimFlag_flagOptionallyReturnsAFile = 128,
 	};
 
-	void				SetFile(const char* Name) { animModel.nifPath.Set(Name); }
+	void				SetFile(const char* Name) { anim.nifPath.Set(Name); }
 
-	TESModelAnim		animModel;		// 018
-	TList<void*>		conditions;		// 030 Condition list
-	UInt8				animFlags;		// 038	animation group and other flags
-	UInt8				loopMin;		// 039
-	UInt8				loopMax;		// 03A
-	UInt8				fil03B;			// 03B
-	UInt16				replayDelay;	// 03C
-	UInt8				flags;			// 03E	bit0 is No attacking
-	UInt8				fil03F;			// 03F
-	UInt32				unk040;			// 040	NiFormArray, contains all idle anims in path if eIFgf_flagUnknown is set
-	TESIdleForm*		parent;			// 044
-	TESIdleForm*		previous;		// 048
-	BSString			str04C;			// 04C
+	struct Data
+	{
+		UInt8			groupFlags;		// 000	animation group and other flags
+		UInt8			loopMin;		// 001
+		UInt8			loopMax;		// 002
+		UInt8			fil03B;			// 003
+		UInt16			replayDelay;	// 004
+		UInt8			flags;			// 006	bit0 is No attacking
+		UInt8			fil03F;			// 007
+	};
+
+	TESModelAnim				anim;			// 018
+	ConditionList				conditions;		// 030
+	Data						data;			// 038
+	BSSimpleArray<TESIdleForm*>* children;		// 040	NiFormArray, contains all idle anims in path if eIFgf_flagUnknown is set
+	TESIdleForm* parent;		// 044
+	TESIdleForm* previous;		// 048
+	String						editorID;		// 04C
 };
-assert(sizeof(TESIdleForm) == 0x54);
+static_assert(sizeof(TESIdleForm) == 0x54);
 
 class TESTexture : public BaseFormComponent {
 public:
 	BSString	ddsPath;		// 04
 };
-assert(sizeof(TESTexture) == 0x0C);
+static_assert(sizeof(TESTexture) == 0x0C);
 
 class TESIcon : public TESTexture { };
-assert(sizeof(TESIcon) == 0x0C);
+static_assert(sizeof(TESIcon) == 0x0C);
 
 class TESFullName : public BaseFormComponent {
 public:
 	BSString	name;		// 004
 };
-assert(sizeof(TESFullName) == 0x0C);
+static_assert(sizeof(TESFullName) == 0x0C);
 
 class TESWeather : public TESForm {
 public:
@@ -1335,13 +1305,13 @@ public:
 	float					hdrInfo[14];				// 200 for the compatibility with OR (to review)
 	UInt32					unk238[77];					// 238
 };
-assert(sizeof(TESWeather) == 0x36C);
+static_assert(sizeof(TESWeather) == 0x36C);
 
 class TESWeatherEx : public TESWeather {
 public:
 	ColorData	colorsb[TESWeather::kNumColorTypes];
 };
-assert(sizeof(TESWeatherEx) == 0x45C);
+static_assert(sizeof(TESWeatherEx) == 0x45C);
 
 class TESClimate : public TESForm {
 public:
@@ -1364,7 +1334,7 @@ public:
 	UInt8				phaseLength;		// 55
 	UInt8				pad56[2];			// 56
 };
-assert(sizeof(TESClimate) == 0x58);
+static_assert(sizeof(TESClimate) == 0x58);
 
 class TESWaterForm : public TESForm {
 public:
@@ -1460,7 +1430,7 @@ public:
 	Properties				properties;		// 084
 	UInt32					unk168[11];		// 168
 };
-assert(sizeof(TESWaterForm) == 0x194);
+static_assert(sizeof(TESWaterForm) == 0x194);
 
 class TESWorldSpace : public TESForm {
 public:
@@ -1579,7 +1549,7 @@ public:
 	UInt16					parentFlags;		// 04E init'd to FF if has a parent. 5 is use ImageSpace, 4 is use parent climate, 3 is use parent Water, 1 is use parent LOD data, 0 is use parent LAND data
 	NiTMap<UInt32, void*>	pointerMap;			// 050 confirmed NiTPointerMap<BSSimpleList<TESObjectREFR>>
 	TList<void*>			lst060;				// 060
-	TList<void*>			lst068;				// 068 confirmed as tList
+	TList<void*>			lst068;				// 068 confirmed as TList
 	TESWorldSpace*			parent;				// 070 confirmed
 	TESWaterForm*			waterFormFirst;		// 074 confirmed NAM2
 	TESWaterForm*			waterFormLast;		// 078 confirmed NAM3 LOD Water type for xEdit
@@ -1600,16 +1570,30 @@ public:
 	TESTexture				waterNoiseTexture;	// 0E0 confirmed XNAM
 
 };
-assert(sizeof(TESWorldSpace) == 0xEC);
+static_assert(sizeof(TESWorldSpace) == 0xEC);
 
-class TESGlobal : public TESForm {
+class TESGlobal : public TESForm
+{
 public:
-	BSString	name;		// 018
-	UInt8		type;		// 020
-	UInt8		pad21[3];	// 021
-	float		data;		// 024
+	enum
+	{
+		kType_Float = 'f',
+		kType_Long = 'l',
+		kType_RefID = 'r',
+		kType_Short = 's'
+	};
+
+	String			name;		// 18	(EDID)
+	UInt8			type;		// 20
+	UInt8			pad21[3];	// 21
+	union
+	{
+		float		data;
+		UInt32		uRefID;
+	};
 };
-assert(sizeof(TESGlobal) == 0x028);
+
+static_assert(sizeof(TESGlobal) == 0x28);
 
 class TESRegion : public TESForm {
 public:
@@ -1619,14 +1603,14 @@ public:
 	TESWeather*		weather;		// 24
 	UInt32			unk28[4];		// 28
 };
-assert(sizeof(TESRegion) == 0x38);
+static_assert(sizeof(TESRegion) == 0x38);
 
 class TESRegionList {
 public:
 	void**			_vtbl;		// 000
 	TList<TESRegion> list;		// 004
 };
-assert(sizeof(TESRegionList) == 0x0C);
+static_assert(sizeof(TESRegionList) == 0x0C);
 
 class TESQuest : public TESForm {
 public:
@@ -1666,7 +1650,7 @@ public:
 	UInt8						pad061[3];				// 061
 	BSString					editorName;				// 064
 };
-assert(sizeof(TESQuest) == 0x6C);
+static_assert(sizeof(TESQuest) == 0x6C);
 
 class TESObject : public TESForm {
 public:
@@ -1687,7 +1671,7 @@ public:
 	virtual UInt32	Unk_5C();
 	virtual bool	Unk_5D(TESObjectREFR* refr);	// if false, no NiNode gets returned by Unk_53, true for NPC
 };
-assert(sizeof(TESObject) == 0x018);
+static_assert(sizeof(TESObject) == 0x018);
 
 class TESBoundObject : public TESObject {
 public:
@@ -1699,17 +1683,17 @@ public:
 	TESBoundObject*			next;		// 020
 	SInt16					bounds[6];	// 024
 };
-assert(sizeof(TESBoundObject) == 0x030);
+static_assert(sizeof(TESBoundObject) == 0x030);
 
 class TESBoundAnimObject : public TESBoundObject {};
-assert(sizeof(TESBoundAnimObject) == 0x30);
+static_assert(sizeof(TESBoundAnimObject) == 0x30);
 
 class TESSoundFile : public BaseFormComponent {
 public:
 	virtual void	Set(const char* str);
 	BSString		fileName;	// 04
 };
-assert(sizeof(TESSoundFile) == 0x0C);
+static_assert(sizeof(TESSoundFile) == 0x0C);
 
 class TESSound : public TESBoundAnimObject {
 public:
@@ -1750,14 +1734,14 @@ public:
 	UInt32			unk60;					// 60
 	UInt32			unk64;					// 64
 };
-assert(sizeof(TESSound) == 0x68);
+static_assert(sizeof(TESSound) == 0x68);
 
 class TESObjectSTAT : public TESBoundObject {
 public:
 	TESModelTextureSwap		model;		// 30
 	UInt32					unk50[2];	// 50
 };
-assert(sizeof(TESObjectSTAT) == 0x058);
+static_assert(sizeof(TESObjectSTAT) == 0x058);
 
 class TESObjectIMOD : public TESBoundObject {
 public:
@@ -1772,7 +1756,7 @@ public:
 	BGSMessageIcon				messageIcon;		// 094
 	BGSPickupPutdownSounds		pickupPutdownSounds;// 0A4
 };
-assert(sizeof(TESObjectIMOD) == 0x0B0);
+static_assert(sizeof(TESObjectIMOD) == 0x0B0);
 
 class TESObjectLIGH : public TESBoundAnimObject {
 public:
@@ -1810,7 +1794,7 @@ public:
 	TESSound					*sound;			// 0B8
 	UInt32						padBC[3];		// 0BC
 };
-assert(sizeof(TESObjectLIGH) == 0x0C8);
+static_assert(sizeof(TESObjectLIGH) == 0x0C8);
 
 class TESObjectWEAP : public TESBoundObject {
 public:
@@ -2090,7 +2074,7 @@ public:
 	UInt32				recharge;			// 380 maybe recharge
 	UInt32				unk384;				// 384
 };
-assert(sizeof(TESObjectWEAP) == 0x388);
+static_assert(sizeof(TESObjectWEAP) == 0x388);
 
 class BGSPerkEntry {
 public:
@@ -2113,7 +2097,7 @@ public:
 	UInt8				priority;			// 05
 	UInt16				type;				// 06 (Quest: 0xC24, Ability: 0xB27, Entry Point: 0xD16)
 };
-assert(sizeof(BGSPerkEntry) == 0x08);
+static_assert(sizeof(BGSPerkEntry) == 0x08);
 
 class BGSPerk : public TESForm {
 public:
@@ -2135,7 +2119,7 @@ public:
 	TList<void*>			conditions;			// 40 Condition List
 	TList<BGSPerkEntry>		entries;			// 48
 };
-assert(sizeof(BGSPerk) == 0x50);
+static_assert(sizeof(BGSPerk) == 0x50);
 
 class TESObjectREFRData {
 public:
@@ -2147,110 +2131,308 @@ public:
 	NiNode* niNode;
 	// possibly more, need to find alloc
 };
-assert(sizeof(TESObjectREFRData) == 0x18);
+static_assert(sizeof(TESObjectREFRData) == 0x18);
 
-class TESObjectCELL : public TESForm {
+
+typedef BSSimpleArray<TESObjectREFR*> ObjectRefrArray;
+
+// 38
+struct NavMeshBounds
+{
+	struct BoundsTriangle;
+
+	NiPoint3						point00;		// 00
+	NiPoint3						point0C;		// 0C
+	BSSimpleArray<BoundsTriangle>	boundsTrigArr;	// 18
+	BSSimpleArray<NiPoint3>			pointArr;		// 28
+};
+static_assert(sizeof(NavMeshBounds) == 0x38);
+
+struct NavMeshInfo;
+typedef BSSimpleArray<NavMeshInfo*> NavMeshInfoArray;
+
+union Coordinate
+{
+	UInt32		xy;
+	struct
+	{
+		SInt16	y;
+		SInt16	x;
+	};
+
+	Coordinate() {}
+	__forceinline Coordinate(SInt16 _x, SInt16 _y) : x(_x), y(_y) {}
+	__forceinline Coordinate(UInt32 _xy) : xy(_xy) {}
+	__forceinline explicit Coordinate(const __m128 pos) { *this = pos; }
+
+	__forceinline void operator=(Coordinate&& rhs) { xy = rhs.xy; }
+	__forceinline void operator=(const Coordinate& rhs) { xy = rhs.xy; }
+	__forceinline void operator=(UInt32 rhs) { xy = rhs; }
+	__forceinline void operator=(__m128i rhs) { xy = _mm_cvtsi128_si32(rhs); }
+	void __vectorcall operator=(__m128 rhs);
+
+	__forceinline bool operator==(const Coordinate& rhs) { return xy == rhs.xy; }
+	__forceinline bool operator!=(const Coordinate& rhs) { return xy != rhs.xy; }
+
+	__forceinline __m128i operator+(const Coordinate& rhs)
+	{
+		return _mm_add_epi16(PS(), rhs.PS());
+	}
+	__forceinline __m128i operator-(const Coordinate& rhs)
+	{
+		return _mm_sub_epi16(PS(), rhs.PS());
+	}
+
+	inline operator UInt32() const { return xy; }
+	__forceinline __m128i PS() const { return _mm_cvtsi32_si128(xy); }
+};
+// 5C	c'tor @ 0x6B46A0; d'tor @ 0x6B6390
+struct NavMeshInfo
+{
+	enum
+	{
+		kFlag_Disabled = 0x10,
+		kFlag_HasBounds = 0x20
+	};
+
+	UInt32				navMeshRefID;		// 00
+	UInt32				worldOrCellRefID;	// 04
+	UInt32				flags;				// 08
+	Coordinate			exteriorCoord;		// 0C
+	NiPoint3			approxLocation;		// 10
+	union									// 1C
+	{
+		TESWorldSpace* parentWorld;
+		TESObjectCELL* parentCell;
+	};
+	float				preferredPercent;	// 20
+	NavMeshInfoArray	array24;			// 24
+	NavMeshInfoArray	array34;			// 34
+	ObjectRefrArray		connectedDoors;		// 44
+	void* ptr54;				// 54
+	NavMeshBounds* bounds;			// 58
+};
+static_assert(sizeof(NavMeshInfo) == 0x5C);
+
+// 40
+class NavMeshInfoMap : public TESForm
+{
 public:
-	enum {
-		kFlags0_Interior					= 1 << 0,
-		kFlags0_HasWater					= 1 << 1,
-		kFlags0_InvertFastTravelBehavior	= 1 << 2,
-		kFlags0_PublicPlace					= 1 << 5,
-		kFlags0_HandChanged					= 1 << 6,
-		kFlags0_BehaveLikeExterior			= 1 << 7,
+	typedef NiTPtrMap<NavMeshInfoArray> WorldInfoArraysMap;
+
+	UInt8							byte18;		// 18
+	UInt8							pad19[3];	// 19
+	NiTPtrMap<NavMeshInfo>			infoMap;	// 1C	Keys are RefIDs of NavMesh
+	NiTPtrMap<WorldInfoArraysMap>	intInfoMap;	// 2C	Keys of main map are RefIDs of TESWorldSpace; keys of the sub-map are Coordinates of cells
+	//		One exception is main map key 0 - keys of the sub-map are TESObjectCELL*
+	UInt8							byte3C;		// 3C
+	UInt8							pad3D[3];	// 3D
+};
+static_assert(sizeof(NavMeshInfoMap) == 0x40);
+
+// 8C
+class ObstacleData : public NiRefObject
+{
+public:
+	UInt32				unk08;			// 08
+	NiRefObject* object0C;		// 0C
+	UInt32				unk10[25];		// 10
+	UInt8				byte74;			// 74
+	UInt8				byte75[3];		// 75
+	NavMeshInfoArray	navMeshInfos;	// 78
+	NiRefObject* object88;		// 88
+};
+
+struct NavMeshVertex;
+struct NavMeshTriangle;
+struct EdgeExtraInfo;
+struct NavMeshTriangleDoorPortal;
+struct NavMeshClosedDoorInfo;
+struct NavMeshPOVData;
+struct ObstacleUndoData;
+struct NavMeshStaticAvoidNode;
+
+class TESChildCell
+{
+public:
+	virtual TESObjectCELL* GetChildCell();
+	virtual TESObjectCELL* GetPersistentCell();
+};
+static_assert(sizeof(TESChildCell) == 0x004);
+// 108
+class NavMesh : public TESForm
+{
+public:
+	virtual void		Unk_4E(void);
+
+	TESChildCell								childCell;			// 018
+	NiRefObject									refObject;			// 01C
+	TESObjectCELL* parentCell;		// 024
+	BSSimpleArray<NavMeshVertex>				vertexArr;			// 028
+	BSSimpleArray<NavMeshTriangle>				triangleArr;		// 038
+	BSSimpleArray<EdgeExtraInfo>				edgeInfoArr;		// 048
+	BSSimpleArray<NavMeshTriangleDoorPortal>	doorPortalArr;		// 058
+	BSSimpleArray<NavMeshClosedDoorInfo>		closedDorrArr;		// 068
+	BSSimpleArray<UInt16>						unk078Arr;			// 078
+	NiTMap<UInt16, NavMeshPOVData*>				povDataMap;			// 088
+	BSSimpleArray<UInt16>						unk098Arr;			// 098
+	UInt32										unk0A8;				// 0A8
+	float										unk0AC[8];			// 0AC
+	BSSimpleArray<UInt16>* arrPtr0CC;			// 0CC
+	BSSimpleArray<ObstacleUndoData>				obstacleUndoArr;	// 0D0
+	NiTMap<UInt16, ObstacleData*>* obstacleDataMap;	// 0E0
+	BSSimpleArray<UInt16>						unk0E4Arr;			// 0E4
+	BSSimpleArray<NavMeshStaticAvoidNode>		avoidNodeArr;		// 0F4
+	UInt32* ptr104;			// 104
+};
+static_assert(sizeof(NavMesh) == 0x108);
+
+struct CellCoord
+{
+	SInt32		x;
+	SInt32		y;
+};
+// E0
+class TESObjectCELL : public TESForm
+{
+public:
+	typedef TList<TESObjectREFR> RefList;
+	
+	struct LightingData
+	{
+		NiVector4	ambient;			// 00
+		NiVector4	directional;		// 04
+		NiVector4	fog;				// 08
+		float		fogNear;			// 0C
+		float		fogFar;				// 10
+		int			directionalRotXY;	// 14
+		int			directionalRotZ;	// 18
+		float		directionalFade;	// 1C
+		float		fogClipDist;		// 20
+		float		fogPower;			// 24
+		void		*getValuesFrom;		// 28
 	};
 
-	struct CellCoordinates {
-		SInt32	x;
-		SInt32	y;
-	};
-	
-	struct LightingData {
-		RGBA		ambient;
-		RGBA		directional;
-		RGBA		fog;
-		float		fogNear;
-		float		fogFar;
-		int			directionalRotXY;
-		int			directionalRotZ;
-		float		directionalFade;
-		float		fogClipDist;
-		float		fogPower;
-		UINT*		getValuesFrom;
-	};
-	
-	struct StructC4 {
-		NiNode*								niNode;		// 00
-		TList<TESObjectREFR>				list04;		// 04
-		NiTMap<TESObjectREFR*, NiNode*>		map0C;		// 0C
-		NiTMap<TESForm*, TESObjectREFR*>	map1C;		// 1C
-		NiTMap<TESObjectREFR*, NiNode*>		map2C;		// 2C
-		NiTMap<TESObjectREFR*, NiNode*>		map3C;		// 3C
-		TList<TESObjectREFR>				list4C;		// 4C
-		TList<void>							list54;		// 54
-		TList<TESObjectREFR>				list5C;		// 5C
+	// 64
+	struct CellRenderData
+	{
+		enum CellSubNodes
+		{
+			kCellNode_Actor = 0x0,
+			kCellNode_Marker = 0x1,
+			kCellNode_Land = 0x2,
+			kCellNode_Static = 0x3,
+			kCellNode_Dynamic = 0x4,
+			kCellNode_Occlusion = 0x5,
+			kCellNode_Water = 0x6,
+			kCellNode_Unk_7 = 0x7,
+			kCellNode_Collision = 0x8,
+			kCellNode_Unk_9 = 0x9,
+			kCellNode_Unk_10 = 0xA,
+			kCellNode_Water_LOD = 0xB,
+		};
+
+		NiNode										*masterNode;			// 00
+		TList<TESObjectREFR>						largeRefs;				// 04	refs with bound size > 3000
+		NiTMap<TESObjectREFR*, NiNode*>				animatedRefs;			// 0C
+		NiTMap<TESForm*, TESObjectREFR*>			emittanceSourceRefs;	// 1C
+		NiTMap<TESObjectREFR*, NiNode*>				emittanceLightRefs;		// 2C
+		NiTMap<TESObjectREFR*, BSMultiBoundNode*>	multiboundRefs;			// 3C
+		TList<TESObjectREFR>						scriptedNonActors;		// 4C
+		TList<TESObjectREFR>						activatingParentRefs;	// 54	Has ExtraActivateRefChildren
+		TList<TESObjectREFR>						placeableWaterList;		// 5C
 	};
 
-	enum CellNodes : UInt32 {
-		kCellNode_Actor = 0x0,
-		kCellNode_Marker = 0x1,
-		kCellNode_Land = 0x2,
-		kCellNode_Static = 0x3,
-		kCellNode_Dynamic = 0x4,
-		kCellNode_Occlusion = 0x5,
-		kCellNode_Water = 0x6,
-		kCellNode_Unk_7 = 0x7,
-		kCellNode_Collision = 0x8,
-		kCellNode_Unk_9 = 0x9,
-		kCellNode_Unk_10 = 0xA,
-		kCellNode_Water_LOD = 0xB,
+	enum
+	{
+		kCellFlag_IsInterior =					1 << 0,
+		kCellFlag_HasWater =					1 << 1,
+		kCellFlag_InvertFastTravelBehavior =	1 << 2,
+		kCellFlag_ForceHideLand =				1 << 3,
+		kCellFlag_PublicPlace =					1 << 5,
+		kCellFlag_HandChanged =					1 << 6,
+		kCellFlag_BehaveLikeExterior =			1 << 7,
 	};
-	
-	TESWaterForm*			GetWaterForm() { return (TESWaterForm*)ThisCall(0x00547770, this); }
-	float					GetWaterHeight() { return ThisCallF(0x005471E0, this); }
-	ExtraHavok*				GetExtraHavok() { return (ExtraHavok*)extraDataList.GetExtraData(BSExtraData::ExtraDataType::kExtraData_Havok); }
-	NiNode*					GetNode()		{ return structC4 ? structC4->niNode : NULL; }
-	NiNode*					GetChildNode(CellNodes aeNode);
-	bool					IsInterior() { return (flags0 & kFlags0_Interior) != 0; }
+
+	enum LoadingState
+	{
+		kState_NotLoaded =	0,
+		kState_Unloading =	1,
+		kState_Loading =	2,
+		kState_Loaded =		3,
+		kState_Detaching =	4,
+		kState_Attaching =	5,
+		kState_Attached =	6
+	};
+
+	TESFullName				fullName;				// 18
+	UInt8					cellFlags;				// 24
+	UInt8					fullySeen;				// 25	Fully visible on local-map
+	UInt8					loadingStage;			// 26
+	UInt8					byte27;					// 27
+	ExtraDataList			extraDataList;			// 28
+	union											// 48
+	{
+		CellCoord			*exteriorCoords;
+		LightingData		*interiorLighting;
+	};
+	TESObjectLAND			*land;					// 4C
+	float					waterHeight;			// 50
+	bool					autoWaterLoaded;		// 54
+	UInt8					pad55[3];				// 55
+	TESTexture				noiseTexture;			// 58
+	BSSimpleArray<NavMesh*>	*navMeshArray;			// 64
+	UInt32					unk68[6];				// 68
+	LightCS					refLock;				// 80
+	UInt32					unk88[6];				// 88
+	SInt32					criticalQueuedRefCount;	// A0
+	SInt32					queuedRefCount;			// A4
+	UInt16					visibleDistantCount;	// A8
+	UInt16					visibleDistantLoadedCount;	// AA
+	RefList					objectList;				// AC
+	NiNode					*lightMarkerNode;		// B4
+	NiNode					*soundMarkerNode;		// B8
+	UInt32					unkBC;					// BC
+	TESWorldSpace			*worldSpace;			// C0
+	CellRenderData			*renderData;			// C4
+	float					LODFadeOut;				// C8
+	UInt8					byteCC;					// CC
+	UInt8					byteCD;					// CD
+	bool					triggeredLODHide;		// CE
+	UInt8					byteCF;					// CF
+	bool					canHideLOD;				// D0
+	bool					cellDetached;			// D1
+	bool					skippedFade;			// D2
+	UInt8					byteD3;					// D3
+	BSPortalGraph			*portalGraph;			// D4
+	BGSLightingTemplate		*lightingTemplate;		// D8
+	UInt32					inheritFlags;			// DC
+
+	bool IsInterior() const {return (cellFlags & kCellFlag_IsInterior) != 0;}
+	NiNode **Get3DNodes() const {return (NiNode**)renderData->masterNode->m_children.data;}
+	NiNode *Get3DNode(UInt32 index) const {return Get3DNodes()[index];}
+	void __fastcall ToggleNodes(UInt32 nodeBits);
+	TESWaterForm* GetWaterForm() { return ThisStdCall<TESWaterForm*>(0x00547770, this); }
+	float					GetWaterHeight() { return ThisStdCall<float>(0x005471E0, this); }
+	NiNode* GetNode() { return renderData ? renderData->masterNode : NULL; }
+	NiNode* GetChildNode(CellRenderData::CellSubNodes aeNode);
+	bool					IsInterior() { return (cellFlags & kCellFlag_IsInterior) != 0; }
 	std::vector<NiNode*> GetTerrainNodes() {
 		std::vector<NiNode*> nodes;
-		nodes.push_back((NiNode*)structC4->niNode->m_children.data[2]);
+		nodes.push_back((NiNode*)renderData->masterNode->m_children.data[2]);
 		return nodes;
 	}
 
-	TESFullName				fullName;			// 018	// 030 in GECK
-	UInt8					flags0;				// 024
-	UInt8					flags1;				// 025
-	UInt8					flags2;				// 026	// 5 or 6 would mean cell is loaded, name based on OBSE
-	UInt8					unk027;				// 027
-	ExtraDataList			extraDataList;		// 028
-	union {										// 048
-		CellCoordinates*	coords;				// if exterior
-		LightingData*		lighting;			// if interior
-	};
-	TESObjectLAND*			land;				// 04C
-	float					waterHeight;		// 050
-	UInt32					unk54;				// 054
-	TESTexture				noiseTexture;		// 058
-	void*					navMeshArray;		// 064 BSSimpleArray<NavMesh>
-	UInt32					unk68[15];			// 068	80 is CellRefLock semaphore
-	UInt32					actorCount;			// 0A4
-	UInt16					countVWD;			// 0A8
-	UInt16					unk0AA;				// 0AA
-	TList<TESObjectREFR>	objectList;			// 0AC
-	NiNode*					niNode0B4;			// 0B4
-	NiNode*					niNode0B8;			// 0B8
-	UInt32					unk0BC;				// 0BC
-	TESWorldSpace*			worldSpace;			// 0C0
-	StructC4*				structC4;			// 0C4
-	float					unk0C8;				// 0C8
-	UInt32					unk0CC;				// 0CC
-	UInt32					unk0D0;				// 0D0
-	void*					portalGraph;		// 0D4 BSPortalGraph*
-	BGSLightingTemplate*	lightingTemplate;	// 0D8
-	UInt32					unk0DC;				// 0DC
+	void RefLockEnter()
+	{
+		refLock.Enter();
+	}
+	void RefLockLeave()
+	{
+		refLock.Leave();
+	}
 };
-assert(sizeof(TESObjectCELL) == 0xE0);
+static_assert(sizeof(TESObjectCELL) == 0xE0);
 
 struct ActorHitInfo {
 	TESObjectREFR*		source;			// 00
@@ -2272,7 +2454,7 @@ struct ActorHitInfo {
 	float				unk5C;			// 5C
 	UInt32				unk60;			// 60
 };
-assert(sizeof(ActorHitInfo) == 0x064);
+static_assert(sizeof(ActorHitInfo) == 0x064);
 
 class BaseProcess {
 public:
@@ -2788,7 +2970,7 @@ public:
 	UInt32			processLevel;	// 28	not initialized, only by descendant to 3 for Low, 2 for MidlleLow, 1 MiddleHighProcess and 0 for HigProcess
 	Data2C*			unk2C;			// 2C
 };
-assert(sizeof(BaseProcess) == 0x030);
+static_assert(sizeof(BaseProcess) == 0x030);
 
 class LowProcess : public BaseProcess {
 public:
@@ -2864,7 +3046,7 @@ public:
 	UInt32				unkAC;		// not initialized!
 	UInt32				unkB0;		// not initialized!
 };
-assert(sizeof(LowProcess) == 0x0B4);
+static_assert(sizeof(LowProcess) == 0x0B4);
 
 class MiddleLowProcess : public LowProcess {
 public:
@@ -2873,7 +3055,7 @@ public:
 	UInt32				unk0B4;			// B4
 	ActorValueModifiers	tempModifiers;	// B8
 };
-assert(sizeof(MiddleLowProcess) == 0x0C8);
+static_assert(sizeof(MiddleLowProcess) == 0x0C8);
 
 class MiddleHighProcess : public MiddleLowProcess {
 public:
@@ -2956,7 +3138,7 @@ public:
 	ActorHitInfo*						hitInfo254;			// 254
 	UInt32								unk258;				// 258
 };
-assert(sizeof(MiddleHighProcess) == 0x25C);
+static_assert(sizeof(MiddleHighProcess) == 0x25C);
 
 class HighProcess : public MiddleHighProcess {
 public:
@@ -3035,7 +3217,7 @@ public:
 	UInt8						pad445[3];			// 445
 	UInt32						unk448[9];			// 448
 };
-assert(sizeof(HighProcess) == 0x46C);
+static_assert(sizeof(HighProcess) == 0x46C);
 
 class HighProcessEx : public HighProcess {
 public:
@@ -3064,100 +3246,118 @@ public:
 	UInt8							OnBeltActionState;
 	UInt8							OnBeltState;
 };
-assert(sizeof(HighProcessEx) == 0x480);
+static_assert(sizeof(HighProcessEx) == 0x480);
 
-class TESObjectREFR : public TESForm {
+
+class TESObjectREFR : public TESForm
+{
 public:
-	virtual void		Unk_4E();	// GetStartingPosition(Position, Rotation, WorldOrCell)
-	virtual void		Unk_4F();
-	virtual void		Unk_50();
-	virtual void		Unk_51();
-	virtual bool		CastShadows();
-	virtual void		Unk_53();
-	virtual void		Unk_54();
-	virtual void		Unk_55();
-	virtual void		Unk_56();
-	virtual void		Unk_57();
-	virtual void		Unk_58();
-	virtual void		Unk_59();
-	virtual void		Unk_5A();
-	virtual void		Unk_5B();
-	virtual void		Unk_5C();
-	virtual void		Unk_5D();
-	virtual void		Unk_5E();
-	virtual TESObjectREFR* RemoveItem(TESForm* toRemove, ExtraDataList* extraList, UInt32 count, UInt32 unk3, UInt32 unk4, TESObjectREFR* destRef, UInt32 unk6, UInt32 unk7, UInt32 unk8, UInt8 unk9);	// 40 unk2 quantity? Returns the reference assigned to the removed item.
-	virtual void		Unk_60();
-	virtual void		Unk_61();	// Linked to AddItem, (item, count, ExtraDataList), func0042 in OBSE
-	virtual void		Unk_62();	// Linked to Unequip (and or equip maybe)
-	virtual void		Unk_63();
-	virtual void		AddItem(TESForm* item, ExtraDataList* xDataList, UInt32 Quantity);	// Needs confirmation
-	virtual void		Unk_65();
-	virtual void		Unk_66();
-	virtual void		Unk_67();					// Actor: GetMagicEffectList
-	virtual bool		GetIsChildSize(bool checkHeight);		// 068 Actor: GetIsChildSize
-	virtual UInt32		GetActorUnk0148();			// result can be interchanged with baseForm, so TESForm* ?
-	virtual void		SetActorUnk0148(UInt32 arg0);
-	virtual void		Unk_6B();
-	virtual void		Unk_6C();	// REFR: GetBSFaceGenNiNodeSkinned
-	virtual void		Unk_6D();	// REFR: calls 006C
-	virtual void		Unk_6E();	// MobileActor: calls 006D then NiNode::Func0040
-	virtual void		Unk_6F();
-	virtual void		Unk_70();
-	virtual void		AnimateNiNode();					// same in FOSE ! identical to Func0052 in OBSE which says (inits animation-related data, and more)
-	virtual void		GenerateNiNode(bool arg0);				// same in FOSE !
-	virtual void		Set3D(NiNode* niNode, bool unloadArt);	// same in FOSE !
-	virtual NiNode*		GetNiNode();						// same in FOSE !
-	virtual void		Unk_75();
-	virtual void		Unk_76();
-	virtual void		Unk_77();
-	virtual void		Unk_78();
-	virtual ActorAnimData*	GetActorAnimData();			// 0079
-	virtual void*			GetValidBip01Names();	// 007A	returns ValidBip01Names*
-	virtual void*		CallGetValidBip01Names(); // returns ValidBip01Names*
-	virtual void		SetValidBip01Names(UInt32 validBip01Names);
-	virtual void		GetPos();				// GetPos or GetDistance
-	virtual void		Unk_7E(UInt32 arg0);
-	virtual void		Unk_7F();
-	virtual void		Unk_80(UInt32 arg0);
-	virtual void		Unk_81(UInt32 arg0);
-	virtual void		Unk_82();
-	virtual UInt32		Unk_83();
-	virtual void		Unk_84(UInt32 arg0);
-	virtual UInt8		GetSitSleepState();		// Get 01AC
-	virtual bool		IsCharacter();			// return false for Projectile, Actor and Creature, true for character and PlayerCharacter
-	virtual bool		Unk_87();			// seems to always return 0
-	virtual bool		Unk_88();			// seems to always return 0
-	virtual void		Unk_89();
-	virtual void		Unk_8A();			// SetParentCell (Interior only ?)
-	virtual UInt8		GetDead(UInt8 Arg1);
-	virtual bool		Unk_8C();
-	virtual bool		Unk_8D();
-	virtual void		Unk_8E();
-	virtual void		Unk_8F();
+	/*138*/virtual bool		GetStartingPosition(NiVector3* outPos, NiVector3* outRot, TESForm** outWrldOrCell, TESForm* defaultWrldOrCell);
+	/*13C*/virtual void		SayTopic(Sound* sound, TESTopic* topic, TESObjectREFR* target, bool dontUseNiNode, bool notVoice, bool useLipFile, UInt8 unused, bool subtitles);
+	/*140*/virtual void		Unk_50(void);
+	/*144*/virtual void		DamageObject(float damage, bool allowDestroyed);
+	/*148*/virtual bool		GetCastsShadows();
+	/*14C*/virtual void		SetCastsShadows(bool doSet);
+	/*150*/virtual void		Unk_54(void);
+	/*154*/virtual void		Unk_55(void);
+	/*158*/virtual void		Unk_56(void);
+	/*15C*/virtual bool		IsObstacle();
+	/*160*/virtual bool		BaseIsQuestItem();
+	/*164*/virtual void		Unk_59(void);
+	/*168*/virtual void		Unk_5A(void);
+	/*16C*/virtual void		Unk_5B(void);
+	/*170*/virtual void		Unk_5C(void);
+	/*174*/virtual void		Unk_5D(void);
+	/*178*/virtual void		RefreshDynamicLight();
+	/*17C*/virtual TESObjectREFR* RemoveItem(TESForm* toRemove, BaseExtraList* extraList, UInt32 quantity, bool keepOwner, bool drop, TESObjectREFR* destRef, UInt32 unk6, UInt32 unk7, bool unk8, bool unk9);
+	/*180*/virtual void		Unk_60(void);
+	/*184*/virtual bool		LoadEquipedItem3D(TESForm* item, UInt32 count, ExtraDataList* xData, bool lockEquip);
+	/*188*/virtual void		Unk_62(void);
+	/*18C*/virtual void		Unk_63(void);
+	/*190*/virtual void		AddItem(TESForm* item, ExtraDataList* xDataList, UInt32 quantity);
+	/*194*/virtual void		Unk_65(void);
+	/*198*/virtual MagicCaster* GetMagicCaster();
+	/*19C*/virtual MagicTarget* GetMagicTarget();
+	/*1A0*/virtual bool		GetIsChildSize(bool checkHeight);		// 068 Actor: GetIsChildSize
+	/*1A4*/virtual UInt32	GetActorUnk0148();			// result can be interchanged with baseForm, so TESForm* ?
+	/*1A8*/virtual void		SetActorUnk0148(UInt32 arg1);
+	/*1AC*/virtual BSFaceGenNiNode* GetFaceGenNodeBiped(UInt32 arg1);
+	/*1B0*/virtual BSFaceGenNiNode* GetFaceGenNodeSkinned(UInt32 arg1);
+	/*1B4*/virtual BSFaceGenNiNode* CallGetFaceGenNodeSkinned(UInt32 arg1);	// REFR: calls 006C
+	/*1B8*/virtual BSFaceGenAnimationData* CreateFaceAnimationData(UInt32 arg1);
+	/*1BC*/virtual void		Unk_6F(void);
+	/*1C0*/virtual bool		Unload3D();
+	/*1C4*/virtual void		AnimateNiNode();
+	/*1C8*/virtual NiNode* GenerateNiNode(bool arg1);
+	/*1CC*/virtual void		Set3D(NiNode* niNode, bool unloadArt);
+	/*1D0*/virtual NiNode* GetNiNode();
+	/*1D4*/virtual void		Unk_75(void);
+	/*1D8*/virtual NiVector3* GetMinBounds(NiVector3* outBounds);
+	/*1DC*/virtual NiVector3* GetMaxBounds(NiVector3* outBounds);
+	/*1E0*/virtual void		UpdateAnimation();
+	/*1E4*/virtual AnimData* GetAnimData();			// 0079
+	/*1E8*/virtual BipedAnim* GetBipedAnim();	// 007A	Character only
+	/*1EC*/virtual BipedAnim* CallGetBipedAnim();
+	/*1F0*/virtual void		SetBipedAnim(BipedAnim* bipedAnims);
+	/*1F4*/virtual NiVector3* GetPos();
+	/*1F8*/virtual void		Unk_7E(UInt32 arg0);
+	/*1FC*/virtual void		Unk_7F(void);
+	/*200*/virtual void		Unk_80(UInt32 arg0);
+	/*204*/virtual void		Unk_81(UInt32 arg0);
+	/*208*/virtual void		Unk_82(void);
+	/*20C*/virtual NiNode* GetProjectileNode();
+	/*210*/virtual void		SetProjectileNode(NiNode* node);
+	/*214*/virtual UInt32	GetSitSleepState();
+	/*218*/virtual bool		IsCharacter();			// return false for Actor and Creature, true for character and PlayerCharacter
+	/*21C*/virtual bool		IsCreature();
+	/*220*/virtual bool		IsExplosion();
+	/*224*/virtual bool		IsProjectile() const;
+	/*228*/virtual void		SetParentCell(TESObjectCELL* cell);			// SetParentCell (Interior only ?)
+	/*22C*/virtual bool		HasHealth(bool arg0);	// HasHealth (baseForm health > 0 or Flags bit23 set)
+	/*230*/virtual bool		GetHasKnockedState();
+	/*234*/virtual bool		GetIsParalyzed();
+	/*238*/virtual void		Unk_8E(void);
+	/*23C*/virtual void		Unk_8F(void);
+	/*240*/virtual void		MoveToHighProcess();
 
-	enum {
-		kFlags_Unk00000002	= 0x00000002,
-		kFlags_Deleted		= 0x00000020,		// refr removed from .esp or savegame
-		kFlags_Persistent	= 0x00000400,		//shared bit with kFormFlags_QuestItem
-		kFlags_Temporary	= 0x00004000,
-		kFlags_Taken		= kFlags_Deleted | kFlags_Unk00000002,
+	enum
+	{
+		kFlags_Unk00000002 = 0x00000002,
+		kFlags_Deleted = 0x00000020,		// refr removed from .esp or savegame
+		kFlags_Taken = kFlags_Deleted | kFlags_Unk00000002,
+		kFlags_Persistent = 0x00000400,		//shared bit with kFormFlags_QuestItem
+		kFlags_Temporary = 0x00004000,
+		kFlags_IgnoreFriendlyHits = 0x00100000,
+		kFlags_Destroyed = 0x00800000,
 
 		kChanged_Inventory = 0x08000000,
 	};
 
-	NiNode*				GetNode() { return (renderData != NULL ? renderData->niNode : NULL); };
+	struct RenderState
+	{
+		TESObjectREFR* currWaterRef;		// 00
+		UInt32			underwaterCount;	// 04	0-0x13 when fully-underwater; exterior only
+		float			waterLevel;			// 08
+		float			revealDistance;		// 0C
+		UInt32			flags;				// 10
+		NiNode* rootNode;			// 14
+		bhkPhantom* phantom;			// 18	Used with trigger volume
+	};
 
-	TESChildCell		childCell;				// 018
-	UInt32				unk1C;					// 01C
-	TESForm*			baseForm;				// 020
-	NiPoint3			rot;					// 024
-	NiPoint3			pos;					// 030 
-	float				scale;					// 03C 
-	TESObjectCELL*		parentCell;				// 040
-	ExtraDataList		extraDataList;			// 044
-	TESObjectREFRData*	renderData;				// 064	- (05C in FOSE)
+	TESChildCell	childCell;		// 18
+
+	TESSound* loopSound;		// 1C
+	TESForm* baseForm;		// 20
+	NiVector3		rotation;		// 24
+	NiVector3		position;		// 30
+	float			scale;			// 3C 
+	TESObjectCELL* parentCell;	// 40
+	ExtraDataList	extraDataList;	// 44
+	RenderState* renderState;	// 64
+
+	NiNode*				GetNode() { return (renderState != NULL ? renderState->rootNode : NULL); };
 };
-assert(sizeof(TESObjectREFR) == 0x068);
+static_assert(sizeof(TESObjectREFR) == 0x068);
 
 class MobileObject : public TESObjectREFR {
 public:
@@ -3229,7 +3429,7 @@ public:
 	UInt8			unk086;			// 086 - loaded
 	UInt8			unk087;			// 087	Init'd to the inverse of NoLowLevelProcessing
 };
-assert(sizeof(MobileObject) == 0x088);
+static_assert(sizeof(MobileObject) == 0x088);
 
 class ActorValuesOwner {
 public:
@@ -3245,7 +3445,7 @@ public:
 	virtual void*	Fn_09();								// GetActorBase (= this - 0x100) or GetActorBase (= this - 0x0A4)
 	virtual UInt16	GetLevel();								// GetLevel (from ActorBase)
 };
-assert(sizeof(ActorValuesOwner) == 0x004);
+static_assert(sizeof(ActorValuesOwner) == 0x004);
 
 class CachedValuesOwner {
 public:
@@ -3266,7 +3466,7 @@ public:
 	virtual float	Fn_0E();
 	virtual bool	Fn_0F();
 };
-assert(sizeof(CachedValuesOwner) == 0x004);
+static_assert(sizeof(CachedValuesOwner) == 0x004);
 
 class PathingLocation {
 public:
@@ -3276,7 +3476,7 @@ public:
 
 	UInt32			unk04[9];	// 04
 };
-assert(sizeof(PathingLocation) == 0x028);
+static_assert(sizeof(PathingLocation) == 0x028);
 
 class ActorMover {
 public:
@@ -3324,7 +3524,7 @@ public:
 	UInt32				unk80;				// 80
 	UInt32				unk84;				// 84
 };
-assert(sizeof(ActorMover) == 0x088);
+static_assert(sizeof(ActorMover) == 0x088);
 
 class Actor : public MobileObject {
 public:
@@ -3539,9 +3739,10 @@ public:
 
 	UInt32				GetBaseActorValue(ActorVal Code) { return avOwner.GetBase(Code); }
 	UInt32				GetActorValue(ActorVal Code) { return avOwner.GetCurrent(Code); }
-	void				EquipItem(TESForm* Form, UInt32 Quantity, ExtraDataList* List) { ThisCall(0x0088C650, this, Form, Quantity, List, 0, false, 0); }
-	void				UnequipItem(TESForm* Form, UInt32 Quantity, ExtraDataList* List) { ThisCall(0x0088C790, this, Form, Quantity, List, 0, false, 0); }
-	bool				IsFemale() { return ThisCall(0x0087F4C0, this); }
+	void				EquipItem(TESForm* Form, UInt32 Quantity, ExtraDataList* List) { ThisStdCall(0x0088C650, this, Form, Quantity, List, 0, false, 0); }
+	void				UnequipItem(TESForm* Form, UInt32 Quantity, ExtraDataList* List) { ThisStdCall(0x0088C790, this, Form, Quantity, List, 0, false, 0); }
+	bool				IsFemale() { return ThisStdCall<bool>(0x0087F4C0, this); }
+	bool				GetDead() const { return (lifeState == 1) || (lifeState == 2); }
 
 	MagicCaster			magicCaster;				// 088
 	MagicTarget			magicTarget;				// 094
@@ -3648,7 +3849,7 @@ public:
 	UInt8				byte1B2;					// 1B2
 	UInt8				byte1B3;					// 1B3
 };
-assert(sizeof(Actor) == 0x1B4);
+static_assert(sizeof(Actor) == 0x1B4);
 
 class Creature : public Actor {
 public:
@@ -3656,7 +3857,7 @@ public:
 
 	UInt32			unk1B4[3];			// 1B4
 };
-assert(sizeof(Creature) == 0x1C0);
+static_assert(sizeof(Creature) == 0x1C0);
 
 class Character : public Actor {
 public:
@@ -3671,7 +3872,7 @@ public:
 	UInt16			unk1C2;				// 1C2
 	float			unk1C4;				// 1C4
 };
-assert(sizeof(Character) == 0x1C8);
+static_assert(sizeof(Character) == 0x1C8);
 
 class PlayerCharacter : public Character {
 public:
@@ -3694,7 +3895,7 @@ public:
 	TESRegion*			GetRegion() { return currentRegion; }
 	void				UpdateInventory() {}
 	bool				IsMoving() { return (actorMover->GetMovementFlags() & 0x800); }
-	bool				IsAlive() { return !GetDead(1); }
+	bool				IsAlive() { return !GetDead(); }
 	bool				IsFirstPerson() { return !isThirdPerson; }
 	bool				IsVanity() { return *(bool*)0x011E07B8; }
 	void				SetFoV(float FoV) {
@@ -3704,7 +3905,7 @@ public:
 						}
 	float				GetFoV(bool IsSpecialView) { return (IsSpecialView ? firstPersonFoV : worldFoV); }
 	void				ResetCamera() {}
-	bool				IsReloading() { return (ThisCall(0x008A8870, this)); }
+	bool				IsReloading() { return (ThisStdCall<bool>(0x008A8870, this)); }
 
 	UInt32				unk1C8[(0x244-0x1C8) >> 2];		// 1C8	0224 is a package of type 1C, 208 could be a DialogPackage, 206 questObjectiveTargets is valid
 	float				unk244[0x4D];					// 244	have to be a set of ActorValue
@@ -3779,7 +3980,7 @@ public:
 	UInt8				byteDF3;				// DF3
 	UInt32				unkDF4[23];				// DF4
 };
-assert(sizeof(PlayerCharacter) == 0xE50);
+static_assert(sizeof(PlayerCharacter) == 0xE50);
 
 class SkinInfo {
 public:
@@ -3823,7 +4024,7 @@ public:
 	NiNode*			LightObject;			// 094 PipBoyObject (LightObject to maintain the compatibility with OR)
 	UInt32			unk098[135];
 };
-assert(sizeof(SkinInfo) == 0x2B4);
+static_assert(sizeof(SkinInfo) == 0x2B4);
 
 class AnimSequenceBase {
 public:
@@ -3835,19 +4036,19 @@ public:
 	virtual BSAnimGroupSequence*	GetAnimGroupSequence2(void* Unk01);
 	virtual void					Unk_06();
 };
-assert(sizeof(AnimSequenceBase) == 0x004);
+static_assert(sizeof(AnimSequenceBase) == 0x004);
 
 class AnimSequenceSingle : public AnimSequenceBase {
 public:
 	BSAnimGroupSequence* Anim;	// 04
 };
-assert(sizeof(AnimSequenceSingle) == 0x008);
+static_assert(sizeof(AnimSequenceSingle) == 0x008);
 
 class AnimSequenceMultiple : public AnimSequenceBase {
 public:
 	NiTList<BSAnimGroupSequence>* Anims;	// 04
 };
-assert(sizeof(AnimSequenceMultiple) == 0x008);
+static_assert(sizeof(AnimSequenceMultiple) == 0x008);
 
 class ActorAnimData {
 public:
@@ -3886,7 +4087,7 @@ public:
 	void*						unk124;				// 124
 	void*						unk128;				// 128
 };
-assert(sizeof(ActorAnimData) == 0x12C);
+static_assert(sizeof(ActorAnimData) == 0x12C);
 
 class TESAnimGroup : public NiRefObject {
 public:
@@ -3945,7 +4146,175 @@ public:
 	UInt8		pad013;			//013
 	UInt32		unk014[10];		//014
 };
-assert(sizeof(TESAnimGroup) == 0x03C);
+static_assert(sizeof(TESAnimGroup) == 0x03C);
+
+// 2B4
+struct BipedAnim
+{
+	enum eOptionalBoneType
+	{
+		kOptionalBone_Bip01Head = 0,
+		kOptionalBone_Weapon = 1,
+		kOptionalBone_Bip01LForeTwist = 2,
+		kOptionalBone_Bip01Spine2 = 3,
+		kOptionalBone_Bip01Neck1 = 4,
+	};
+
+	enum SlotIDs
+	{
+		kSlot_Head = 0,
+		kSlot_Hair,
+		kSlot_UpperBody,
+		kSlot_LeftHand,
+		kSlot_RightHand,
+		kSlot_Weapon,
+		kSlot_PipBoy,
+		kSlot_Backpack,
+		kSlot_Necklace,
+		kSlot_Headband,
+		kSlot_Hat,
+		kSlot_Eyeglasses,
+		kSlot_Nosering,
+		kSlot_Earrings,
+		kSlot_Mask,
+		kSlot_Choker,
+		kSlot_MouthObject,
+		kSlot_BodyAddon1,
+		kSlot_BodyAddon2,
+		kSlot_BodyAddon3
+	};
+
+	// 08
+	struct OptionalBone
+	{
+		bool		exists;
+		NiNode* bone;
+	};
+
+	// 10
+	struct Data
+	{
+		union									// 00 can be a modelled form (Armor or Weapon) or a Race if not equipped
+		{
+			TESForm* item;
+			TESObjectARMO* armor;
+			TESObjectWEAP* weapon;
+			TESRace* race;
+		};
+		TESModelTextureSwap* modelTexture;	// 04 texture or model for said form
+		NiAVObject* object;		// 08 NiNode for the modelled form
+		UInt8					hasSkinnedGeom;	// 0C
+		UInt8					pad0D[3];		// 0D
+	};
+
+	NiNode* bip01;			// 000 receive Bip01 node, then optionally Bip01Head, Weapon, Bip01LForeTwist, Bip01Spine2, Bip01Neck1
+	OptionalBone		bones[5];		// 004
+	Data				slotData[20];	// 02C indexed by the EquipSlot
+	Data				unk016C[20];	// 16C indexed by the EquipSlot
+	UInt32				unk2AC;			// 2AC
+	Character* character;		// 2B0
+};
+static_assert(sizeof(BipedAnim) == 0x2B4);
+
+struct KFModel;
+class AnimIdle;
+
+// 13C
+struct AnimData
+{
+	enum SequenceTypes
+	{
+		kSequence_None = -1,
+		kSequence_Idle = 0,
+		kSequence_Movement = 1,
+		kSequence_LeftArm = 2,
+		kSequence_LeftHand = 3,
+		kSequence_Weapon = 4,
+		kSequence_WeaponUp = 5,
+		kSequence_WeaponDown = 6,
+		kSequence_SpecialIdle = 7,
+		kSequence_Death = 0x14
+	};
+
+	enum AnimStates
+	{
+
+	};
+
+	struct PlayingIdle
+	{
+		TESIdleForm* idleForm;
+		float			replayDelay;
+	};
+
+	UInt32							unk000;				// 000
+	Actor* actor;				// 004
+	NiNode* nSceneRoot;		// 008
+	NiNode* nBip01;			// 00C
+	UInt32							unk010;				// 010
+	float							flt014;				// 014
+	float							flt018;				// 018
+	NiVector3						pos01C;				// 01C
+	NiNode* nPelvis;			// 028
+	NiNode* nBip01Copy;		// 02C
+	NiNode* nLForearm;			// 030
+	NiNode* nHead;				// 034
+	NiNode* nWeapon;			// 038
+	UInt32							unk03C[2];			// 03C
+	NiNode* nNeck1;			// 044
+	float							flt048;				// 048
+	UInt16							animGroupIDs[8];	// 04C
+	SInt32							sequenceState1[8];	// 05C
+	SInt32							sequenceState2[8];	// 07C
+	UInt16							word09C[8];			// 09C
+	UInt32							unk0AC[8];			// 0AC
+	UInt8							byte0CC;			// 0CC
+	UInt8							byte0CD;			// 0CD
+	UInt8							byte0CE;			// 0CE
+	UInt8							byte0CF;			// 0CF
+	float							timePassed;			// 0D0
+	UInt32							unk0D4;				// 0D4
+	NiControllerManager* controllerMngr;	// 0D8
+	NiTPtrMap<AnimSequenceBase>* sequenceBaseMap;	// 0DC
+	BSAnimGroupSequence* animSequence[8];	// 0E0
+	BSAnimGroupSequence* animSeq100;		// 100
+	TList<KFModel>					loadingAnims;		// 104
+	float							movementSpeedMult;	// 10C
+	float							rateOfFire;			// 110
+	float							turboSpeedMult;		// 114
+	float							weaponReloadSpeed;	// 118
+	float							equipSpeed;			// 11C
+	UInt8							noBlend;			// 120
+	UInt8							byte121;			// 121
+	UInt16							word122;			// 122
+	AnimIdle* idleAnim;			// 124
+	AnimIdle* queuedIdleAnim;	// 128
+	NiObject* object12C;			// 12C
+	NiObject* object130;			// 130
+	TList<PlayingIdle>				playingIdleAnims;	// 134
+
+	__forceinline void PlayIdle(TESIdleForm* idleAnim)
+	{
+		ThisCall(0x497F20, this, idleAnim, actor, idleAnim->data.groupFlags & 0x3F, 3);
+	}
+
+	__forceinline void StopIdle()
+	{
+		ThisCall(0x498910, this, true, false);
+	}
+
+	__forceinline void Refresh()
+	{
+		ThisCall(0x499240, this, 0);
+	}
+
+	void BlendSequence(UInt32 sequenceIdx)
+	{
+		if (animSequence[sequenceIdx])
+			ThisCall(0x4994F0, this, sequenceIdx, 0);
+	}
+};
+static_assert(sizeof(AnimData) == 0x13C);
 
 class SkyObject {
 public:
@@ -3956,7 +4325,7 @@ public:
 
 	NiNode*				RootNode;	// 04
 };
-assert(sizeof(SkyObject) == 0x08);
+static_assert(sizeof(SkyObject) == 0x08);
 
 class Sun : public SkyObject {
 public:
@@ -3973,7 +4342,7 @@ public:
 	UInt8				 byte27;			// 27
 	BSShaderAccumulator* shaderAccum;		// 28 BSShaderAccumulator*
 };
-assert(sizeof(Sun) == 0x2C);
+static_assert(sizeof(Sun) == 0x2C);
 
 class Atmosphere : public SkyObject {
 public:
@@ -3987,7 +4356,7 @@ public:
 	UInt8			pad19[3];
 
 };
-assert(sizeof(Atmosphere) == 0x01C);
+static_assert(sizeof(Atmosphere) == 0x01C);
 
 class NiFogProperty : public NiProperty
 {
@@ -4010,7 +4379,7 @@ public:
 	NiColor kWaterColor;
 	float fPower;
 };
-assert(sizeof(BSFogProperty) == 0x64);
+static_assert(sizeof(BSFogProperty) == 0x64);
 
 
 class Stars : public SkyObject {	
@@ -4018,7 +4387,7 @@ public:
 	NiNode*			node08;			// 08
 	float			flt0C;			// 0C
 };
-assert(sizeof(Stars) == 0x010);
+static_assert(sizeof(Stars) == 0x010);
 
 class Clouds : public SkyObject {
 public:
@@ -4030,7 +4399,7 @@ public:
 	UInt8				byte5A;			// 5A
 	UInt8				byte5B;			// 5B
 };
-assert(sizeof(Clouds) == 0x05C);
+static_assert(sizeof(Clouds) == 0x05C);
 
 class Precipitation {
 public:
@@ -4042,7 +4411,7 @@ public:
 	float		unk10;		// 10
 	UInt32		unk14;		// 14
 };
-assert(sizeof(Precipitation) == 0x018);
+static_assert(sizeof(Precipitation) == 0x018);
 
 class Moon : public SkyObject {
 public:
@@ -4094,19 +4463,19 @@ public:
         return 0;
     }
 };
-assert(sizeof(Moon) == 0x07C);
+static_assert(sizeof(Moon) == 0x07C);
 
 class Sky {
 public:
-	void ForceWeather(TESWeather* Weather) { ThisCall(0x0063D0E0, this, Weather, 0); }
+	void ForceWeather(TESWeather* Weather) { ThisStdCall(0x0063D0E0, this, Weather, 0); }
 	static Sky* Get() { return *(Sky**)0x11DEA20; }
 
-	float GetSunriseBegin() { return ThisCallD(0x595EA0, this); }
-	float GetSunriseEnd()   { return ThisCallD(0x595F50, this); }
-	float GetSunsetBegin()  { return ThisCallD(0x595FC0, this); }
-	float GetSunsetEnd()    { return ThisCallD(0x596030, this); }
-	float GetSunriseColorBegin() { return ThisCallD(0x63B9B0, this); }
-	float GetSunsetColorEnd() { return ThisCallD(0x63BA30, this); }
+	float GetSunriseBegin() { return ThisStdCall<float>(0x595EA0, this); }
+	float GetSunriseEnd()   { return ThisStdCall<float>(0x595F50, this); }
+	float GetSunsetBegin()  { return ThisStdCall<float>(0x595FC0, this); }
+	float GetSunsetEnd()    { return ThisStdCall<float>(0x596030, this); }
+	float GetSunriseColorBegin() { return ThisStdCall<float>(0x63B9B0, this); }
+	float GetSunsetColorEnd() { return ThisStdCall<float>(0x63BA30, this); }
 
 	enum Flags : UInt32
 	{
@@ -4128,7 +4497,7 @@ public:
 //	void RefreshMoon();
 	void RefreshClimate(TESClimate* climate, bool immediate = true)
 	{
-		ThisCall(0x0063C8F0, this, climate, immediate);
+		ThisStdCall(0x0063C8F0, this, climate, immediate);
 	}
 //	bool GetIsRaining();
 	void**			_vtbl;				// 000
@@ -4189,53 +4558,64 @@ public:
 	bool GetIsUnderWater() { return this->flags & Sky::kSkyFlag_IsUnderwater; }
 
 };
-assert(sizeof(Sky) == 0x138);
+static_assert(sizeof(Sky) == 0x138);
 
-class GridArray {
+// 04
+class GridArray
+{
 public:
-	virtual void*	Destroy(bool doFree);
-	virtual void	Fn_01(void);
-	virtual void	Fn_02(void);
-	virtual void	Fn_03(void);
-	virtual void	Fn_04(void);
-	virtual void	Fn_05(void);
-};
-assert(sizeof(GridArray) == 0x04);
-
-class GridCellArray : public GridArray {
+	/*00*/virtual void* Destroy(bool doFree);
+	/*04*/virtual void	Fn_01(void);
+	/*08*/virtual void	Fn_02(void);
+	/*0C*/virtual void	Fn_03(void);
+	/*10*/virtual bool	SetPosXY(SInt32 posX, SInt32 posY);
+	/*14*/virtual void	Fn_05(UInt32 arg1, UInt32 arg2);
+};;
+static_assert(sizeof(GridArray) == 0x04);
+// 28
+class GridCellArray : public GridArray
+{
 public:
-	virtual void	Fn_06(void);
-	virtual void	Fn_07(void);
-	virtual void	Fn_08(void);
-	virtual void	Fn_09(void);
+	/*18*/virtual void	UnloadCellAtGridXY(UInt32 gridX, UInt32 gridY);
+	/*1C*/virtual void	SetGridAtXYToNull(UInt32 gridX, UInt32 gridY);
+	/*20*/virtual void	CopyCellAtGridXYTo(UInt32 gridX1, UInt32 gridY1, UInt32 gridX2, UInt32 gridY2);
+	/*24*/virtual void	SwapCellsAtGridXYs(UInt32 gridX1, UInt32 gridY1, UInt32 gridX2, UInt32 gridY2);
 
-	TESObjectCELL*	GetCell(UInt32 x, UInt32 y) { return *(TESObjectCELL**)ThisCall(0x004BA490, this, x, y); }
-	TESObjectCELL*	GetCell(UInt32 Index) { return gridCells[Index]; }
+	CellCoord		worldXY;		// 04	Coord of current cell within worldspace
+	UInt32			gridSize;		// 0C	Init'd to uGridsToLoad
+	TESObjectCELL** gridCells;	// 10	Size is gridSize^2
+	NiVector3		posXY;			// 14	worldXY * 4096
+	UInt8			byte20;			// 20
+	UInt8			pad21[3];		// 21
+	NiObject* object24;		// 24
 
-	SInt32			worldX;			// 04	X coord of current cell within worldspace
-	SInt32			worldY;			// 08	Y coord "
-	UInt8			size;			// 0C	Init'd to uGridsToLoad
-	UInt8			pad0D[3];		// 0D
-	TESObjectCELL** gridCells;		// 10	Size is gridSize^2
-	float			posX;			// 14	worldX * 4096
-	float			posY;			// 18	worldY * 4096
-	UInt32			unk1C[3];		// 1C
-};
-assert(sizeof(GridCellArray) == 0x028);
+	class Iterator
+	{
+		TESObjectCELL** pCells;
+		UInt32			count;
 
-template <typename Data> class DNode{
-public:
-  DNode<Data> *next;
-  DNode<Data> *prev;
-  Data* data;
+	public:
+		explicit operator bool() const { return count != 0; }
+		void operator++()
+		{
+			pCells++;
+			count--;
+		}
+
+		TESObjectCELL* operator*() const { return *pCells; }
+		TESObjectCELL* operator->() const { return *pCells; }
+
+		Iterator(GridCellArray& source) : pCells(source.gridCells), count(source.gridSize* source.gridSize) {}
+	};
+
+	Iterator Begin() { return Iterator(*this); }
+
+	TESObjectCELL* __vectorcall GetCellAtPos(__m128 pos) const;
+	TESObjectCELL* __vectorcall GetCellAtCoord(__m128i cellXY) const;
+	TESObjectCELL* GetCell(UInt32 x, UInt32 y) { return *ThisCall<TESObjectCELL**>(0x004BA490, this, x, y); }
+	TESObjectCELL* GetCell(UInt32 Index) { return gridCells[Index]; }
 };
-template <typename Data> class DList{
-public:
-    DNode<Data>* first;
-    DNode<Data>* last;
-    UInt32 count;  
-};
-assert(sizeof(DList<void>) == 0xC);
+extern GridCellArray* g_gridCellArray;
 
 struct WaterGroup
 {
@@ -4269,36 +4649,39 @@ struct WaterGroup
 
 class WaterManager {
 public:
-	UInt32 numWaterGroups;					// 000
+	struct WadingWaterData;
+	UInt32				numWaterGroups;					// 000
 	UInt32				unk04;					// 004
-	UInt32				unk08;					// 008
-	UInt32				unk0C;					// 00C
-	UInt32				unk10;					// 010
-	UInt32				unk14;					// 014
-	UInt32				unk18;					// 018
+	NiObject* object08;		// 08
+	NiObject* object0C;		// 0C
+	NiObject* object10;		// 10
+	NiObject* object14;		// 14
+	NiObject* object18;		// 18
 	NiSourceTexture*	WaterTexture;			// 01C
-	UInt32				unk20;					// 020
-	float				unk24;					// 024
+	NiObject* object20;		// 20
+	UInt32				unk24;					// 024
 	UInt32				unk28;					// 028
 	UInt32				unk2C;					// 02C
 	UInt32				unk30;					// 030
 	UInt8				unk34;					// 034
-	UInt8				pad34[3];
-	float				unk38;					// 038
+	UInt32				unk38;					// 038
 	DList<WaterGroup>	waterGroups;			// 03C
 	WaterGroup			*waterLOD; 				// 048
 	NiTMap<TESObjectREFR*, TESObjectREFR*>		unkReflectionExplosion;	// 04C Seems to be used only under a bReflectExplosions = 1 condition
 	NiTMap<TESObjectREFR*, TESObjectREFR*>		unk5C;	// 05C
 	NiTMap<TESWaterForm*, bool>					unk6C;	// 06C
-	NiTMap<TESObjectREFR*, void*>				unk7C;	// 07C NiTMap<TESObjectREFR*, WadingWaterData*>
-	UInt32				unk8C;					// 08C
-	UInt32				unk90;					// 090
-	UInt32				unk94;					// 094
+	NiTMap<TESObjectREFR*, WadingWaterData*>	wadingWaterMap;	// 7C
+	Sound										sound8C;		// 8C
 	float				unk98;					// 098
 	UInt8				unk9C;					// 09C
-	UInt8				pad9C[3];
+
+	__forceinline static NiNode* GetWaterLOD() { return *(NiNode**)0x11DEA1C; }
+	__forceinline static NiNode* GetWaterWade() { return *(NiNode**)0x11C7C28; }
+
+	void __fastcall Update(NiCamera* camera);
+	void __fastcall UpdateEx(NiCamera* camera);
 };
-assert(sizeof(WaterManager) == 0x0A0);
+static_assert(sizeof(WaterManager) == 0x0A0);
 
 class TES {
 public:
@@ -4316,7 +4699,7 @@ public:
 
 		D3DXVECTOR3 playerPosition, waterPosition;
 
-		playerPosition = Ref->pos.toD3DXVEC3();
+		playerPosition = Ref->position.toD3DXVEC3();
 		float height = Cell->GetWaterHeight();
 
 		NiCamera* Camera = WorldSceneGraph->camera;
@@ -4325,31 +4708,31 @@ public:
 
 		DList<WaterGroup> watergroups = waterManager->waterGroups;
 
-		NiMatrix33* WorldRotate = &Camera->m_worldTransform.rot;
+		NiMatrix33* WorldRotate = &Camera->m_worldTransform.rotate;
 		CameraForward.x = WorldRotate->data[0][0];
 		CameraForward.y = WorldRotate->data[1][0];
 		CameraForward.z = WorldRotate->data[2][0];
 
 		// look at all water planes in nearby scene
-		DNode<WaterGroup>* water = watergroups.first;
+		DList<WaterGroup>::DNode * water = watergroups.Head();
 		
-		if (watergroups.count == 0) return height;
+		if (watergroups.Count() == 0) return height;
 
 		WaterGroup*	waterGroup = water->data;
 		waterForm = &water->data->waterForm;
 
 		float distance = 1000000;
 		float inFront = -1;
-		for (UInt32 i = 0; i < watergroups.count; i++) {
+		for (UInt32 i = 0; i < watergroups.Count(); i++) {
 
 			DList<TESObjectREFR> waterplanes = water->data->waterPlanes;
-			DNode<TESObjectREFR>* plane = waterplanes.first;
+			DList<TESObjectREFR>::DNode* plane = waterplanes.Head();
 
-			for (UInt32 j = 0; j < waterplanes.count; j++) {
+			for (UInt32 j = 0; j < waterplanes.Count(); j++) {
 				NiNode* node = plane->data->GetNode();
 				NiBound* bounds = node->GetWorldBound();
 
-				float waterDistance = node->GetDistance(&Ref->pos) - bounds->Radius;
+				float waterDistance = node->GetDistance(&Ref->position) - bounds->Radius;
 
 				if (Ref->inWater && waterDistance < 0) {
 					// player is inside the plane, this is the best candidate
@@ -4412,7 +4795,7 @@ public:
 	void*								navMeshInfoMap;		// BC NavMeshInfoMap*
 	void*								unkC0;				// C0 LoadedAreaBound*
 };
-assert(sizeof(TES) == 0xC4);
+static_assert(sizeof(TES) == 0xC4);
 
 class TESGameSound {
 public:
@@ -4432,13 +4815,13 @@ public:
 	UInt32			unk50;		// 50
 	UInt32			unk54;		// 54
 };
-assert(sizeof(TESGameSound) == 0x058);
+static_assert(sizeof(TESGameSound) == 0x058);
 
 class BSAnimGroupSequence : public NiControllerSequence {
 public:
 	TESAnimGroup* animGroup;	//074
 };
-assert(sizeof(BSAnimGroupSequence) == 0x078);
+static_assert(sizeof(BSAnimGroupSequence) == 0x078);
 
 class Tile {
 public:
@@ -4574,7 +4957,7 @@ public:
 		void*		action;	// 10
 	};
 
-	void						SetFloat(UInt32 Index, float Value) { ThisCall(0x00A012D0, this, Index, Value, 1); }
+	void						SetFloat(UInt32 Index, float Value) { ThisStdCall(0x00A012D0, this, Index, Value, 1); }
 
 	ChildNode*					firstChild;		// 04
 	ChildNode*					lastChild;		// 08
@@ -4588,29 +4971,32 @@ public:
 	UInt8						unk35;			// 35
 	UInt8						pad35[2];		// 36
 };
-assert(sizeof(Tile) == 0x38);
+static_assert(sizeof(Tile) == 0x38);
 
-class TileImage : public Tile {
+class TileImage : public Tile
+{
 public:
-	float		flt038;			// 38
-	UInt32		unk03C;			// 3C
-	void*		shaderProp;		// 40 TileShaderProperty*
-	UInt8		byt044;			// 44
-	UInt8		pad044[3];		// 45-47
+	float				flt38;			// 38
+	NiTexture* texture;		// 3C
+	TileShaderProperty* shaderProp;	// 40
+	UInt8				byte44;			// 44
+	UInt8				pad45[3];		// 45
+
+	__forceinline void SetTexture(NiTexture* tex) { ThisCall(0xA20610, this, tex); }
 };
-assert(sizeof(TileImage) == 0x48);
+static_assert(sizeof(TileImage) == 0x48);
 
 class TileRect : public Tile {
 public:
 	UInt32	unk38;	// 38
 };
-assert(sizeof(TileRect) == 0x3C);
+static_assert(sizeof(TileRect) == 0x3C);
 
 class TileMenu : public TileRect {
 public:
 	Menu*	menu;	// 3C
 };
-assert(sizeof(TileMenu) == 0x40);
+static_assert(sizeof(TileMenu) == 0x40);
 
 class Menu {
 public:
@@ -4692,7 +5078,7 @@ public:
 	UInt32			id;			// 20
 	UInt32			unk24;		// 24
 };
-assert(sizeof(Menu) == 0x28);
+static_assert(sizeof(Menu) == 0x28);
 
 class HUDMainMenu : public Menu {
 public:
@@ -4815,7 +5201,7 @@ public:
 	void*					ptr234;			// 234
 	UInt32					unk238[16];		// 238
 };
-assert(sizeof(HUDMainMenu) == 0x278);
+static_assert(sizeof(HUDMainMenu) == 0x278);
 
 class ModInfo {
 public:
@@ -4880,7 +5266,7 @@ public:
 	FormInfo			writeInfo;			// 270 "used" to add record to the plugin.
 	UInt32				writeOffset;		// 288
 	UInt32				subrecordBytesToWrite;	// 28C
-	TList<void>			tList290;			// 290 looks to be a list of form or a list of formInfo. referenced from TESForm::WriteForm
+	TList<void>			TList290;			// 290 looks to be a list of form or a list of formInfo. referenced from TESForm::WriteForm
 	UInt8				unk298;				// 298
 	UInt8				bIsBigEndian;		// 299
 	UInt8				unk29A;				// 29A
@@ -4906,7 +5292,7 @@ public:
 	UInt8				unk428;				// 428 decide if forms needs to be reloaded on LoadFiles
 	UInt8				pad429[3];
 };
-assert(sizeof(ModInfo) == 0x42C);
+static_assert(sizeof(ModInfo) == 0x42C);
 
 class ModList {
 public:
@@ -4914,13 +5300,13 @@ public:
 	UInt32				loadedModCount;		// 08
 	ModInfo*			loadedMods[0xFF];	// 0C
 };
-assert(sizeof(ModList) == 0x408);
+static_assert(sizeof(ModList) == 0x408);
 
 class MainDataHandler {
 public:
 	
 	TESForm*				CreateForm(UInt8 FormType) { TESForm* (__cdecl* CreateForm)(UInt8) = (TESForm* (__cdecl*)(UInt8))0x00465110; return CreateForm(FormType); }
-	bool					AddData(TESForm* Form) { return ThisCall(0x004603B0, this, Form); }
+	bool					AddData(TESForm* Form) { return ThisStdCall<bool>(0x004603B0, this, Form); }
 	void					FillNames(std::vector<std::string>* List, UInt32 FormType) {
 								List->clear();
 								if (FormType == TESForm::FormType::kFormType_Weather) {
@@ -4955,13 +5341,13 @@ public:
 	TList<TESWeather>				weathers;				// 030
 	TList<EnchantmentItem>			enchantmentItemList;	// 038
 	TList<SpellItem>				spellItemList;			// 040
-	TList<BGSHeadPart>				headPartList;			// 048
+	TList<BGSHeadPart>				headParTList;			// 048
 	TList<TESHair>					hairList;				// 050
 	TList<TESEyes>					eyeList;				// 058
 	TList<TESRace>					raceList;				// 060
 	TList<BGSEncounterZone>			encounterZoneList;		// 068
 	TList<TESLandTexture>			landTextureList;		// 070
-	TList<BGSCameraShot>			cameraShotList;			// 078
+	TList<BGSCameraShot>			cameraShoTList;			// 078
 	TList<TESClass>					classList;				// 080
 	TList<TESFaction>				factionList;			// 088
 	TList<TESReputation>			reputationList;			// 090
@@ -4971,17 +5357,17 @@ public:
 	TList<TESAmmoEffect>			ammoEffectList;			// 0B0
 	TList<TESCasino>				casinoList;				// 0B8
 	TList<TESCaravanDeck>			caravanDeckList;		// 0C0
-	TList<Script>					scriptList;				// 0C8
+	TList<Script>					scripTList;				// 0C8
 	TList<TESSound>					soundList;				// 0D0
 	TList<BGSAcousticSpace>			acousticSpaceList;		// 0D8
 	TList<BGSRagdoll>				ragdollList;			// 0E0
 	TList<TESGlobal>				globalList;				// 0E8
 	TList<BGSVoiceType>				voiceTypeList;			// 0F0
 	TList<BGSImpactData>			impactDataList;			// 0F8
-	TList<BGSImpactDataSet>			impactDataSetList;		// 100
+	TList<BGSImpactDataSet>			impactDataSeTList;		// 100
 	TList<TESTopic>					topicList;				// 108
 	TList<TESTopicInfo>				topicInfoList;			// 110
-	TList<TESQuest>					questList;				// 118
+	TList<TESQuest>					quesTList;				// 118
 	TList<TESCombatStyle>			combatStyleList;		// 120
 	TList<TESLoadScreen>			loadScreenList;			// 128
 	TList<TESWaterForm>				waterFormList;			// 130
@@ -5003,7 +5389,7 @@ public:
 	TList<BGSLightingTemplate>		lightingTemplateList;	// 1B0
 	TList<BGSMusicType>				musicTypeList;			// 1B8
 	TList<TESLoadScreenType>		loadScreenTypeList;		// 1C0
-	TList<MediaSet>					mediaSetList;			// 1C8
+	TList<MediaSet>					mediaSeTList;			// 1C8
 	TList<MediaLocationController>	mediaLocControllerList;	// 1D0
 	TESRegionList*					regionList;			// 1D8
 	NiTArray<TESObjectCELL*>		cellArray;				// 1DC
@@ -5028,7 +5414,7 @@ public:
 	UInt32							unk634;					// 634
 	UInt32							unk638;					// 638
 };
-assert(sizeof(MainDataHandler) == 0x63C);
+static_assert(sizeof(MainDataHandler) == 0x63C);
 
 class InputControl {
 public:
@@ -5091,7 +5477,7 @@ public:
 	UInt8					JoystickInputControls[28];			// 1BCC
 	UInt32					unk1BE4[(0x1C00 - 0x1BE4) >> 2];	// 1BE4
 };
-assert(sizeof(InputControl) == 0x1C04);
+static_assert(sizeof(InputControl) == 0x1C04);
 
 class BSAudioManager {
 public:
@@ -5143,7 +5529,7 @@ public:
 	UInt8						byte186;
 	UInt8						byte187;
 };
-assert(sizeof(BSAudioManager) == 0x188);
+static_assert(sizeof(BSAudioManager) == 0x188);
 
 class SoundControl { // BSWin32Audio
 public:
@@ -5154,7 +5540,7 @@ public:
 		UInt32			Unk08;
 	};
 
-	void					Play(TESSound* Sound) { SoundData Data; SoundData DataB; ThisCall(0x00AD73B0, this, &Data, Sound->refID, 0x101); ThisCall(0x00418900, &DataB, &Data); ThisCall(0x00AD8830, &DataB, 0); }
+	void					Play(TESSound* Sound) { SoundData Data; SoundData DataB; ThisStdCall(0x00AD73B0, this, &Data, Sound->refID, 0x101); ThisStdCall(0x00418900, &DataB, &Data); ThisStdCall(0x00AD8830, &DataB, 0); }
 
 	void**					_vtbl;						// 000
 	UInt8					IsInitialized;				// 004
@@ -5169,7 +5555,7 @@ public:
 	DSCAPS					soundCaps;					// 040
 	UInt32					unkA0;						// 0A0
 };
-assert(sizeof(SoundControl) == 0x0A4);
+static_assert(sizeof(SoundControl) == 0x0A4);
 
 class Main {
 public:
@@ -5224,7 +5610,7 @@ public:
 	UInt32			unk9C;				// 9C
 	NiCamera*		camera;				// A0
 };
-assert(sizeof(Main) == 0x0A4);
+static_assert(sizeof(Main) == 0x0A4);
 
 class MenuInterfaceManager {
 public:
@@ -5313,7 +5699,7 @@ public:
 
 	UInt8					getIsMenuOpen() { return pipBoyMode == 3; };
 };
-assert(sizeof(MenuInterfaceManager) == 0x580);
+static_assert(sizeof(MenuInterfaceManager) == 0x580);
 
 class TimeGlobals {
 public:
@@ -5327,13 +5713,13 @@ public:
 	static float GetGameTime() { TimeGlobals* Globals = (TimeGlobals*)0x011DE7B8; return Globals->GameHour->data * 60.0f * 60.0f; }
 	static TimeGlobals* Get() { return (TimeGlobals*)0x11DE7B8; }
 };
-assert(sizeof(TimeGlobals) == 0x018); // Static class, size could be larger
+static_assert(sizeof(TimeGlobals) == 0x018); // Static class, size could be larger
 
 class QueuedModelLoader {
 public:
 	UInt32	Unk000[7]; // LockFreeMaps for models
 };
-assert(sizeof(QueuedModelLoader) == 0x01C);
+static_assert(sizeof(QueuedModelLoader) == 0x01C);
 
 class GameSetting {
 public:
@@ -5345,7 +5731,7 @@ public:
 	};
 	char*		Name;
 };
-assert(sizeof(GameSetting) == 0x0C);
+static_assert(sizeof(GameSetting) == 0x0C);
 
 struct MuzzleFlash
 {
@@ -5415,8 +5801,21 @@ namespace Pointers {
 
 
 
-class BSShaderProperty : public NiShadeProperty {
+class BSShaderProperty : public NiProperty {
 public:
+	/*94*/virtual void		Unk_25(void);
+	/*98*/virtual void		Unk_26(UInt32 arg1);
+	/*9C*/virtual void		Unk_27(UInt32 arg1);
+	/*A0*/virtual void		Unk_28(UInt32 arg1, UInt32 arg2, UInt32 arg3, UInt32 arg4, UInt32 arg5, UInt32 arg6);
+	/*A4*/virtual void		Unk_29(UInt32 arg1);
+	/*A8*/virtual void		Unk_2A(void);
+	/*AC*/virtual void		Unk_2B(UInt32 arg1);
+	/*B0*/virtual void		Unk_2C(UInt32 arg1, UInt32 arg2, UInt32 arg3);
+	/*B4*/virtual void		Unk_2D(void);
+	/*B8*/virtual void		Unk_2E(UInt32 arg1);
+	/*BC*/virtual void		Unk_2F(UInt32 arg1, UInt32 arg2);
+	/*C0*/virtual void		Unk_30(void);
+
 	enum BSShaderFlags {
 		kFlags_Specular = 0x00000001,
 		kFlags_Skinned = 0x00000002,
@@ -5488,142 +5887,208 @@ public:
 	};
 
 	bool	IsLightingProperty();
-
-	UInt32	Unk020;		// 020
-	UInt32	Unk024;		// 024
-	float	Unk028;		// 028
-	float	Unk02C;		// 02C
-	float	Unk030;		// 030
-	float	Unk034;		// 034
-	UInt32	Unk038;		// 038
-	UInt32	Unk03C;		// 03C
-	UInt32	Unk040;		// 040
-	UInt32	Unk044;		// 044
-	UInt32	Unk048;		// 048
-	UInt32	Unk04C;		// 04C
-	UInt32	Unk050;		// 050
-	UInt32	Unk054;		// 054
-	UInt32	type;		// 058
-	float	Unk05C;		// 05C
+	
+	UInt16				unk18;				// 18
+	UInt16				unk1A;				// 1A
+	UInt32				shaderType;			// 1C
+	UInt32				flags1;				// 20
+	UInt32				flags2;				// 24
+	float				alpha;				// 28
+	float				fadeAlpha;			// 2C
+	float				envMapScale;		// 30
+	float				LODFade;			// 34
+	UInt32				lastRenderPassState;// 38
+	BSRenderPassList	*renderPassLists[7];// 3C
+	UInt32				shaderIndex;		// 58
+	float				depthBias;			// 5C
 };
-assert(sizeof(BSShaderProperty) == 0x60);
+static_assert(sizeof(BSShaderProperty) == 0x60);
 
-class WaterShaderProperty : BSShaderProperty
+// 150
+class WaterShaderProperty : public BSShaderProperty
 {
 public:
-	struct VarAmounts
-	{
-		float unk;
-		float fWaterReflectivityAmt;
-		float fWaterOpacity;
-		float fWaterDistortionAmt;
-	};
-
-	UInt8 byte60;
-	UInt8 byte61;
-	UInt8 byte62;
-	bool bDepth;
-	UInt32 dword64;
-	UInt32 dword68;
-	float blendRadiusX;
-	float blendRadiusY;
-	float fogPower;
-	float fog78;
-	UInt8 byte7C;
-	UInt8 byte7D;
-	UInt8 byte7E;
-	bool isUseDefaultWater;
-	bool bReflect;
-	UInt8 bRefract;
-	UInt8 UV;
-	UInt8 byte83;
-	UInt32 dword84;
-	NiColorAlpha shallowColor;
-	NiColorAlpha deepColor;
-	NiColorAlpha reflectionColor;
-	WaterShaderProperty::VarAmounts Vars;
-	float floatC8;
-	float floatCC;
-	float blendRadiusZ;
-	float floatD4;
-	NiVector4 depthData;
-	float floatE8;
-	float floatEC;
-	float floatF0;
-	float floatF4;
-	float floatF8;
-	float floatFC;
-	float fresnelZ;
-	float fresnelW;
-	float float108;
-	float float10C;
-	float float110;
-	float float114;
-	UInt8 fWaterFresnelTerm[4];
-	float fWaterNoise;
-	float fFogAmount;
-	float texScale;
-	UInt32 dword128;
-	UInt32 dword12C;
-	UInt32 dword130;
-	NiSourceTexture* noiseTexture;
-	BSRenderedTexture* noDepth;
-	BSRenderedTexture* reflections;
-	BSRenderedTexture* refractions;
-	BSRenderedTexture* depth;
-	UInt32 dword148;
-	UInt32 dword14C;
+	bool				isWading;			// 060
+	UInt8				byte061;			// 061
+	bool				renderAtWaterLevel;	// 062
+	bool				bDepth;				// 063
+	UInt32				unk064;				// 064
+	UInt32				unk068;				// 068
+	NiPoint2			blendRadius;		// 06C
+	float				fogDistanceFar;		// 074
+	float				fogDistanceNear;	// 078
+	UInt8				byte07C;			// 07C
+	UInt8				byte07D;			// 07D
+	bool				isUnderwater;		// 07E
+	UInt8				useDefaultWater;	// 07F
+	UInt8				bReflections;		// 080
+	UInt8				bRefractions;		// 081
+	UInt8				bTextureCoords;		// 082
+	UInt8				byte083;			// 083
+	UInt32				stencilMask;		// 084
+	NiColorAlpha		shallowColor;		// 088
+	NiColorAlpha		deepColor;			// 098
+	NiColorAlpha		reflectionColor;	// 0A8
+	float				sunPower;			// 0B8
+	float				reflectivity;		// 0BC
+	float				opacity;			// 0C0
+	float				distortion;			// 0C4
+	float				flt0C8;				// 0C8
+	float				flt0CC;				// 0CC
+	float				lightRadius;		// 0D0
+	float				lightBrightness;	// 0D4
+	float				depthFalloffStart;	// 0D8
+	float				depthFalloffEnd;	// 0DC
+	float				flt0E0;				// 0E0
+	float				flt0E4;				// 0E4
+	float				flt0E8;				// 0E8
+	float				flt0EC;				// 0EC
+	float				flt0F0;				// 0F0
+	float				flt0F4;				// 0F4
+	float				flt0F8;				// 0F8
+	float				flt0FC;				// 0FC
+	float				shininess;			// 100
+	float				reflectionHDRMult;	// 104
+	float				flt108;				// 108
+	float				flt10C;				// 10C
+	float				flt110;				// 110
+	float				flt114;				// 114
+	float				waterFresnelTerm;	// 118
+	float				noiseScale;			// 11C
+	float				fog;				// 120
+	float				texScale;			// 124
+	UInt32				unk128[3];			// 128
+	NiSourceTexture* noiseTexture;		// 134
+	BSRenderedTexture* noDepth;			// 138
+	BSRenderedTexture* reflections;		// 13C
+	BSRenderedTexture* refractions;		// 140
+	BSRenderedTexture* depth;				// 144
+	BSRenderedTexture* wading;			// 148
+	BSRenderPass* stencilPass;		// 14C
 };
-assert(sizeof(WaterShaderProperty) == 0x150);
+static_assert(sizeof(WaterShaderProperty) == 0x150);
+
+// B0
+class TileShaderProperty : public BSShaderProperty
+{
+public:
+	NiTexture* srcTexture;	// 60
+	NiTexture* alphaTexture;	// 64
+	NiColorAlpha		overlayColor;	// 68
+	float				alpha;			// 78
+	NiPoint2			textureOrigin;	// 7C	X/Y: [0.0, 1.0)
+	NiPoint2			texturePercent;	// 84
+	UInt32				unk8C;			// 8C
+	UInt8				byte90;			// 90
+	bool				textureMorph;	// 91	Applies textureOrigin & texturePercent
+	bool				hasVtxColors;	// 92
+	UInt8				byte93;			// 93
+	void* ptr94;			// 94
+	UInt16				word98;			// 98
+	UInt16				word9A;			// 9A
+	int					minX;			// 9C	min/max values used for clipping
+	int					minY;			// A0
+	int					maxX;			// A4
+	int					maxY;			// A8
+	UInt8				byteAC;			// AC
+	UInt8				padAD[3];		// AD
+};
+static_assert(sizeof(TileShaderProperty) == 0xB0);
+
+// 80
+class BSShaderNoLightingProperty : public BSShaderProperty
+{
+public:
+	/*C4*/virtual void		Unk_31(void);
+	/*C8*/virtual void		Unk_32(void);
+	/*CC*/virtual void		Unk_33(void);
+	/*D0*/virtual void		Unk_34(void);
+
+	NiTexture* srcTexture;			// 60
+	const char* texturePath;			// 64
+	UInt16			word68;					// 68
+	UInt16			word6A;					// 6A
+	UInt32			unk6C;					// 6C
+	float			falloffStartAngle;		// 70
+	float			falloffStopAngle;		// 74
+	float			falloffStartOpacity;	// 78
+	float			falloffStopOpacity;		// 7C
+
+	__forceinline static BSShaderNoLightingProperty* Create() { return ThisCall<BSShaderNoLightingProperty*>(0xB6FC90, CdeclCall<void*>(0xAA13E0, sizeof(BSShaderNoLightingProperty))); }
+};
+static_assert(sizeof(BSShaderNoLightingProperty) == 0x80);
 
 
 class BSShaderLightingProperty : public BSShaderProperty {
 public:
-	DList<ShadowSceneLight>		LightList;
-	float						fUnk06C;
-	UInt32						uiRefID;
-	bool						bLightListChanged;
-	DNode<ShadowSceneLight>* pLightIterator;
-};
-assert(sizeof(BSShaderLightingProperty) == 0x7C);
+	/*C4*/virtual void		Unk_31(void);
+	/*C8*/virtual void		Unk_32(void);
 
-class BSShaderPPLightingProperty : public BSShaderLightingProperty {
+	DList<LightingData>			illuminatingLights;	// 60
+	float						flt6C;				// 6C
+	UInt32						unk70;				// 70
+	bool						lightListChanged;	// 74
+	UInt8						pad75[3];			// 75
+	DList<LightingData>::DNode* lastLight;			// 78
+};
+static_assert(sizeof(BSShaderLightingProperty) == 0x7C);
+
+// 104
+class BSShaderPPLightingProperty : public BSShaderLightingProperty
+{
 public:
-	struct Unk0C4 {
-		char cUnk0[10];
-	};
-
-	UInt32					unk07C;
-	float					fMorphDistance;
-	NiColorAlpha			kHairTint;
-	NiVector4				kLandBlendParams;
-	BSShaderTextureSet*		spTextureSet;
-	UInt16					usLandscapeTextures;
-	NiSourceTexture**		ppTextures[6];
-	Unk0C4*					ptr0C4;
-	UInt16					usLandPassCount;
-	Unk0C4*					pbTextureIsSpecular;
-	void*					spTangentSpaceData;
-	UInt32					unk0D4;
-	UInt32					eClampMode;
-	EffectShaderProperty*	spTexEffectData;
-	float					fRefractionStrength;
-	UInt32					iRefractionFirePeriod;
-	float					fParallaxMaxPasses;
-	float					fParallaxScale;
-	NiVector4				kLODTextureParams;
-	BSRenderPass* pDepthPass;
-
-	bool IsRefractive() { return false; }
+	/*0CC*/virtual void		SetupGeometry(void*);
+	/*0D0*/virtual void		CopyProperties(BSShaderPPLightingProperty* from);
+	/*0D4*/virtual void		Unk_35(void);
+	/*0D8*/virtual void		Unk_36(void);
+	/*0DC*/virtual void		PickClampMode(UInt32 mode);
+	/*0E0*/virtual UInt32	GetClampMode();
+	/*0E4*/virtual void		SetClampMode(UInt32 mode);
+	/*0E8*/virtual void		Unk_3A(void);
+	/*0EC*/virtual void		Unk_3B(void);
+	/*0F0*/virtual void		Unk_3C(void);
+	/*0F4*/virtual void		Unk_3D(void);
+	/*0F8*/virtual void		Unk_3E(void);
+	/*0FC*/virtual void		Unk_3F(void);
+	/*100*/virtual void		Unk_40(void);
+	/*104*/virtual void		Unk_41(void);
+	/*108*/virtual void		Unk_42(void);
+	/*10C*/virtual void		Unk_43(void);
+	/*110*/virtual void		Unk_44(void);
+	/*114*/virtual void		Unk_45(void);
+	/*118*/virtual void		Unk_46(void);
+	/*11C*/virtual void		Unk_47(void);
+	
+	UInt32				unk07C;					// 07C
+	UInt32				unk080;					// 080
+	NiColorAlpha		hairTint;				// 084
+	NiColorAlpha		color094;				// 094
+	BSShaderTextureSet	*textureSet;			// 0A4
+	UInt16				word0A8;				// 0A8
+	UInt16				word0AA;				// 0AA
+	NiTexture			**srcTextures[6];		// 0AC
+	void				*ptr0C4;				// 0C4
+	UInt32				unk0C8;					// 0C8
+	void				*ptr0CC;				// 0CC
+	NiObject			*object0D0;				// 0D0
+	UInt32				unk0D4;					// 0D4
+	UInt32				clampMode;				// 0D8
+	NiObject			*object0DC;				// 0DC
+	float				refractionStrength;		// 0E0
+	SInt32				refractionFirePeriod;	// 0E4
+	float				parallaxMaxPasses;		// 0E8
+	float				parallaxScale;			// 0EC
+	NiColorAlpha		emmisiveColor;			// 0F0
+	BSRenderPass		*depthPass;				// 100
 };
-assert(sizeof(BSShaderPPLightingProperty) == 0x104);
-assert(offsetof(BSShaderPPLightingProperty, kHairTint) == 0x84);
+static_assert(sizeof(BSShaderPPLightingProperty) == 0x104);
+static_assert(offsetof(BSShaderPPLightingProperty, hairTint) == 0x84);
 
 class SpeedTreeShaderLightingProperty : public BSShaderLightingProperty {
 public:
 	UInt32	Unk07C[3];	// 07C
 };
-assert(sizeof(SpeedTreeShaderLightingProperty) == 0x88);
+static_assert(sizeof(SpeedTreeShaderLightingProperty) == 0x88);
 
 class SpeedTreeLeafShaderProperty : public SpeedTreeShaderLightingProperty {
 public:
@@ -5635,4 +6100,24 @@ public:
 
 	LeafData* leafData;	// 088
 };
-assert(sizeof(SpeedTreeLeafShaderProperty) == 0x8C);
+static_assert(sizeof(SpeedTreeLeafShaderProperty) == 0x8C);
+
+// 90
+class SkyShaderProperty : public BSShaderProperty
+{
+public:
+	/*C4*/virtual void		Unk_31(void);
+	/*C8*/virtual void		Unk_32(void);
+	/*CC*/virtual void		Unk_33(void);
+	/*D0*/virtual void		Unk_34(void);
+
+	NiColorAlpha		color;			// 60
+	NiSourceTexture* srcTexture70;	// 70
+	String				filePath;		// 74
+	UInt32				unk7C;			// 7C
+	NiSourceTexture* srcTexture80;	// 80
+	float				flt84;			// 84	Maybe texture % for animation?
+	UInt32				unk88;			// 88
+	UInt32				unk8C;			// 8C
+};
+static_assert(sizeof(SkyShaderProperty) == 0x90);

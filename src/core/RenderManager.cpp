@@ -2,8 +2,8 @@
 
 void RenderManager::CreateD3DMatrix(D3DMATRIX* Matrix, NiTransform* Transform) {
 
-	NiMatrix33* Rot = &Transform->rot;
-	NiPoint3* Pos = &Transform->pos;
+	NiMatrix33* Rot = &Transform->rotate;
+	NiVector3* Pos = &Transform->translate;
 	float Scale = Transform->scale;
 
 	Matrix->_11 = Rot->data[0][0] * Scale;
@@ -36,9 +36,9 @@ bool RenderManager::IsNode(NiAVObject* node) {
 void RenderManager::GetScreenSpaceBoundSize(NiPoint2* BoundSize, NiBound* Bound, float ZeroTolerance) {
 		
 	NiCamera* Camera = WorldSceneGraph->camera;
-	NiMatrix33* WorldRotate = &Camera->m_worldTransform.rot;
-	NiPoint3 BoundPos = { Bound->Center.x - Camera->m_worldTransform.pos.x, Bound->Center.y - Camera->m_worldTransform.pos.y, Bound->Center.z - Camera->m_worldTransform.pos.z};
-	float BoundViewDist = BoundPos * BoundPos;
+	NiMatrix33* WorldRotate = &Camera->m_worldTransform.rotate;
+	NiVector3 BoundPos({ Bound->Center.x - Camera->m_worldTransform.translate.x, Bound->Center.y - Camera->m_worldTransform.translate.y, Bound->Center.z - Camera->m_worldTransform.translate.z });
+	float BoundViewDist = BoundPos.DotProduct(BoundPos);
 	float Ratio = Bound->Radius;
 
 	if (BoundViewDist < ZeroTolerance) {
@@ -58,9 +58,9 @@ void RenderManager::GetScreenSpaceBoundSize(NiPoint2* BoundSize, NiBound* Bound,
 
 float RenderManager::GetObjectDistance(NiBound* Bound){
 	NiCamera* Camera = WorldSceneGraph->camera;
-	NiMatrix33* WorldRotate = &Camera->m_worldTransform.rot;
-	NiPoint3 BoundPos = { Bound->Center.x - Camera->m_worldTransform.pos.x, Bound->Center.y - Camera->m_worldTransform.pos.y, Bound->Center.z - Camera->m_worldTransform.pos.z };
-    return sqrt(BoundPos * BoundPos);
+	NiMatrix33* WorldRotate = &Camera->m_worldTransform.rotate;
+	NiVector3 BoundPos({ Bound->Center.x - Camera->m_worldTransform.translate.x, Bound->Center.y - Camera->m_worldTransform.translate.y, Bound->Center.z - Camera->m_worldTransform.translate.z });
+    return BoundPos.Length();
 }
 
 void RenderManager::UpdateSceneCameraData() {
@@ -68,8 +68,8 @@ void RenderManager::UpdateSceneCameraData() {
 	NiCamera* Camera = WorldSceneGraph->camera;
 
 	if (Camera) {
-		NiMatrix33* WorldRotate = &Camera->m_worldTransform.rot;
-		NiPoint3* WorldTranslate = &Camera->m_worldTransform.pos;
+		NiMatrix33* WorldRotate = &Camera->m_worldTransform.rotate;
+		NiVector3* WorldTranslate = &Camera->m_worldTransform.translate;
 		
 		CameraForward.x = WorldRotate->data[0][0];
 		CameraForward.y = WorldRotate->data[1][0];
@@ -84,12 +84,12 @@ void RenderManager::SetupSceneCamera() {
 	NiCamera* Camera = WorldSceneGraph->camera;
 
 	if (Camera) {
-		NiPoint3 Loc = *Pointers::Generic::CameraLocation;
-		NiPoint3 Forward = { 0.0f, 0.0f, 0.0f };
-		NiPoint3 Up = { 0.0f, 0.0f, 0.0f };
-		NiPoint3 Right = { 0.0f, 0.0f, 0.0f };
-		NiMatrix33* WorldRotate = &Camera->m_worldTransform.rot;
-		NiPoint3* WorldTranslate = &Camera->m_worldTransform.pos;
+		NiVector3 Loc = *Pointers::Generic::CameraLocation;
+		NiVector3 Forward({ 0.0f, 0.0f, 0.0f });
+		NiVector3 Up({ 0.0f, 0.0f, 0.0f });
+		NiVector3 Right({ 0.0F, 0.0F, 0.0F });
+		NiMatrix33* WorldRotate = &Camera->m_worldTransform.rotate;
+		NiVector3* WorldTranslate = &Camera->m_worldTransform.translate;
 		NiFrustum* Frustum = &Camera->Frustum;
 		float FrustumWidth = Frustum->Right - Frustum->Left;
 		float FrustumHeight = Frustum->Top - Frustum->Bottom;
@@ -152,9 +152,9 @@ void RenderManager::SetupSceneCamera() {
 		viewMatrix._32 = Up.z;
 		viewMatrix._33 = Forward.z;
 		viewMatrix._34 = 0.0f;
-		viewMatrix._41 = -(Right * Loc);
-		viewMatrix._42 = -(Up * Loc);
-		viewMatrix._43 = -(Forward * Loc);
+		viewMatrix._41 = -Right.DotProduct(Loc);
+		viewMatrix._42 = -Up.DotProduct(Loc);
+		viewMatrix._43 = -Forward.DotProduct(Loc);
 		viewMatrix._44 = 1.0f;
 
 		invViewMatrix._11 = Right.x;

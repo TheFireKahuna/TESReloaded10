@@ -14,11 +14,11 @@ void FlashlightEffect::UpdateSettings() {
 	Settings.renderShadows = TheSettingManager->GetSettingI("Shaders.Flashlight.Main", "RenderShadows");
 	selectedPass = Settings.renderShadows;
 
-	Settings.Offset = NiPoint3(
+	Settings.Offset = {
 		TheSettingManager->GetSettingF("Shaders.Flashlight.Main", "OffsetX"),
 		TheSettingManager->GetSettingF("Shaders.Flashlight.Main", "OffsetY"),
 		TheSettingManager->GetSettingF("Shaders.Flashlight.Main", "OffsetZ")
-	);
+	};
 
 	Settings.Color = NiColor(
 		TheSettingManager->GetSettingF("Shaders.Flashlight.Main", "ColorR"),
@@ -43,13 +43,13 @@ void FlashlightEffect::UpdateConstants() {
 	spotLightActive = Enabled && lightIsOn;
 	if (!spotLightActive) {
 		// disable light by setting it to 0 dimmer & radius
-		SpotLight->Dimmer = 0;
-		SpotLight->Spec = NiColor(0, 0, 0);
+		SpotLight->fadeValue = 0;
+		SpotLight->radius = 0;
 		SpotLight->CastShadows = false;
 		return;
 	}
 
-	NiPoint3 WeaponPos;
+	NiVector3 WeaponPos;
 	NiMatrix33 WeaponRot;
 	bool melee = false;
 	if (Player->process->IsWeaponOut()) {
@@ -65,8 +65,8 @@ void FlashlightEffect::UpdateConstants() {
 
 	if (Player->isThirdPerson) {
 		if (Settings.attachToWeapon && !melee && Player->process->IsWeaponOut() && Player->IsReloading() && Player->IsAiming()) {
-			WeaponPos = Player->ActorSkinInfo->WeaponNode->m_worldTransform.pos;
-			WeaponRot = Player->ActorSkinInfo->WeaponNode->m_worldTransform.rot;
+			WeaponPos = Player->ActorSkinInfo->WeaponNode->m_worldTransform.translate;
+			WeaponRot = Player->ActorSkinInfo->WeaponNode->m_worldTransform.rotate;
 		}
 		else {
 			// matrix that will rotate 90 degrees on the Z then X axis
@@ -81,29 +81,26 @@ void FlashlightEffect::UpdateConstants() {
 			rotation.data[2][1] = 0;
 			rotation.data[2][2] = 0;
 
-			WeaponPos = Player->ActorSkinInfo->HeadNode->m_worldTransform.pos;
-			WeaponRot = Player->ActorSkinInfo->HeadNode->m_worldTransform.rot;
-			rotation = rotation * WeaponRot; // we place the rotation matrix in the referential of the bone
-			WeaponRot = WeaponRot * rotation; // we apply it
+			WeaponPos = Player->ActorSkinInfo->HeadNode->m_worldTransform.translate;
+			WeaponRot = Player->ActorSkinInfo->HeadNode->m_worldTransform.rotate;
+			rotation = rotation.MultiplyMatrices(WeaponRot); // we place the rotation matrix in the referential of the bone
+			WeaponRot = WeaponRot.MultiplyMatrices(rotation); // we apply it
 		}
 	}
 	else {
 		// isReloading is inverted and returns 0 when player is reloading
 		if (Settings.attachToWeapon && !melee && Player->process->IsWeaponOut() && Player->IsReloading()) {
-			WeaponPos = Player->firstPersonSkinInfo->WeaponNode->m_worldTransform.pos;
-			WeaponRot = Player->firstPersonSkinInfo->WeaponNode->m_worldTransform.rot;
+			WeaponPos = Player->firstPersonSkinInfo->WeaponNode->m_worldTransform.translate;
+			WeaponRot = Player->firstPersonSkinInfo->WeaponNode->m_worldTransform.rotate;
 		}
 		else {
-			WeaponPos = WorldSceneGraph->camera->m_worldTransform.pos;
-			WeaponRot = WorldSceneGraph->camera->m_worldTransform.rot;
+			WeaponPos = WorldSceneGraph->camera->m_worldTransform.translate;
+			WeaponRot = WorldSceneGraph->camera->m_worldTransform.rotate;
 		}
 	}
 
 	// rotate offset in the direction of the cone
-	NiPoint3 offset = WeaponRot * Settings.Offset;
-	WeaponPos.x += offset.x;
-	WeaponPos.y += offset.y;
-	WeaponPos.z += offset.z;
+	WeaponPos = WeaponRot.Rotate(Settings.Offset.PS());
 
 	if (spotLightActive) {
 		// find and disable pipboy light
@@ -111,7 +108,7 @@ void FlashlightEffect::UpdateConstants() {
 		for (UINT32 i = 0; i < PlayerNode->m_children.capacity; i++) {
 			NiAVObject* childNode = PlayerNode->m_children.data[i];
 			if (childNode) {
-				if (childNode->GetRTTI() == (void*)0x11F4A98) {
+				if (childNode->GetStreamableRTTI() == (void*)0x11F4A98) {
 					childNode->m_flags |= childNode->APP_CULLED;
 				}
 			}
@@ -119,13 +116,13 @@ void FlashlightEffect::UpdateConstants() {
 	}
 
 	SpotLight->CastShadows = Settings.renderShadows;
-	SpotLight->Diff = Settings.Color;
-	SpotLight->Dimmer = Settings.Dimmer * 10.0;
-	SpotLight->m_worldTransform.pos = WeaponPos;
-	SpotLight->m_worldTransform.rot = WeaponRot;
+	SpotLight->diffuseColor = Settings.Color;
+	SpotLight->fadeValue = Settings.Dimmer * 10.0;
+	SpotLight->m_worldTransform.translate = WeaponPos;
+	SpotLight->m_worldTransform.rotate = WeaponRot;
 	SpotLight->m_worldTransform.scale = 1.0f;
 	SpotLight->OuterSpotAngle = Settings.ConeAngle;
-	SpotLight->Spec = NiColor(Settings.Distance, 0, 0); // radius in r channel
+	SpotLight->radius = Settings.Distance; // radius in r channel
 
 	GetFlashlightViewProj();
 };
@@ -137,11 +134,11 @@ void FlashlightEffect::GetFlashlightViewProj() {
 	if (!SpotLight) return;
 	
 	D3DXVECTOR3 Up = D3DXVECTOR3(0, 0, 1);
-	D3DXVECTOR3 Eye = SpotLight->m_worldTransform.pos.toD3DXVEC3();
-	D3DXVECTOR3 Direction = D3DXVECTOR3(SpotLight->m_worldTransform.rot.data[0][0], SpotLight->m_worldTransform.rot.data[1][0], SpotLight->m_worldTransform.rot.data[2][0]);
+	D3DXVECTOR3 Eye = SpotLight->m_worldTransform.translate.toD3DXVEC3();
+	D3DXVECTOR3 Direction = D3DXVECTOR3(SpotLight->m_worldTransform.rotate.data[0][0], SpotLight->m_worldTransform.rotate.data[1][0], SpotLight->m_worldTransform.rotate.data[2][0]);
 	D3DXVECTOR3 At = Eye + Direction;
 
-	float Radius = SpotLight->Spec.r;
+	float Radius = SpotLight->radius;
 	D3DXMATRIX View, Proj;
 	D3DXMatrixPerspectiveFovRH(&Proj, D3DXToRadian(SpotLight->OuterSpotAngle * 2), 1.0f, 0.1f, Radius);
 	D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
