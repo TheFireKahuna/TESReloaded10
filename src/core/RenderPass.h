@@ -23,7 +23,6 @@ public:
 		VertexShader = NULL;
 		PixelShader = NULL;
 	};
-	virtual bool AccumObject(NiGeometry* Geo, UInt32& visibility) { return true; };
 
 	ShaderRecordVertex* VertexShader;
 	ShaderRecordPixel* PixelShader;
@@ -31,6 +30,7 @@ public:
 	std::vector<std::tuple<NiGeometry*, UInt32>> GeometryList;
 	virtual void UpdateConstants(NiGeometry* Geo) {};
 	virtual void RegisterConstants() {};
+	virtual bool AccumObject(NiGeometry* Geo, UInt32& visibility) { return true; };
 	bool IsVisible(ShadowMapTypeEnum type, UInt32 visibility);
 };
 

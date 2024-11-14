@@ -11,7 +11,7 @@ bool RenderPass::IsVisible(ShadowMapTypeEnum type, UInt32 visibility) {
 	return false;
 }
 void ShadowRenderPass::RenderNormalPass(ShadowMapTypeEnum ShadowMapType) {
-	//if (GeometryList.empty()) return;
+	if (GeometryList.empty()) return;
 	IDirect3DDevice9* Device = TheRenderManager->device;
 	NiDX9RenderState* RenderState = TheRenderManager->renderState;
 	RenderState->SetPixelShader(PixelShader->ShaderHandle, false);
@@ -28,21 +28,22 @@ void ShadowRenderPass::RenderNormalPass(ShadowMapTypeEnum ShadowMapType) {
 			NiGeometryData* ModelData = Geo->geomData;
 			NiGeometryBufferData* GeoData = ModelData->bufferData;
 			NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
-
-			TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
-			for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
-				Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
-			}
-			//			Logger::Log("%s %s  %08X", Geo->m_blockName, Geo->m_parent, GeoData->VBChip[0]->VB);
-			Device->SetIndices(GeoData->IB);
-			if (GeoData->FVF)
-				RenderState->SetFVF(GeoData->FVF, false);
-			else
-				RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
-			for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
-				PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
-				Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, GeoData->VertCount, StartIndex, PrimitiveCount);
-				StartIndex += PrimitiveCount + 2;
+			if (GeoData && GeoData->VertCount) {
+				TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
+				for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
+					Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
+				}
+				//			Logger::Log("%s %s  %08X", Geo->m_blockName, Geo->m_parent, GeoData->VBChip[0]->VB);
+				Device->SetIndices(GeoData->IB);
+				if (GeoData->FVF)
+					RenderState->SetFVF(GeoData->FVF, false);
+				else
+					RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
+				for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
+					PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
+					Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, GeoData->VertCount, StartIndex, PrimitiveCount);
+					StartIndex += PrimitiveCount + 2;
+				}
 			}
 		//}
 	}
@@ -56,31 +57,33 @@ void SpeedTreeShadowRenderPass::RenderSpeedTreePass(ShadowMapTypeEnum ShadowMapT
 
 	for (std::tuple<NiGeometry*, UInt32>& obj : GeometryList) {
 		NiGeometry* Geo = obj._Myfirst._Val;
-		if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
+		//if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
+			UpdateConstants(Geo);
+			VertexShader->SetCT();
+			PixelShader->SetCT();
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			NiGeometryData* ModelData = Geo->geomData;
 			NiGeometryBufferData* GeoData = ModelData->bufferData;
 			NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
+			if (GeoData && GeoData->VertCount) {
 
-			TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
-			for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
-				Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
+				TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
+				for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
+					Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
+				}
+				Device->SetIndices(GeoData->IB);
+				if (GeoData->FVF)
+					RenderState->SetFVF(GeoData->FVF, false);
+				else
+					RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
+				for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
+					PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
+					Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, GeoData->VertCount, StartIndex, PrimitiveCount);
+					StartIndex += PrimitiveCount + 2;
+				}
 			}
-			Device->SetIndices(GeoData->IB);
-			if (GeoData->FVF)
-				RenderState->SetFVF(GeoData->FVF, false);
-			else
-				RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
-			UpdateConstants(Geo);
-			VertexShader->SetCT();
-			PixelShader->SetCT();
-			for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
-				PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
-				Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, GeoData->VertCount, StartIndex, PrimitiveCount);
-				StartIndex += PrimitiveCount + 2;
-			}
-		}
+		//}
 	}
 }
 void AlphaShadowRenderPass::RenderAlphaPass(ShadowMapTypeEnum ShadowMapType) {
@@ -91,32 +94,34 @@ void AlphaShadowRenderPass::RenderAlphaPass(ShadowMapTypeEnum ShadowMapType) {
 
 	for (std::tuple<NiGeometry*, UInt32>& obj : GeometryList) {
 		NiGeometry* Geo = obj._Myfirst._Val;
-		if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
+		//if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
+			UpdateConstants(Geo);
+			VertexShader->SetCT();
+			PixelShader->SetCT();
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			NiGeometryData* ModelData = Geo->geomData;
 			NiGeometryBufferData* GeoData = ModelData->bufferData;
 			NiD3DShaderDeclaration* ShaderDeclaration = Geo->shader->ShaderDeclaration;
+			if (GeoData && GeoData->VertCount) {
 
-			TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
-			for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
-				Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
-			}
-			Device->SetIndices(GeoData->IB);
-			if (GeoData->FVF)
-				RenderState->SetFVF(GeoData->FVF, false);
-			else
-				RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
-			UpdateConstants(Geo);
-			VertexShader->SetCT();
-			PixelShader->SetCT();
+				TheRenderManager->PackGeometryBuffer(GeoData, ModelData, NULL, ShaderDeclaration);
+				for (UInt32 i = 0; i < GeoData->StreamCount; i++) {
+					Device->SetStreamSource(i, GeoData->VBChip[i]->VB, 0, GeoData->VertexStride[i]);
+				}
+				Device->SetIndices(GeoData->IB);
+				if (GeoData->FVF)
+					RenderState->SetFVF(GeoData->FVF, false);
+				else
+					RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
 
-			for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
-				PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
-				Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, GeoData->VertCount, StartIndex, PrimitiveCount);
-				StartIndex += PrimitiveCount + 2;
+				for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
+					PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
+					Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, GeoData->VertCount, StartIndex, PrimitiveCount);
+					StartIndex += PrimitiveCount + 2;
+				}
 			}
-		}
+		//}
 	}
 }
 void SkinnedAlphaGeoShadowRenderPass::RenderSkinnedAlphaPass(ShadowMapTypeEnum ShadowMapType) {
@@ -127,7 +132,7 @@ void SkinnedAlphaGeoShadowRenderPass::RenderSkinnedAlphaPass(ShadowMapTypeEnum S
 
 	for (std::tuple<NiGeometry*, UInt32>& obj : GeometryList) {
 		NiGeometry* Geo = obj._Myfirst._Val;
-		if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
+		//if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			int StartRegister = 9;
@@ -145,6 +150,9 @@ void SkinnedAlphaGeoShadowRenderPass::RenderSkinnedAlphaPass(ShadowMapTypeEnum S
 
 				if (!SkinInstance->IsPartitionEnabled(p)) continue;
 
+				UpdateConstants(Geo);
+				VertexShader->SetCT();
+				PixelShader->SetCT();
 				StartIndex = 0;
 				StartRegister = 9;
 				NiSkinPartition::Partition* Partition = &SkinPartition->Partitions[p];
@@ -163,16 +171,13 @@ void SkinnedAlphaGeoShadowRenderPass::RenderSkinnedAlphaPass(ShadowMapTypeEnum S
 					RenderState->SetFVF(GeoData->FVF, false);
 				else
 					RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
-				UpdateConstants(Geo);
-				VertexShader->SetCT();
-				PixelShader->SetCT();
 				for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
 					PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
 					Device->DrawIndexedPrimitive(PrimitiveType, GeoData->BaseVertexIndex, 0, Partition->Vertices, StartIndex, PrimitiveCount);
 					StartIndex += PrimitiveCount + 2;
 				}
 			}
-		}
+		//}
 	}
 }
 
@@ -184,7 +189,7 @@ void SkinnedGeoShadowRenderPass::RenderSkinnedPass(ShadowMapTypeEnum ShadowMapTy
 
 	for (std::tuple<NiGeometry*, UInt32>& obj : GeometryList) {
 		NiGeometry* Geo = obj._Myfirst._Val;
-		if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
+		//if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			int StartRegister = 9;
@@ -201,6 +206,9 @@ void SkinnedGeoShadowRenderPass::RenderSkinnedPass(ShadowMapTypeEnum ShadowMapTy
 
 				if (!SkinInstance->IsPartitionEnabled(p)) continue;
 
+				UpdateConstants(Geo);
+				VertexShader->SetCT();
+				PixelShader->SetCT();
 				StartIndex = 0;
 				StartRegister = 9;
 				NiSkinPartition::Partition* Partition = &SkinPartition->Partitions[p];
@@ -219,16 +227,13 @@ void SkinnedGeoShadowRenderPass::RenderSkinnedPass(ShadowMapTypeEnum ShadowMapTy
 					RenderState->SetFVF(GeoData->FVF, false);
 				else
 					RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
-				UpdateConstants(Geo);
-				VertexShader->SetCT();
-				PixelShader->SetCT();
 				for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
 					PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
 					Device->DrawIndexedPrimitive(PrimitiveType, GeoData->BaseVertexIndex, 0, Partition->Vertices, StartIndex, PrimitiveCount);
 					StartIndex += PrimitiveCount + 2;
 				}
 			}
-		}
+		//}
 	}
 }
 
@@ -334,6 +339,7 @@ void SkinnedGeoShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowsExteriorEffect::ShadowStruct* Constants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 	Constants->Data.x = 1.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
 	Constants->Data.y = 0.0f; // Alpha control
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
 }
 
 
@@ -372,6 +378,7 @@ void SkinnedAlphaGeoShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowsExteriorEffect::ShadowStruct* ShadowConstants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 	ShadowConstants->Data.x = 1.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
 	ShadowConstants->Data.y = 0.0f; // Alpha control
+	TheRenderManager->CreateD3DMatrix(&TheShaderManager->ShaderConst.ShadowWorld, &Geo->m_worldTransform);
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
 	NiTexture* Texture = *((BSShaderPPLightingProperty*)ShaderProperty)->srcTextures[0];

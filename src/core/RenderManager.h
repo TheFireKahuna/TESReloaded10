@@ -10,7 +10,6 @@ public:
 	void				SetupSceneCamera();
 	void				CheckAndTakeScreenShot(IDirect3DSurface9* RenderTarget, bool HDR);
     float               GetObjectDistance(NiBound* Bound);
-	bool				IsNode(NiAVObject* node);
 	D3DXMATRIX			WorldViewProjMatrix;
 	D3DXMATRIX			ViewProjMatrix;
 	D3DXMATRIX			InvViewProjMatrix;

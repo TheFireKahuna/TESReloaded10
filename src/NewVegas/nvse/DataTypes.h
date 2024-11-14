@@ -52,6 +52,7 @@ struct NiVector3
 		y = rhs.y;
 		z = rhs.z;
 	}
+
 	__forceinline void operator=(const NiVector3& rhs)
 	{
 		_mm_storeu_si64(this, _mm_loadu_si64(&rhs));
@@ -107,6 +108,7 @@ struct NiVector3
 
 	inline float __vectorcall Length() const { return Length_V4(PS3()); }
 	NiVector3& Normalize();
+	float __vectorcall CrossProductF(const NiVector3& vB) { return x * vB.x + y * vB.y + z * vB.z; };
 	__m128 __vectorcall CrossProduct(const NiVector3& vB) const;
 	__m128 __vectorcall Interpolate(const NiVector3& vB, float t) const;
 	__m128 __vectorcall GetTranslatedPos(const NiTransform& transfrm) const;

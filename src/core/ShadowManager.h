@@ -20,9 +20,9 @@ public:
 	void					RenderShadowSpotlight(NiSpotLight** Lights, UInt32 LightIndex);
 	void					RenderShadowMaps();
     void                    BlurShadowMap(ShadowsExteriorEffect::ShadowMapSettings* ShadowMap);
-	void					RenderShadowExteriorMaps(D3DXVECTOR3* At);
-	TESObjectREFR*			GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms);
-	void					AccumulateGeometry(NiAVObject* accum);
+	void					RenderShadowExteriorMaps();
+	NiNode*					GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms);
+	void					AccumulateGeometry(NiAVObject* NiObject, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand);
 	void					SelectGeometry(NiAVObject* accum);
 	bool					IsOutAllFrustums(NiNode* node);
 	bool					ExcludeFromAllRadius(NiAVObject* node);

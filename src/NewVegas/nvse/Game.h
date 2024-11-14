@@ -4596,15 +4596,21 @@ public:
 
 	public:
 		explicit operator bool() const { return count != 0; }
-		void operator++()
+		Iterator operator++()
 		{
 			pCells++;
 			count--;
+			return *this;
 		}
 
-		TESObjectCELL* operator*() const { return *pCells; }
+		TESObjectCELL*& operator*() const { return *pCells; }
 		TESObjectCELL* operator->() const { return *pCells; }
 
+		const Iterator& operator=(const Iterator& rhs) {
+			*pCells = *rhs.pCells;
+			return *this;
+
+		}
 		Iterator(GridCellArray& source) : pCells(source.gridCells), count(source.gridSize* source.gridSize) {}
 	};
 
@@ -5777,8 +5783,6 @@ namespace Pointers {
         static const void* BSDismemberSkinInstance = (void*) 0x01069A84;
 		static const void* BSMultiBoundNode   = (void*)0x010C1D14;
 		static const void* NiParticleNode     = (void*)0x010BD44C;
-		static const void* NiBillBoardNode = (void*)0x0102BF44;
-		static const void* NiParticleSystem = (void*)0x010BD44C;
 
 	}
 	namespace Settings {

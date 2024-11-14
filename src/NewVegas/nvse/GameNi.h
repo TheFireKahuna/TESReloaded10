@@ -513,8 +513,8 @@ public:
 	TESObjectREFR* GetParentRef() const;
 	void AssignGeometryProps();
 
-	float GetDistance(NiPoint3* Point);
-	NiBound* GetWorldBound();
+	float		GetDistance(NiPoint3* Point);
+	NiBound*	GetWorldBound();
 	float		GetWorldBoundRadius();
 };
 static_assert(sizeof(NiAVObject) == 0x9C);
@@ -673,7 +673,7 @@ static_assert(sizeof(BSFaceGenNiNode) == 0xF0);
 
 class NiCamera : public NiAVObject {
 public:
-	D3DXMATRIX		worldToCam;	// 09C
+	D3DMATRIX		worldToCam;	// 09C
 	NiFrustum		Frustum;			// D4
 	float			MinNearPlaneDist;	// F8
 	float			MaxFarNearRatio;	// FC
@@ -819,6 +819,12 @@ public:
 	/*9C*/virtual bool		ContainsDataType(UInt32 dataType);
 	/*A0*/virtual void		CalculateNormals();
 
+	enum Consistency {
+		MUTABLE = 0x0000,
+		STATIC = 0x4000,
+		VOLATILE = 0x8000,
+		CONSISTENCY_MASK = 0xF000,
+	};
 	enum KeepFlag
 	{
 		eKeep_Vertices =	1,
@@ -845,8 +851,8 @@ public:
 	UInt16						dataFlags;		// 0C	NormalBinormalTangent
 	UInt16						dirtyFlags;		// 0E
 	NiBound						bounds;			// 10
-	NiVector3					*vertices;		// 20
-	NiVector3					*normals;		// 24
+	NiPoint3*					vertices;		// 20
+	NiPoint3*					normals;		// 24
 	NiColorAlpha				*vertexColors;	// 28
 	NiPoint2					*uvCoords;		// 2C
 	NiAdditionalGeometryData	*additionalData;// 30
@@ -1858,8 +1864,6 @@ public:
 	void							PackGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiD3DShaderDeclaration* ShaderDeclaration);
 	void							PackSkinnedGeometryBuffer(NiGeometryBufferData* GeoData, NiGeometryData* ModelData, NiSkinInstance* SkinInstance, NiSkinPartition::Partition* Partition, NiD3DShaderDeclaration* ShaderDeclaration);
 	void							CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransform* WorldTrasform);
-	void							AddGeometryToUnsharedGroup(NiGeometryData* data) {}
-	void							OriginalShadowPass() {}   //Stubbed
 
 	LPDIRECT3D9						ms_pkD3D9;
 	UInt32							unk284;

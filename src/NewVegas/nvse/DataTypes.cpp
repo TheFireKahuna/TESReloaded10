@@ -1492,7 +1492,7 @@ void NiMatrix33::GenerateRotationMatrixZXY(NiVector3* v, bool degrees) {
 }
 
 UInt32 NiBound::WhichSide(NiPlane* Plane) {
-	float Distance = Plane->Normal.DotProduct(Center) - Plane->Constant;
+	float Distance = Plane->Normal.CrossProductF(Center) - Plane->Constant;
 	UInt32 Result = NiPlane::kSide_None;
 
 	if (Distance <= -Radius) Result = NiPlane::kSide_Negative; else if (Distance >= Radius) Result = NiPlane::kSide_Positive;

@@ -24,21 +24,13 @@ void RenderManager::CreateD3DMatrix(D3DMATRIX* Matrix, NiTransform* Transform) {
 	Matrix->_44 = 1.0f;
 
 }
-bool RenderManager::IsNode(NiAVObject* node) {
-	void* VFT = *(void**)node;
-
-	return 	VFT == Pointers::VirtualTables::NiNode || VFT == Pointers::VirtualTables::BSFadeNode || VFT == Pointers::VirtualTables::BSFaceGenNiNode
-		|| VFT == Pointers::VirtualTables::BSTreeNode || VFT == Pointers::VirtualTables::BSMultiBoundNode
-		|| VFT == Pointers::VirtualTables::NiBillBoardNode;
-
-}
 
 void RenderManager::GetScreenSpaceBoundSize(NiPoint2* BoundSize, NiBound* Bound, float ZeroTolerance) {
 		
 	NiCamera* Camera = WorldSceneGraph->camera;
 	NiMatrix33* WorldRotate = &Camera->m_worldTransform.rotate;
 	NiVector3 BoundPos({ Bound->Center.x - Camera->m_worldTransform.translate.x, Bound->Center.y - Camera->m_worldTransform.translate.y, Bound->Center.z - Camera->m_worldTransform.translate.z });
-	float BoundViewDist = BoundPos.DotProduct(BoundPos);
+	float BoundViewDist = BoundPos.CrossProductF(BoundPos);
 	float Ratio = Bound->Radius;
 
 	if (BoundViewDist < ZeroTolerance) {
@@ -60,7 +52,7 @@ float RenderManager::GetObjectDistance(NiBound* Bound){
 	NiCamera* Camera = WorldSceneGraph->camera;
 	NiMatrix33* WorldRotate = &Camera->m_worldTransform.rotate;
 	NiVector3 BoundPos({ Bound->Center.x - Camera->m_worldTransform.translate.x, Bound->Center.y - Camera->m_worldTransform.translate.y, Bound->Center.z - Camera->m_worldTransform.translate.z });
-    return BoundPos.Length();
+	return sqrt(BoundPos.CrossProductF(BoundPos));
 }
 
 void RenderManager::UpdateSceneCameraData() {
@@ -152,9 +144,9 @@ void RenderManager::SetupSceneCamera() {
 		viewMatrix._32 = Up.z;
 		viewMatrix._33 = Forward.z;
 		viewMatrix._34 = 0.0f;
-		viewMatrix._41 = -Right.DotProduct(Loc);
-		viewMatrix._42 = -Up.DotProduct(Loc);
-		viewMatrix._43 = -Forward.DotProduct(Loc);
+		viewMatrix._41 = -Right.CrossProductF(Loc);
+		viewMatrix._42 = -Up.CrossProductF(Loc);
+		viewMatrix._43 = -Forward.CrossProductF(Loc);
 		viewMatrix._44 = 1.0f;
 
 		invViewMatrix._11 = Right.x;
