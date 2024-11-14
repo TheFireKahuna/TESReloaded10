@@ -23,6 +23,7 @@ public:
 		VertexShader = NULL;
 		PixelShader = NULL;
 	};
+	virtual bool AccumObject(NiGeometry* Geo, UInt32& visibility) { return true; };
 
 	ShaderRecordVertex* VertexShader;
 	ShaderRecordPixel* PixelShader;
@@ -45,6 +46,7 @@ public:
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
 	void RenderNormalPass(ShadowMapTypeEnum ShadowMapType);
+	bool AccumObject(NiGeometry* Geo, UInt32& visibility);
 };
 
 
@@ -59,6 +61,7 @@ public:
 	void RegisterConstants() {};
 	void UpdateConstants(NiGeometry* Geo) {};
 	void RenderInteriorPass(NiGeometry* Geo);
+	bool AccumObject(NiGeometry* Geo, UInt32& visibility) { return true; };
 };
 
 class AlphaShadowRenderPass : public RenderPass {
@@ -73,6 +76,7 @@ public:
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
 	void RenderAlphaPass(ShadowMapTypeEnum ShadowMapType);
+	bool AccumObject(NiGeometry* Geo, UInt32& visibility);
 };
 
 
@@ -88,6 +92,7 @@ public:
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
 	void RenderSkinnedPass(ShadowMapTypeEnum ShadowMapType);
+	bool AccumObject(NiGeometry* Geo, UInt32& visibility);
 };
 
 
@@ -103,6 +108,7 @@ public:
 	void RegisterConstants();
 	void UpdateConstants(NiGeometry* Geo);
 	void RenderSkinnedAlphaPass(ShadowMapTypeEnum ShadowMapType);
+	bool AccumObject(NiGeometry* Geo, UInt32& visibility);
 };
 
 
@@ -121,4 +127,5 @@ public:
 	void RegisterConstants(); 
 	void UpdateConstants(NiGeometry* Geo);
 	void RenderSpeedTreePass(ShadowMapTypeEnum ShadowMapType);
+	bool AccumObject(NiGeometry* Geo, UInt32& visibility);
 };

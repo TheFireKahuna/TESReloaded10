@@ -19,7 +19,10 @@ void ShadowRenderPass::RenderNormalPass(ShadowMapTypeEnum ShadowMapType) {
 
 	for (std::tuple<NiGeometry*, UInt32>& obj : GeometryList) {
 		NiGeometry* Geo = obj._Myfirst._Val;
-		if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
+		//if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
+			UpdateConstants(Geo);
+			VertexShader->SetCT();
+			PixelShader->SetCT();
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			NiGeometryData* ModelData = Geo->geomData;
@@ -36,15 +39,12 @@ void ShadowRenderPass::RenderNormalPass(ShadowMapTypeEnum ShadowMapType) {
 				RenderState->SetFVF(GeoData->FVF, false);
 			else
 				RenderState->SetVertexDeclaration(GeoData->VertexDeclaration, false);
-			UpdateConstants(Geo);
-			VertexShader->SetCT();
-			PixelShader->SetCT();
 			for (UInt32 i = 0; i < GeoData->NumArrays; i++) {
 				PrimitiveCount = GeoData->ArrayLengths ? GeoData->ArrayLengths[i] - 2 : GeoData->TriCount;
 				Device->DrawIndexedPrimitive(GeoData->PrimitiveType, GeoData->BaseVertexIndex, 0, GeoData->VertCount, StartIndex, PrimitiveCount);
 				StartIndex += PrimitiveCount + 2;
 			}
-		}
+		//}
 	}
 }
 
@@ -254,6 +254,17 @@ void ShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 }
 
 
+bool ShadowRenderPass::AccumObject(NiGeometry* Geo, UInt32& visibility) {
+	if (!Geo->geomData || !Geo->geomData->bufferData) return false; // discard objects without buffer data
+
+	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
+	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
+
+	GeometryList.push_back(std::make_tuple(Geo, visibility));
+	return true;
+}
+
+
 
 AlphaShadowRenderPass::AlphaShadowRenderPass() {
 	PixelShader = TheShadowManager->ShadowMapPixel;
@@ -292,6 +303,21 @@ void AlphaShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 }
 
 
+bool AlphaShadowRenderPass::AccumObject(NiGeometry* Geo, UInt32& visibility) {
+	if (!Geo->geomData || !Geo->geomData->bufferData) return false; // discard objects without buffer data
+
+	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
+	NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
+
+	if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
+	if (!AProp) return false;
+	if (!(AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK) && !(AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK)) return false;
+
+	GeometryList.push_back(std::make_tuple(Geo, visibility));
+	return true;
+}
+
+
 SkinnedGeoShadowRenderPass::SkinnedGeoShadowRenderPass() {
 	PixelShader = TheShadowManager->ShadowMapPixel;
 	VertexShader = TheShadowManager->ShadowMapVertex;
@@ -308,6 +334,25 @@ void SkinnedGeoShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	ShadowsExteriorEffect::ShadowStruct* Constants = &TheShaderManager->Effects.ShadowsExteriors->Constants;
 	Constants->Data.x = 1.0f; // Type of geo (0 normal, 1 actors (skinned), 2 speedtree leaves)
 	Constants->Data.y = 0.0f; // Alpha control
+}
+
+
+bool SkinnedGeoShadowRenderPass::AccumObject(NiGeometry* Geo, UInt32& visibility) {
+	// check data for rigged geometry
+	if (Geo->skinInstance &&
+		Geo->skinInstance->SkinPartition &&
+		Geo->skinInstance->SkinPartition->Partitions) {
+
+		// only accum if valid data preset
+		if (Geo->skinInstance->SkinPartition->Partitions[0].bufferData) {
+			GeometryList.push_back(std::make_tuple(Geo, visibility));
+		}
+
+		// we return true in any case because we still found skinned geo either way
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -345,6 +390,31 @@ void SkinnedAlphaGeoShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 		RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
 		RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
 	}
+}
+
+
+bool SkinnedAlphaGeoShadowRenderPass::AccumObject(NiGeometry* Geo, UInt32& visibility) {
+	// check data for rigged geometry
+	if (Geo->skinInstance &&
+		Geo->skinInstance->SkinPartition &&
+		Geo->skinInstance->SkinPartition->Partitions) {
+
+		// only accum if valid data preset
+		if (Geo->skinInstance->SkinPartition->Partitions[0].bufferData) {
+			BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
+			NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
+
+			if (!ShaderProperty || !ShaderProperty->IsLightingProperty()) return false;
+			if (!AProp) return false;
+			if (!(AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK) && !(AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK)) return false;
+			GeometryList.push_back(std::make_tuple(Geo, visibility));
+		}
+
+		// we return true in any case because we still found skinned geo either way
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -403,6 +473,16 @@ void SpeedTreeShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 	RenderState->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT, false);
 	RenderState->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT, false);
 	RenderState->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_POINT, false);
+}
+
+
+bool SpeedTreeShadowRenderPass::AccumObject(NiGeometry* Geo, UInt32& visibility) {
+
+	BSShaderProperty* shaderProp = static_cast<BSShaderProperty*>(Geo->GetProperty(NiProperty::kType_Shade));
+	if (shaderProp->shaderType != ShaderDefinitionEnum::kShaderDefinition_SpeedTreeLeafShader) return false;
+
+	GeometryList.push_back(std::make_tuple(Geo, visibility));
+	return true;
 }
 
 

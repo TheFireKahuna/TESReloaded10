@@ -23,7 +23,7 @@ public:
 	void					RenderShadowExteriorMaps(D3DXVECTOR3* At);
 	TESObjectREFR*			GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::FormsStruct* Forms);
 	void					AccumulateGeometry(NiAVObject* accum);
-	void					SelectGeometry(NiGeometry* geo);
+	void					SelectGeometry(NiAVObject* accum);
 	bool					IsOutAllFrustums(NiNode* node);
 	bool					ExcludeFromAllRadius(NiAVObject* node);
 	void					RenderInterior(NiAVObject* Object, float MinRadius);

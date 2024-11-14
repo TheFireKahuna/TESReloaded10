@@ -108,7 +108,7 @@ void FlashlightEffect::UpdateConstants() {
 		for (UINT32 i = 0; i < PlayerNode->m_children.capacity; i++) {
 			NiAVObject* childNode = PlayerNode->m_children.data[i];
 			if (childNode) {
-				if (childNode->GetStreamableRTTI() == (void*)0x11F4A98) {
+				if (childNode->GetType() == (void*)0x11F4A98) {
 					childNode->m_flags |= childNode->APP_CULLED;
 				}
 			}

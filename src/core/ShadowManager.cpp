@@ -25,6 +25,14 @@ void ShadowManager::Initialize() {
     TheShadowManager->ShadowMapBlurVertex = (ShaderRecordVertex*) ShaderRecord::LoadShader("ShadowMapBlur.vso", "Shadows\\");
     TheShadowManager->ShadowMapBlurPixel = (ShaderRecordPixel*) ShaderRecord::LoadShader("ShadowMapBlur.pso", "Shadows\\");
 
+	// Make sure samplers are not reset on SetCT as that causes errors.
+	TheShadowManager->ShadowMapVertex->ClearSamplers = false;
+	TheShadowManager->ShadowMapPixel->ClearSamplers = false;
+	TheShadowManager->ShadowCubeMapVertex->ClearSamplers = false;
+	TheShadowManager->ShadowCubeMapPixel->ClearSamplers = false;
+	TheShadowManager->ShadowMapBlurVertex->ClearSamplers = false;
+	TheShadowManager->ShadowMapBlurPixel->ClearSamplers = false;
+
 	TheShadowManager->ShadowShadersLoaded = true;
     if (TheShadowManager->ShadowMapVertex == nullptr || TheShadowManager->ShadowMapPixel == nullptr  || TheShadowManager->ShadowMapBlurVertex  == nullptr
         || TheShadowManager->ShadowCubeMapVertex == nullptr || TheShadowManager->ShadowCubeMapPixel == nullptr || TheShadowManager->ShadowMapBlurPixel  == nullptr ){
@@ -223,76 +231,30 @@ TESObjectREFR* ShadowManager::GetRef(TESObjectREFR* Ref, ShadowsExteriorEffect::
 	TESObjectREFR* R = NULL;
 
 	if (Ref && Ref->GetNode()) {
-		TESForm* Form = Ref->baseForm;
-		ExtraRefractionProperty* RefractionExtraProperty = GetExtraType(&Ref->extraDataList, ExtraRefractionProperty);
-		float Refraction = RefractionExtraProperty ? (1 - RefractionExtraProperty->refractionAmount) : 0.0f;
-		if (Refraction > 0.5) return NULL;
-
-		if (!(Ref->flags & TESForm::FormFlags::kFormFlags_NotCastShadows)) {
-			UInt8 TypeID = Form->formType;
-			if ((TypeID == TESForm::FormType::kFormType_Activator && Forms->Activators) ||
-				(TypeID == TESForm::FormType::kFormType_Apparatus && Forms->Apparatus) ||
-				(TypeID == TESForm::FormType::kFormType_Book && Forms->Books) ||
-				(TypeID == TESForm::FormType::kFormType_Container && Forms->Containers) ||
-				(TypeID == TESForm::FormType::kFormType_Door && Forms->Doors) ||
-				(TypeID == TESForm::FormType::kFormType_Misc && Forms->Misc) ||
-				(TypeID >= TESForm::FormType::kFormType_Stat && TypeID <= TESForm::FormType::kFormType_MoveableStatic && Forms->Statics) ||
-				(TypeID == TESForm::FormType::kFormType_Tree && Forms->Trees) ||
-				(TypeID == TESForm::FormType::kFormType_Furniture && Forms->Furniture) ||
-				(TypeID == TESForm::FormType::kFormType_Land && Forms->Terrain) ||
-				(TypeID >= TESForm::FormType::kFormType_NPC && TypeID <= TESForm::FormType::kFormType_LeveledCreature && Forms->Actors))
-				R = Ref;
-		}
+		R = Ref;
 	}
 	return R;
 
 }
 
 
-void ShadowManager::SelectGeometry(NiGeometry* Geo) {
+void ShadowManager::SelectGeometry(NiAVObject* accum) {
 
-	if (!Geo->shader) return;
+	NiGeometry* geo = static_cast<NiGeometry*>(accum);
+	if (!geo->shader) return; // skip Geometry without a shader
+
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
 	UInt32 visibility = ShadowMapVisibility::None;
-	if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapNear].ShadowMapFrustum, Geo)) visibility = ShadowMapVisibility::Near;
-	else if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapMiddle].ShadowMapFrustum, Geo)) visibility = ShadowMapVisibility::Middle;
-	else if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapFar].ShadowMapFrustum, Geo)) visibility = ShadowMapVisibility::Far;
-	else if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapLod].ShadowMapFrustum, Geo)) visibility = ShadowMapVisibility::Lod;
-	if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapOrtho].ShadowMapFrustum, Geo)) visibility |= ShadowMapVisibility::Ortho;
-	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
-	bool haveLightingProperty = ShaderProperty && ShaderProperty->IsLightingProperty();
+	if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapNear].ShadowMapFrustum, geo)) visibility = ShadowMapVisibility::Near;
+	else if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapMiddle].ShadowMapFrustum, geo)) visibility = ShadowMapVisibility::Middle;
+	else if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapFar].ShadowMapFrustum, geo)) visibility = ShadowMapVisibility::Far;
+	else if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapLod].ShadowMapFrustum, geo)) visibility = ShadowMapVisibility::Lod;
+	if (TheCameraManager->InFrustum(&Shadows->ShadowMaps[MapOrtho].ShadowMapFrustum, geo)) visibility |= ShadowMapVisibility::Ortho;
 
-	//if (haveLightingProperty) { /*Leaves don't have a shade property or is not a LightingProperty*/
-	//	BSShaderPPLightingProperty* lightProperty = (BSShaderPPLightingProperty*)ShaderProperty;
-
-		/*Oblivion: Only seen 0.0 or 0.208. IS the structure actually corrrect?*/
-		//if (lightProperty->IsRefractive()) return; //Configure,also check for actors, they are skinned
-	//}
-
-	bool alphaObject = false;
-	if (AlphaEnabled) {
-		NiAlphaProperty* AProp = (NiAlphaProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Alpha);
-		if (AProp->flags & NiAlphaProperty::AlphaFlags::ALPHA_BLEND_MASK || AProp->flags & NiAlphaProperty::AlphaFlags::TEST_ENABLE_MASK) alphaObject = true;
-	}
-	//	if (alphaObject && !haveLightingProperty) return;
-	if (Geo->skinInstance && !Geo->geomData->bufferData && Geo->skinInstance->SkinPartition->Partitions[0].bufferData) {
-		if (alphaObject) TheShadowManager->skinnedAlphaPass->GeometryList.push_back(std::make_tuple(Geo, visibility));
-		else TheShadowManager->skinnedGeoPass->GeometryList.push_back(std::make_tuple(Geo, visibility));
-		return;
-	}
-	else if (Geo->skinInstance && !Geo->geomData->bufferData) {
-		//		Logger::Log("Skinned but no partition: %s   %s", Geo->m_pcName, Geo->m_parent ? Geo->m_parent->m_pcName : "<No parent>");
-		return;
-	}
-	//if(!Geo->geomData->BuffData) TheRenderManager->AddGeometryToUnsharedGroup(Geo->geomData);  //TODO Oblivion only for now. Find new vegas?
-	if (Geo->geomData->bufferData) {
-		if (Geo->m_parent->m_blockName && !memcmp(Geo->m_parent->m_blockName, "Leaves", 6)) TheShadowManager->speedTreePass->GeometryList.push_back(std::make_tuple(Geo, visibility));
-		else if (alphaObject) TheShadowManager->alphaPass->GeometryList.push_back(std::make_tuple(Geo, visibility));
-		else TheShadowManager->geometryPass->GeometryList.push_back(std::make_tuple(Geo, visibility));
-	}
-	else {
-		//	Logger::Log("%s   %s", Geo->m_blockName, Geo->m_parent ? Geo->m_parent->m_pcName : "<No parent>");
-	}
+	if (skinnedGeoPass->AccumObject(geo, visibility)) {}
+	else if (speedTreePass->AccumObject(geo, visibility)) {}
+	else if (AlphaEnabled && alphaPass->AccumObject(geo, visibility)) {}
+	else geometryPass->AccumObject(geo, visibility);
 }
 
 void ShadowManager::AccumulateGeometry(NiAVObject* accum) {
@@ -309,7 +271,7 @@ void ShadowManager::AccumulateGeometry(NiAVObject* accum) {
 				}
 			}
 			else if (VFT == Pointers::VirtualTables::NiTriShape || VFT == Pointers::VirtualTables::NiTriStrips) {
-				SelectGeometry(static_cast<NiGeometry*>(accum));
+				SelectGeometry(accum);
 
 			}
 			//else if (VFT != Pointers::VirtualTables::NiPointLight /*TODO attenuaton map?Test for the affecedNode list*/ && VFT != Pointers::VirtualTables::NiParticleSystem) {
@@ -324,6 +286,7 @@ void ShadowManager::RenderShadowExteriorMaps(D3DXVECTOR3* At) {
 	UInt32 CellArraySize = CellArray->gridSize * CellArray->gridSize;
 
 	ShadowsExteriorEffect* Shadows = TheShaderManager->Effects.ShadowsExteriors;
+	ShadowsExteriorEffect::ExteriorsStruct* ShadowsExteriors = &Shadows->Settings.Exteriors;
 
 	D3DXVECTOR4 OrthoDir = D3DXVECTOR4(0.05f, 0.05f, 1.0f, 0.0f);
 	D3DXVECTOR4* SunDir = &TheShaderManager->ShaderConst.SunDir;
@@ -344,41 +307,60 @@ void ShadowManager::RenderShadowExteriorMaps(D3DXVECTOR3* At) {
 	TheShadowManager->skinnedGeoPass->GeometryList.clear();
 	TheShadowManager->skinnedAlphaPass->GeometryList.clear();
 
-	for (UInt32 i = 0; i < CellArraySize; i++) {
-		if (TESObjectCELL* Cell = CellArray->GetCell(i)) {
-			std::vector<NiNode*> TerrainNodes = Cell->GetTerrainNodes();
-			for (NiNode* node : TerrainNodes) {
-				AccumulateGeometry(node);
-			}
-			//			if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
-			/*for (UInt32 i = 2; i < Cell->GetNode()->m_children.numObjs; i++) {
-				//For NewVegas: 0 Actor, 2 Land, 3 Static, 4 Dynamic,5 Multibound, 1 Marker
-				//For Oblivion: 0 Actor, 2-5 Static Terrain is in subnode 0 of every 2-5 node. Node 0 seems to be unstable, some actors aren't rendered sometimes (not present in the node?)
-				NiNode* TerrainNode = (NiNode*)Cell->GetNode()->m_children.data[i];
-				AccumulateGeometry(TerrainNode);
-			} */
-			TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
-			while (Entry) {
-				if (TESObjectREFR* Ref = GetRef(Entry->data, &Shadows->ShadowMaps[MapNear].Forms)) {
-					NiNode* RefNode = Ref->GetNode();
-					AccumulateGeometry(RefNode);
+	if (Player->GetWorldSpace()) {
+		for (UInt32 i = 0; i < CellArraySize; i++) {
+			if (TESObjectCELL* Cell = CellArray->GetCell(i)) {
+				std::vector<NiNode*> TerrainNodes = Cell->GetTerrainNodes();
+				if (!Cell || Cell->IsInterior())
+					continue;
+				for (NiNode* node : TerrainNodes) {
+					AccumulateGeometry(node);
 				}
-				Entry = Entry->next;
+				//			if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
+				/*for (UInt32 i = 2; i < Cell->GetNode()->m_children.numObjs; i++) {
+					//For NewVegas: 0 Actor, 2 Land, 3 Static, 4 Dynamic,5 Multibound, 1 Marker
+					//For Oblivion: 0 Actor, 2-5 Static Terrain is in subnode 0 of every 2-5 node. Node 0 seems to be unstable, some actors aren't rendered sometimes (not present in the node?)
+					NiNode* TerrainNode = (NiNode*)Cell->GetNode()->m_children.data[i];
+					AccumulateGeometry(TerrainNode);
+				} */
+				TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
+				while (Entry) {
+					if (TESObjectREFR* Ref = GetRef(Entry->data, &Shadows->ShadowMaps[MapNear].Forms)) {
+						NiNode* RefNode = Ref->GetNode();
+						AccumulateGeometry(RefNode);
+					}
+					Entry = Entry->next;
+				}
 			}
 		}
 	}
+	else if (Player->parentCell && !Player->parentCell->IsInterior()) {
+		std::vector<NiNode*> TerrainNodes = Player->parentCell->GetTerrainNodes();
+		for (NiNode* node : TerrainNodes) {
+			AccumulateGeometry(node);
+		}
+		//			if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
+		/*for (UInt32 i = 2; i < Cell->GetNode()->m_children.numObjs; i++) {
+			//For NewVegas: 0 Actor, 2 Land, 3 Static, 4 Dynamic,5 Multibound, 1 Marker
+			//For Oblivion: 0 Actor, 2-5 Static Terrain is in subnode 0 of every 2-5 node. Node 0 seems to be unstable, some actors aren't rendered sometimes (not present in the node?)
+			NiNode* TerrainNode = (NiNode*)Cell->GetNode()->m_children.data[i];
+			AccumulateGeometry(TerrainNode);
+		} */
+		TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
+		while (Entry) {
+			if (TESObjectREFR* Ref = GetRef(Entry->data, &Shadows->ShadowMaps[MapNear].Forms)) {
+				NiNode* RefNode = Ref->GetNode();
+				AccumulateGeometry(RefNode);
+			}
+			Entry = Entry->next;
+		}
+	}
 
-	RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
-	RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
-	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
-	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
+	IDirect3DDevice9* Device = TheRenderManager->device;
 
-	for (UInt32 i = ShadowMapTypeEnum::MapNear; i <= ShadowMapTypeEnum::MapOrtho; i++) {
+	for (int i = MapNear; i <= MapOrtho; i++) {
 		ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
 		if (i == MapOrtho) {
-			BillboardRight = { ViewOrtho._11, ViewOrtho._21, ViewOrtho._31, 0.0f };
-			BillboardUp = { ViewOrtho._12, ViewOrtho._22, ViewOrtho._32, 0.0f };
-
 			ShadowData->z = 1; // identify ortho map in shader constant
 			Shadows->Constants.ShadowViewProj = Shadows->GetOrthoViewProj(ViewOrtho);
 			ShadowMap->ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * ViewOrtho;
@@ -386,15 +368,15 @@ void ShadowManager::RenderShadowExteriorMaps(D3DXVECTOR3* At) {
 			OrthoData->x = Shadows->ShadowMaps[MapOrtho].ShadowMapRadius * 2;
 		}
 		else {
-			BillboardRight = { ViewSun._11, ViewSun._21, ViewSun._31, 0.0f };
-			BillboardUp = { ViewSun._12, ViewSun._22, ViewSun._32, 0.0f };
-
 			ShadowData->z = 0; // set shader constant to identify other shadow maps
 			Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, ViewSun);
 			ShadowMap->ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * ViewSun;
 			TheCameraManager->SetFrustum(&ShadowMap->ShadowMapFrustum, &ViewSun);
 		}
-		IDirect3DDevice9* Device = TheRenderManager->device;
+		RenderState->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_ZWRITEENABLE, D3DZB_TRUE, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
+		RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
 
 		Device->SetRenderTarget(0, ShadowMap->ShadowMapSurface);
 		Device->SetDepthStencilSurface(ShadowMap->ShadowMapDepthSurface);
@@ -412,6 +394,7 @@ void ShadowManager::RenderShadowExteriorMaps(D3DXVECTOR3* At) {
 		//}
 
 		Device->EndScene();
+		if (ShadowsExteriors->BlurShadowMaps) BlurShadowMap(ShadowMap);
 	}
 }
 
@@ -506,15 +489,10 @@ void ShadowManager::RenderShadowMaps() {
 		interiorPass->VertexShader = ShadowCubeMapVertex;
 		interiorPass->PixelShader = ShadowCubeMapPixel;
 
+		D3DXMATRIX View = GetViewMatrix(&At, SunDir);
 		auto shadowMapTimer = TimeLogger();
 		// render ortho map
 		RenderShadowExteriorMaps(&At);
-		if (ShadowsExteriors->BlurShadowMaps) {
-			for (int i = MapNear; i < MapOrtho; i++) {
-				ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
-				BlurShadowMap(ShadowMap);
-			}
-		}
 
 		std::string message = "ShadowManager::RenderShadowMap";
 		shadowMapTimer.LogTime(message.c_str());
