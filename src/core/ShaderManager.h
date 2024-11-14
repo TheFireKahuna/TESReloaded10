@@ -13,7 +13,7 @@ struct ShaderConstants {
 		D3DXMATRIX		OcclusionWorldViewProj;
 	};
 
-	D3DXMATRIXA16			ShadowWorld;
+	D3DXMATRIX				ShadowWorld;
 	D3DXVECTOR4				ReciprocalResolution;
 	D3DXVECTOR4				SunDir;
 	D3DXVECTOR4				SunPosition;

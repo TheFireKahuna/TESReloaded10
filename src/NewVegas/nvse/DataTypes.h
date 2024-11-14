@@ -311,6 +311,24 @@ struct NiMatrix33
 		data[0][3] = rhs.data[0][3]; data[0][4] = rhs.data[0][4]; data[0][5] = rhs.data[0][5];
 		data[0][6] = rhs.data[0][6]; data[0][7] = rhs.data[0][7]; data[0][8] = rhs.data[0][8];
 	}
+	__forceinline NiMatrix33(NiMatrix33& rhs)
+	{
+		data[0][0] = rhs.data[0][0]; data[0][1] = rhs.data[0][1]; data[0][2] = rhs.data[0][2];
+		data[0][3] = rhs.data[0][3]; data[0][4] = rhs.data[0][4]; data[0][5] = rhs.data[0][5];
+		data[0][6] = rhs.data[0][6]; data[0][7] = rhs.data[0][7]; data[0][8] = rhs.data[0][8];
+	}
+	__forceinline NiMatrix33(const NiMatrix33&& rhs)
+	{
+		data[0][0] = rhs.data[0][0]; data[0][1] = rhs.data[0][1]; data[0][2] = rhs.data[0][2];
+		data[0][3] = rhs.data[0][3]; data[0][4] = rhs.data[0][4]; data[0][5] = rhs.data[0][5];
+		data[0][6] = rhs.data[0][6]; data[0][7] = rhs.data[0][7]; data[0][8] = rhs.data[0][8];
+	}
+	__forceinline NiMatrix33(NiMatrix33* rhs)
+	{
+		data[0][0] = rhs->data[0][0]; data[0][1] = rhs->data[0][1]; data[0][2] = rhs->data[0][2];
+		data[0][3] = rhs->data[0][3]; data[0][4] = rhs->data[0][4]; data[0][5] = rhs->data[0][5];
+		data[0][6] = rhs->data[0][6]; data[0][7] = rhs->data[0][7]; data[0][8] = rhs->data[0][8];
+	}
 	__forceinline void operator=(const NiMatrix33& rhs)
 	{
 		_mm_storeu_ps(&data[0][0], _mm_loadu_ps(&rhs.data[0][0]));
@@ -335,6 +353,129 @@ struct NiMatrix33
 				return false;
 		return true;
 	}
+	NiMatrix33 operator * (const NiMatrix33 mat) const {
+		NiMatrix33 prd;
+
+		prd.data[0][0] =
+			data[0][0] * mat.data[0][0] +
+			data[0][1] * mat.data[1][0] +
+			data[0][2] * mat.data[2][0];
+		prd.data[1][0] =
+			data[1][0] * mat.data[0][0] +
+			data[1][1] * mat.data[1][0] +
+			data[1][2] * mat.data[2][0];
+		prd.data[2][0] =
+			data[2][0] * mat.data[0][0] +
+			data[2][1] * mat.data[1][0] +
+			data[2][2] * mat.data[2][0];
+		prd.data[0][1] =
+			data[0][0] * mat.data[0][1] +
+			data[0][1] * mat.data[1][1] +
+			data[0][2] * mat.data[2][1];
+		prd.data[1][1] =
+			data[1][0] * mat.data[0][1] +
+			data[1][1] * mat.data[1][1] +
+			data[1][2] * mat.data[2][1];
+		prd.data[2][1] =
+			data[2][0] * mat.data[0][1] +
+			data[2][1] * mat.data[1][1] +
+			data[2][2] * mat.data[2][1];
+		prd.data[0][2] =
+			data[0][0] * mat.data[0][2] +
+			data[0][1] * mat.data[1][2] +
+			data[0][2] * mat.data[2][2];
+		prd.data[1][2] =
+			data[1][0] * mat.data[0][2] +
+			data[1][1] * mat.data[1][2] +
+			data[1][2] * mat.data[2][2];
+		prd.data[2][2] =
+			data[2][0] * mat.data[0][2] +
+			data[2][1] * mat.data[1][2] +
+			data[2][2] * mat.data[2][2];
+		return prd;
+	}
+	NiMatrix33 operator * (const NiMatrix33&& mat) const {
+		NiMatrix33 prd;
+
+		prd.data[0][0] =
+			data[0][0] * mat.data[0][0] +
+			data[0][1] * mat.data[1][0] +
+			data[0][2] * mat.data[2][0];
+		prd.data[1][0] =
+			data[1][0] * mat.data[0][0] +
+			data[1][1] * mat.data[1][0] +
+			data[1][2] * mat.data[2][0];
+		prd.data[2][0] =
+			data[2][0] * mat.data[0][0] +
+			data[2][1] * mat.data[1][0] +
+			data[2][2] * mat.data[2][0];
+		prd.data[0][1] =
+			data[0][0] * mat.data[0][1] +
+			data[0][1] * mat.data[1][1] +
+			data[0][2] * mat.data[2][1];
+		prd.data[1][1] =
+			data[1][0] * mat.data[0][1] +
+			data[1][1] * mat.data[1][1] +
+			data[1][2] * mat.data[2][1];
+		prd.data[2][1] =
+			data[2][0] * mat.data[0][1] +
+			data[2][1] * mat.data[1][1] +
+			data[2][2] * mat.data[2][1];
+		prd.data[0][2] =
+			data[0][0] * mat.data[0][2] +
+			data[0][1] * mat.data[1][2] +
+			data[0][2] * mat.data[2][2];
+		prd.data[1][2] =
+			data[1][0] * mat.data[0][2] +
+			data[1][1] * mat.data[1][2] +
+			data[1][2] * mat.data[2][2];
+		prd.data[2][2] =
+			data[2][0] * mat.data[0][2] +
+			data[2][1] * mat.data[1][2] +
+			data[2][2] * mat.data[2][2];
+		return prd;
+	}
+	NiMatrix33 operator * (NiMatrix33* mat) const {
+		NiMatrix33 prd;
+
+		prd.data[0][0] =
+			data[0][0] * mat->data[0][0] +
+			data[0][1] * mat->data[1][0] +
+			data[0][2] * mat->data[2][0];
+		prd.data[1][0] =
+			data[1][0] * mat->data[0][0] +
+			data[1][1] * mat->data[1][0] +
+			data[1][2] * mat->data[2][0];
+		prd.data[2][0] =
+			data[2][0] * mat->data[0][0] +
+			data[2][1] * mat->data[1][0] +
+			data[2][2] * mat->data[2][0];
+		prd.data[0][1] =
+			data[0][0] * mat->data[0][1] +
+			data[0][1] * mat->data[1][1] +
+			data[0][2] * mat->data[2][1];
+		prd.data[1][1] =
+			data[1][0] * mat->data[0][1] +
+			data[1][1] * mat->data[1][1] +
+			data[1][2] * mat->data[2][1];
+		prd.data[2][1] =
+			data[2][0] * mat->data[0][1] +
+			data[2][1] * mat->data[1][1] +
+			data[2][2] * mat->data[2][1];
+		prd.data[0][2] =
+			data[0][0] * mat->data[0][2] +
+			data[0][1] * mat->data[1][2] +
+			data[0][2] * mat->data[2][2];
+		prd.data[1][2] =
+			data[1][0] * mat->data[0][2] +
+			data[1][1] * mat->data[1][2] +
+			data[1][2] * mat->data[2][2];
+		prd.data[2][2] =
+			data[2][0] * mat->data[0][2] +
+			data[2][1] * mat->data[1][2] +
+			data[2][2] * mat->data[2][2];
+		return prd;
+	}
 
 	__m128 __vectorcall ToEulerPRY() const;
 	__m128 __vectorcall ToEulerPRYInv() const;
@@ -356,8 +497,6 @@ struct NiMatrix33
 	NiMatrix33& __fastcall Transpose(NiMatrix33& out);
 
 	void GenerateRotationMatrixZXY(NiVector3* v, bool degrees);
-
-	void Dump() const;
 };
 
 

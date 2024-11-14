@@ -21,8 +21,8 @@ void ShadowRenderPass::RenderNormalPass(ShadowMapTypeEnum ShadowMapType) {
 		NiGeometry* Geo = obj._Myfirst._Val;
 		//if (IsVisible(ShadowMapType, obj._Get_rest()._Myfirst._Val)) {
 			UpdateConstants(Geo);
-			VertexShader->SetCT();
 			PixelShader->SetCT();
+			VertexShader->SetCT();
 			int StartIndex = 0;
 			int PrimitiveCount = 0;
 			NiGeometryData* ModelData = Geo->geomData;

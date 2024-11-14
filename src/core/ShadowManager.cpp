@@ -153,7 +153,6 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 		}
 		At += CameraDirection;
 		D3DXMatrixLookAtRH(&View, &Eye, &At, &Up);
-		TList<TESObjectREFR>::Entry* Entry = &Player->parentCell->objectList.First;
 
 		for (TESObjectREFR*& iter : Player->parentCell->objectList) {
 			NiNode* RefNode = GetRef(iter, &Settings->Forms);
@@ -378,15 +377,23 @@ void ShadowManager::RenderShadowExteriorMaps() {
 	TheShadowManager->skinnedGeoPass->GeometryList.clear();
 	TheShadowManager->skinnedAlphaPass->GeometryList.clear();
 
+	D3DXMATRIX* ViewProj;
+
 	for (UInt32 i = ShadowMapTypeEnum::MapNear; i < ShadowMapTypeEnum::MapOrtho; i++) {
-		D3DMATRIX ViewProj = Shadows->GetCascadeViewProj(&Shadows->ShadowMaps[i],ViewSun);
-		Shadows->ShadowMaps[i].ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * ViewProj;
-		TheCameraManager->SetFrustum(&Shadows->ShadowMaps[i].ShadowMapFrustum, &ViewProj);
+		ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
+		Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(&Shadows->ShadowMaps[i],ViewSun);
+		ViewProj = &Shadows->Constants.ShadowViewProj;
+
+		ShadowMap->ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * (*ViewProj);
+		TheCameraManager->SetFrustum(&ShadowMap->ShadowMapFrustum, ViewProj);
 	}
-	D3DMATRIX ViewProj = Shadows->GetOrthoViewProj(ViewOrtho);
-	Shadows->ShadowMaps[MapOrtho].ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * ViewProj;
-	TheCameraManager->SetFrustum(&Shadows->ShadowMaps[MapOrtho].ShadowMapFrustum, &ViewProj);
-	OrthoData->x = Shadows->ShadowMaps[MapOrtho].ShadowMapRadius * 2;
+	ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[MapOrtho];
+	Shadows->Constants.ShadowViewProj = Shadows->GetOrthoViewProj(ViewOrtho);
+	ViewProj = &Shadows->Constants.ShadowViewProj;
+
+	ShadowMap->ShadowCameraToLight = TheRenderManager->InvViewProjMatrix * (*ViewProj);
+	TheCameraManager->SetFrustum(&ShadowMap->ShadowMapFrustum, ViewProj);
+	OrthoData->x = ShadowMap->ShadowMapRadius * 2;
 
 	for (UInt32 i = 0; i < CellArraySize; i++) {
 		TESObjectCELL* Cell = CellArray->GetCell(i);
@@ -412,8 +419,8 @@ void ShadowManager::RenderShadowExteriorMaps() {
 
 	IDirect3DDevice9* Device = TheRenderManager->device;
 
-	for (int i = MapNear; i <= MapOrtho; i++) {
-		ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[i];
+	for (int i = MapNear; i < MapOrtho; i++) {
+		ShadowMap = &Shadows->ShadowMaps[i];
 		if (i == MapOrtho) {
 			ShadowData->z = 1; // identify ortho map in shader constant
 			Shadows->Constants.ShadowViewProj = Shadows->GetOrthoViewProj(ViewOrtho);
@@ -427,9 +434,11 @@ void ShadowManager::RenderShadowExteriorMaps() {
 		RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
 		RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
 
+		D3DVIEWPORT9* ShadowViewport = &ShadowMap->ShadowMapViewPort;
+
 		Device->SetRenderTarget(0, ShadowMap->ShadowMapSurface);
 		Device->SetDepthStencilSurface(ShadowMap->ShadowMapDepthSurface);
-		Device->SetViewport(&ShadowMap->ShadowMapViewPort);
+		Device->SetViewport(ShadowViewport);
 
 		Device->Clear(0L, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f), 1.0f, 0L);
 
@@ -556,33 +565,6 @@ void ShadowManager::RenderShadowMaps() {
 	skinnedAlphaPass->PixelShader = ShadowCubeMapPixel;
 	speedTreePass->VertexShader = ShadowCubeMapVertex;
 	speedTreePass->PixelShader = ShadowCubeMapPixel;
-
-	auto shadowMapTimer = TimeLogger();
-	if ((isExterior && usePointLights) || (!isExterior && InteriorEnabled)) {
-		// render the cubemaps for each light
-		for (int i = 0; i < ShadowsInteriors->LightPoints; i++) {
-
-			RenderShadowCubeMap(ShadowLights, i);
-
-			std::string message = "ShadowManager::RenderShadowCubeMap ";
-			message += std::to_string(i);
-			shadowMapTimer.LogTime(message.c_str());
-		}
-	}
-
-	if (TheShaderManager->Effects.Flashlight->Enabled && TheShaderManager->Effects.Flashlight->spotLightActive && TheShaderManager->Effects.Flashlight->Settings.renderShadows) {
-		// render shadow maps for spotlights
-		
-		for (int i = 0; i < SpotLightsMax; i++) {
-			if (!SpotLights[i] || SpotLights[i]->radius == 0) continue; //bypass lights with no radius
-
-			RenderShadowSpotlight(SpotLights, i);
-
-			std::string message = "ShadowManager::RenderShadowSpotLight";
-			message += std::to_string(i);
-			shadowMapTimer.LogTime(message.c_str());
-		}
-	}
 
 	// reset renderer to previous state
 	Device->SetDepthStencilSurface(DepthSurface);

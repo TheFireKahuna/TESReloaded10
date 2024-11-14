@@ -30,7 +30,8 @@ void RenderManager::GetScreenSpaceBoundSize(NiPoint2* BoundSize, NiBound* Bound,
 	NiCamera* Camera = WorldSceneGraph->camera;
 	NiMatrix33* WorldRotate = &Camera->m_worldTransform.rotate;
 	NiVector3 BoundPos({ Bound->Center.x - Camera->m_worldTransform.translate.x, Bound->Center.y - Camera->m_worldTransform.translate.y, Bound->Center.z - Camera->m_worldTransform.translate.z });
-	float BoundViewDist = BoundPos.CrossProductF(BoundPos);
+	D3DXVECTOR3 boundVec = BoundPos.toD3DXVEC3();
+	float BoundViewDist = D3DXVec3Dot(&boundVec, &boundVec);
 	float Ratio = Bound->Radius;
 
 	if (BoundViewDist < ZeroTolerance) {
@@ -52,7 +53,8 @@ float RenderManager::GetObjectDistance(NiBound* Bound){
 	NiCamera* Camera = WorldSceneGraph->camera;
 	NiMatrix33* WorldRotate = &Camera->m_worldTransform.rotate;
 	NiVector3 BoundPos({ Bound->Center.x - Camera->m_worldTransform.translate.x, Bound->Center.y - Camera->m_worldTransform.translate.y, Bound->Center.z - Camera->m_worldTransform.translate.z });
-	return sqrt(BoundPos.CrossProductF(BoundPos));
+	D3DXVECTOR3 boundVec = BoundPos.toD3DXVEC3();
+	return sqrt(D3DXVec3Dot(&boundVec, &boundVec));
 }
 
 void RenderManager::UpdateSceneCameraData() {
@@ -131,6 +133,10 @@ void RenderManager::SetupSceneCamera() {
 		worldMatrix._42 = -WorldTranslate->y;
 		worldMatrix._43 = -WorldTranslate->z;
 		worldMatrix._44 = 1.0f;
+		D3DXVECTOR3 RightVec = Right.toD3DXVEC3();
+		D3DXVECTOR3 UpVec = Up.toD3DXVEC3();
+		D3DXVECTOR3 ForwardVec = Forward.toD3DXVEC3();
+		D3DXVECTOR3 LocVec = Loc.toD3DXVEC3();
 
 		viewMatrix._11 = Right.x;
 		viewMatrix._12 = Up.x;
@@ -144,9 +150,9 @@ void RenderManager::SetupSceneCamera() {
 		viewMatrix._32 = Up.z;
 		viewMatrix._33 = Forward.z;
 		viewMatrix._34 = 0.0f;
-		viewMatrix._41 = -Right.CrossProductF(Loc);
-		viewMatrix._42 = -Up.CrossProductF(Loc);
-		viewMatrix._43 = -Forward.CrossProductF(Loc);
+		viewMatrix._41 = -D3DXVec3Dot(&RightVec, &LocVec);
+		viewMatrix._42 = -D3DXVec3Dot(&UpVec, &LocVec);
+		viewMatrix._43 = -D3DXVec3Dot(&ForwardVec, &LocVec);
 		viewMatrix._44 = 1.0f;
 
 		invViewMatrix._11 = Right.x;

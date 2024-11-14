@@ -311,7 +311,7 @@
       <Filter>Effects</Filter>
     </ClInclude>
     <ClInclude Include="..\src\NewVegas\nvse\DataTypes.h">
-      <Filter>Core</Filter>
+      <Filter>NewVegas\nvse</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -537,9 +537,11 @@
     <ClCompile Include="..\src\effects\PBR.cpp">
       <Filter>Effects</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\NewVegas\nvse\DataTypes.cpp" />
     <ClCompile Include="..\src\base\Types.cpp">
       <Filter>Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NewVegas\nvse\DataTypes.cpp">
+      <Filter>NewVegas\nvse</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

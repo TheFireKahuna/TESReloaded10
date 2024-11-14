@@ -102,7 +102,7 @@ void CameraManager::CameraManagerCommands::Execute(NiAVObject* CameraNode) {
 
 	if (IsRotating) {
 		m.GenerateRotationMatrixZXY(&Rotation, 1);
-		m = (*NodeRotationW).MultiplyMatrices(m);
+		m = *NodeRotationW * m;
 		memcpy(CameraRotationW, &m, sizeof(NiMatrix33));
 		memcpy(CameraRotationL, &m, sizeof(NiMatrix33));
 	}

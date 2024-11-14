@@ -18,13 +18,6 @@ class ShadowsExteriorEffect : public EffectRecord
 public:
 	ShadowsExteriorEffect() : EffectRecord("ShadowsExteriors") {};
 	
-	enum ShadowMapTypeEnum {
-		MapNear = 0,
-		MapMiddle = 1,
-		MapFar = 2,
-		MapLod = 3,
-		MapOrtho = 4,
-	};
 
 	//Constants
 	struct ShadowStruct {
