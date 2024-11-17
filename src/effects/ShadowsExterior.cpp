@@ -172,6 +172,24 @@ void ShadowsExteriorEffect::RegisterConstants() {
 }
 
 void ShadowsExteriorEffect::RegisterTextures() {
+	bool ShadowBufferPrecision = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "ShadowBufferPrecision");
+	bool PointBufferRes = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "PointBufferRes");
+	bool PointBufferPrecision = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Main", "PointBufferPrecision");
+	D3DFORMAT ShadowBufferType;
+	D3DFORMAT PointBufferType;
+
+	if (ShadowBufferPrecision)
+		ShadowBufferType = D3DFMT_D32F_LOCKABLE;
+	else
+		ShadowBufferType = D3DFMT_D24S8;
+
+	if (PointBufferPrecision) {
+		PointBufferType = D3DFMT_G32R32F;
+	}
+	else {
+		PointBufferType = D3DFMT_G16R16F;
+	}
+
 	ULONG ShadowCubeMapSize = Settings.Interiors.ShadowCubeMapSize;
 
 	// initialize cascade shadowmaps
@@ -187,7 +205,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 		ULONG ShadowMapSize = Settings.Exteriors.ShadowMapResolution * multiple;
 
 		TheTextureManager->InitTexture(ShadowBufferNames[i], &ShadowMaps[i].ShadowMapTexture, &ShadowMaps[i].ShadowMapSurface, ShadowMapSize, ShadowMapSize, D3DFMT_G32R32F);
-		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[i].ShadowMapDepthSurface, NULL);
+		TheRenderManager->device->CreateDepthStencilSurface(ShadowMapSize, ShadowMapSize, ShadowBufferType, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[i].ShadowMapDepthSurface, NULL);
 		
 		// initialize the frame vertices for future shadow blurring
 		TheShaderManager->CreateFrameVertex(ShadowMapSize, ShadowMapSize, &ShadowMaps[i].BlurShadowVertexBuffer);
@@ -198,7 +216,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	// ortho texture
 	ULONG orthoMapRes = Settings.Exteriors.OrthoMapResolution;
 	TheTextureManager->InitTexture("TESR_OrthoMapBuffer", &ShadowMaps[MapOrtho].ShadowMapTexture, &ShadowMaps[MapOrtho].ShadowMapSurface, orthoMapRes, orthoMapRes, D3DFMT_G32R32F);
-	TheRenderManager->device->CreateDepthStencilSurface(orthoMapRes, orthoMapRes, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[MapOrtho].ShadowMapDepthSurface, NULL);
+	TheRenderManager->device->CreateDepthStencilSurface(orthoMapRes, orthoMapRes, ShadowBufferType, D3DMULTISAMPLE_NONE, 0, true, &ShadowMaps[MapOrtho].ShadowMapDepthSurface, NULL);
 	ShadowMaps[MapOrtho].ShadowMapViewPort = { 0, 0, orthoMapRes, orthoMapRes, 0.0f, 1.0f };
 	ShadowMaps[MapOrtho].ShadowMapInverseResolution = 1.0f / (float)orthoMapRes;
 
@@ -220,13 +238,16 @@ void ShadowsExteriorEffect::RegisterTextures() {
 		TheTextureManager->RegisterTexture(textureName.c_str(), (IDirect3DBaseTexture9**)&Textures.ShadowCubeMapTexture[i]);
 	}
 	// Create the stencil surface used for rendering cubemaps
-	TheRenderManager->device->CreateDepthStencilSurface(ShadowCubeMapSize, ShadowCubeMapSize, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &Textures.ShadowCubeMapDepthSurface, NULL);
+	TheRenderManager->device->CreateDepthStencilSurface(ShadowCubeMapSize, ShadowCubeMapSize, ShadowBufferType, D3DMULTISAMPLE_NONE, 0, true, &Textures.ShadowCubeMapDepthSurface, NULL);
 
 	//TheShadowManager->ShadowCubeMapViewPort = { 0, 0, ShadowCubeMapSize, ShadowCubeMapSize, 0.0f, 1.0f };
 	//memset(TheShadowManager->ShadowCubeMapLights, NULL, sizeof(ShadowCubeMapLights));
 
 	// Initialize shadow buffer
-	TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width / 2, TheRenderManager->height / 2, D3DFMT_G16R16);
+	if (PointBufferRes)
+		TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width, TheRenderManager->height, PointBufferType);
+	else
+		TheTextureManager->InitTexture("TESR_PointShadowBuffer", &Textures.ShadowPassTexture, &Textures.ShadowPassSurface, TheRenderManager->width / 2, TheRenderManager->height / 2, PointBufferType);
 }
 
 

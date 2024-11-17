@@ -615,6 +615,9 @@ ShadowsRadius = 8000                 # Max distance for rendering of shadow from
 OrthoRadius = 8000                   # Max distance for rendering of ortho map.
 UsePointShadowsDay = false           # Wether to cast shadows from point lights. Requires a slight darkening of the entire screen.
 UsePointShadowsNight = true          # Wether to cast shadows from point lights during Nights. Requires a slight darkening of the entire screen.
+ShadowBufferPrecision = 0            # Precision for Shadow Map buffers, 0 for 24 bit, 1 for 32 bit. DXVK may already upgrade depth buffers to 32bit precision
+PointBufferRes = 0                   # Resolution for Point Shadow (and Screen Space Shadow) buffers, 0 for half res, 1 for full res. Improves quality at a decent perf cost
+PointBufferPrecision = 0             # Color depth for Point Shadow (and Screen Space Shadow) buffers, 0 for 16 bit, 1 for 32 bit. May improve stability of screen space shadows
 
 [_Shaders.ShadowsExteriors.Middle]
 Activators = false                   # Wether to include objects with "Activator" flag when rendering shadowmaps.
