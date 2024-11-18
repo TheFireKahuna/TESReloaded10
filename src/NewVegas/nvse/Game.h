@@ -1710,6 +1710,27 @@ public:
 	BSString		fileName;	// 04
 };
 assert(sizeof(TESSoundFile) == 0x0C);
+// 68
+class TESGrass : public TESBoundObject
+{
+public:
+	TESModel		model;					// 30
+
+	UInt8			density;				// 48
+	UInt8			minSlope;				// 49
+	UInt8			maxSlope;				// 4A
+	UInt8			pad4B;					// 4B
+	UInt16			unitFromWaterAmount;	// 4C
+	UInt8			pad4E[2];				// 4E
+	UInt8			unitFromWaterType;		// 50
+	UInt8			pad51[3];				// 51
+	float			positionRange;			// 54
+	float			heightRange;			// 58
+	float			colorRange;				// 5C
+	float			wavePeriod;				// 60
+	UInt8			grassFlags;				// 64
+	UInt8			pad65[3];				// 65
+};
 
 class TESSound : public TESBoundAnimObject {
 public:
@@ -2179,16 +2200,16 @@ public:
 		UINT*		getValuesFrom;
 	};
 	
-	struct StructC4 {
-		NiNode*								niNode;		// 00
-		TList<TESObjectREFR>				list04;		// 04
-		NiTMap<TESObjectREFR*, NiNode*>		map0C;		// 0C
-		NiTMap<TESForm*, TESObjectREFR*>	map1C;		// 1C
-		NiTMap<TESObjectREFR*, NiNode*>		map2C;		// 2C
-		NiTMap<TESObjectREFR*, NiNode*>		map3C;		// 3C
-		TList<TESObjectREFR>				list4C;		// 4C
-		TList<void>							list54;		// 54
-		TList<TESObjectREFR>				list5C;		// 5C
+	struct CellRenderData {
+		NiNode*										niNode;		// 00
+		TList<TESObjectREFR>						largeRefs;				// 04	refs with bound size > 3000
+		NiTMap<TESObjectREFR*, NiNode*>				animatedRefs;			// 0C
+		NiTMap<TESForm*, TESObjectREFR*>			emittanceSourceRefs;	// 1C
+		NiTMap<TESObjectREFR*, NiNode*>				emittanceLightRefs;		// 2C
+		NiTMap<TESObjectREFR*, BSMultiBoundNode*>	multiboundRefs;			// 3C
+		TList<TESObjectREFR>						scriptedNonActors;		// 4C
+		TList<TESObjectREFR>						activatingParentRefs;	// 54	Has ExtraActivateRefChildren
+		TList<TESObjectREFR>						placeableWaterList;		// 5C
 	};
 
 	enum CellNodes : UInt32 {
@@ -2206,18 +2227,18 @@ public:
 		kCellNode_Water_LOD = 0xB,
 	};
 	
-	TESWaterForm*			GetWaterForm() { return (TESWaterForm*)ThisCall(0x00547770, this); }
+	TESWaterForm*			GetWaterForm()	{ return (TESWaterForm*)ThisCall(0x00547770, this); }
 	float					GetWaterHeight() { return ThisCallF(0x005471E0, this); }
 	ExtraHavok*				GetExtraHavok() { return (ExtraHavok*)extraDataList.GetExtraData(BSExtraData::ExtraDataType::kExtraData_Havok); }
-	NiNode*					GetNode()		{ return structC4 ? structC4->niNode : NULL; }
+	NiNode*					GetNode()		{ return renderData ? renderData->niNode : NULL; }
 	NiNode*					GetChildNode(CellNodes aeNode);
-	bool					IsInterior() { return (flags0 & kFlags0_Interior) != 0; }
+	bool					IsInterior()	{ return (cellFlags & kFlags0_Interior) != 0; }
 
 	TESFullName				fullName;			// 018	// 030 in GECK
-	UInt8					flags0;				// 024
-	UInt8					flags1;				// 025
-	UInt8					flags2;				// 026	// 5 or 6 would mean cell is loaded, name based on OBSE
-	UInt8					unk027;				// 027
+	UInt8					cellFlags;				// 24
+	UInt8					fullySeen;				// 25	Fully visible on local-map
+	UInt8					loadingStage;			// 26
+	UInt8					byte27;					// 27
 	ExtraDataList			extraDataList;		// 028
 	union {										// 048
 		CellCoordinates*	coords;				// if exterior
@@ -2225,25 +2246,44 @@ public:
 	};
 	TESObjectLAND*			land;				// 04C
 	float					waterHeight;		// 050
-	UInt32					unk54;				// 054
+	bool					autoWaterLoaded;		// 54
+	UInt8					pad55[3];				// 55
 	TESTexture				noiseTexture;		// 058
 	void*					navMeshArray;		// 064 BSSimpleArray<NavMesh>
-	UInt32					unk68[15];			// 068	80 is CellRefLock semaphore
+	UInt32					unk68[6];				// 68
+	LightCS					refLock;				// 80
+	UInt32					unk88[6];				// 88
+	SInt32					criticalQueuedRefCount;	// A0
 	UInt32					actorCount;			// 0A4
-	UInt16					countVWD;			// 0A8
-	UInt16					unk0AA;				// 0AA
+	UInt16					visibleDistantCount;	// A8
+	UInt16					visibleDistantLoadedCount;	// AA
 	TList<TESObjectREFR>	objectList;			// 0AC
-	NiNode*					niNode0B4;			// 0B4
-	NiNode*					niNode0B8;			// 0B8
-	UInt32					unk0BC;				// 0BC
-	TESWorldSpace*			worldSpace;			// 0C0
-	StructC4*				structC4;			// 0C4
-	float					unk0C8;				// 0C8
-	UInt32					unk0CC;				// 0CC
-	UInt32					unk0D0;				// 0D0
+	NiNode*					lightMarkerNode;		// B4
+	NiNode*					soundMarkerNode;		// B8
+	UInt32					unkBC;					// BC
+	TESWorldSpace*			worldSpace;			// C0
+	CellRenderData*			renderData;			// C4
+	float					LODFadeOut;				// C8
+	UInt8					byteCC;					// CC
+	UInt8					byteCD;					// CD
+	bool					triggeredLODHide;		// CE
+	UInt8					byteCF;					// CF
+	bool					canHideLOD;				// D0
+	bool					cellDetached;			// D1
+	bool					skippedFade;			// D2
+	UInt8					byteD3;					// D3
 	void*					portalGraph;		// 0D4 BSPortalGraph*
 	BGSLightingTemplate*	lightingTemplate;	// 0D8
-	UInt32					unk0DC;				// 0DC
+	UInt32					inheritFlags;			// DC
+
+	void RefLockEnter()
+	{
+		refLock.Enter();
+	}
+	void RefLockLeave()
+	{
+		refLock.Leave();
+	}
 };
 assert(sizeof(TESObjectCELL) == 0xE0);
 
@@ -3140,17 +3180,29 @@ public:
 		kChanged_Inventory = 0x08000000,
 	};
 
+	struct RenderState
+	{
+		TESObjectREFR*	currWaterRef;		// 00
+		UInt32			underwaterCount;	// 04	0-0x13 when fully-underwater; exterior only
+		float			waterLevel;			// 08
+		float			revealDistance;		// 0C
+		UInt32			flags;				// 10
+		NiNode*			niNode;			// 14
+		bhkPhantom*		phantom;			// 18	Used with trigger volume
+	};
+
 	NiNode*				GetNode() { return (renderData != NULL ? renderData->niNode : NULL); };
 
 	TESChildCell		childCell;				// 018
-	UInt32				unk1C;					// 01C
+
+	TESSound*			loopSound;		// 1C
 	TESForm*			baseForm;				// 020
 	NiPoint3			rot;					// 024
 	NiPoint3			pos;					// 030 
 	float				scale;					// 03C 
 	TESObjectCELL*		parentCell;				// 040
 	ExtraDataList		extraDataList;			// 044
-	TESObjectREFRData*	renderData;				// 064	- (05C in FOSE)
+	RenderState*		renderData;	// 64
 };
 assert(sizeof(TESObjectREFR) == 0x068);
 
@@ -4300,6 +4352,7 @@ public:
 	virtual void		Fn_00(UInt32 arg1, UInt32 arg2, UInt32 arg3, UInt32 arg4, UInt32 arg5);
 	
 	void				PurgeCells() {}
+	NiNode* ObjectLODRoot() { return *(NiNode**)0x11DEA18; }
 
 	/*
 	* Fills the last 3 parameters with info while detecting the closest most important water plane/group/form based on the given ref

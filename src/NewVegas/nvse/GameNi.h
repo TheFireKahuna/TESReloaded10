@@ -1,5 +1,7 @@
 #pragma once
 
+class NiTriShape;
+class NiTriStrips;
 class NiNode;
 class NiPick;
 class NiTextKeyExtraData;
@@ -585,6 +587,19 @@ struct PropertyList {
 	UInt32 count;
 };
 
+// 0C	c'tor @ 0x43D410
+struct NiUpdateData
+{
+	float		timePassed;			// 00
+	bool		updateControllers;	// 04
+	bool		isMultiThreaded;	// 05
+	UInt8		byte06;				// 06
+	bool		updateGeomorphs;	// 07
+	bool		updateShadowScene;	// 08
+	UInt8		pad09[3];			// 09
+
+	NiUpdateData() { ZeroMemory(this, sizeof(NiUpdateData)); }
+};
 
 template <std::size_t N> struct Debug; // No definition
 
@@ -594,63 +609,63 @@ template struct Debug<sizeof(PropertyNode)>; // Issue error if definition is mis
 
 class NiAVObject : public NiObjectNET {
 public:
-	virtual void			UpdateControllers(float fTime);
-	virtual void			Unk_24();
-	virtual void			Unk_25();
+	/*8C*/virtual void		UpdateControllers(const NiUpdateData& updParams);
+	/*90*/virtual void		ApplyTransform(NiMatrix33* arg1, NiPoint3* arg2, bool arg3);
+	/*94*/virtual void		Unk_25(UInt32 arg);
+	/*98*/virtual void		Unk_26(UInt32 arg);
 	virtual NiAVObject*		GetObjectByName(const char* Name);
-	virtual void*			Unk_27();
-	virtual void			UpdateDownwardPass(float fTime, bool bUpdateControllers);
-	virtual void			UpdateSelectedDownwardPass(float fTime);
-	virtual void			UpdateRigidDownwardPass(float fTime);
-	virtual void			UpdatePropertiesDownward(NiPropertyState* ParentState);
-	virtual void			UpdateEffectsDownward(NiDynamicEffectState* ParentState);
-	virtual void			UpdateTransformData();
-	virtual void			UpdateTransformBound();
-	virtual void			OnVisible(NiCullingProcess* CullingProcess);
-	virtual void			Unk_30(void* arg);			// get NiMaterialProperty, pass to arg if found
-	virtual void			Unk_31(void* arg);
-	virtual void			Unk_32(void* arg);
-	virtual void			Unk_33(void* arg);
-	virtual void			Unk_34(void* arg);
-	virtual void			Unk_35(void* arg);
-	virtual void			Unk_36(void* arg);	// last is 036 verified
+	/*A0*/virtual void		SetSelectiveUpdateFlags(UInt8* bSelectiveUpdate, UInt32 bSelectiveUpdateTransform, UInt8* bRigid);
+	/*A4*/virtual void		UpdateDownwardPass(const NiUpdateData& updParams, UInt32 flags);
+	/*A8*/virtual void		UpdateSelectedDownwardPass(const NiUpdateData& updParams, UInt32 flags);
+	/*AC*/virtual void		UpdateRigidDownwardPass(const NiUpdateData& updParams, UInt32 flags);
+	/*B0*/virtual void		Unk_2C(const NiPropertyState& properties);
+	/*B4*/virtual void		Unk_2D(UInt32 arg);
+	/*B8*/virtual void		UpdateWorldData(const NiUpdateData& updParams);
+	/*BC*/virtual void		UpdateWorldBound();
+	/*C0*/virtual void		UpdateTransformAndBounds(const NiUpdateData& updParams);
+	/*C4*/virtual void		PreAttachUpdate(NiNode* newParent, const NiUpdateData& updParams);
+	/*C8*/virtual void		PreAttachUpdateProperties(NiNode* newParent);
+	/*CC*/virtual void		DetachParent(UInt32 arg);
+	/*D0*/virtual void		UpdateUpwardPassParent();
+	/*D4*/virtual void		OnVisible(NiCullingProcess* culling);
+	/*D8*/virtual void		PurgeRendererData(NiDX9Renderer* renderer);
+	
+    enum NiFlags : DWORD {
+        APP_CULLED                              = 1u <<  0, // Forces culled state
+        SELECTIVE_UPDATE                        = 1u <<  1, // Allows selective updates - see flags below
+        SELECTIVE_UPDATE_TRANSFORMS             = 1u <<  2, // Allows transform controller update
+        SELECTIVE_UPDATE_CONTROLLER                = 1u <<  3, // Allows controller update
+        SELECTIVE_UPDATE_RIGID                  = 1u <<  4, // Forces the use of UpdateRigidDownwardPass
+        DISPLAY_OBJECT                          = 1u <<  5, // Used only by sky objects
+        DISABLE_SORTING                         = 1u <<  6,    // Unused, just like Gamebryo's sorter
+        SELECTIVE_UPDATE_TRANSFORMS_OVERRIDE    = 1u <<  7, // Forces UPDATE_TRANSFORMS even if node has no transform controllers
+        UNK_8                                    = 1u <<  8, // ??
+        SAVE_EXTERNAL_GEOM_DATA                 = 1u <<  9, // Resets transformations
+        NO_DECALS                                = 1u << 10,    // Disables decals for this object
+        ALWAYS_DRAW                             = 1u << 11, // Forces light inclusion, and skips culling
+        ACTOR_NODE                                = 1u << 12, // Used to mark actor nodes, for actor culling
+        FIXED_BOUND                             = 1u << 13, // Prevents bound updates
+        FADED_IN                                = 1u << 14, // BSFadeNode only; Marks the fade state
+        IGNORE_FADE                                = 1u << 15, // BSFadeNode only; Disables fading
+        LOD_FADING_OUT                            = 1u << 16, // BSFadeNode only; Looks unused
+        HAS_MOVING_SOUND                        = 1u << 17, // Used for sound updates
+        HAS_PROPERTY_CONTROLLER                    = 1u << 18, // Marks the presence of a property controller
+        HAS_BOUND                                = 1u << 19, // Marks the presence of a bound
+        ACTOR_CULLED                            = 1u << 20, // Used for actor culling
+        IGNORES_PICKING                            = 1u << 21, // Disables picking for this object
+        UPDATE_MULTIBOUNDS                        = 1u << 22,    // ?? Bound and light related, seems to force multibound update/attachment?
+        NO_SHADOWS                                = 1u << 23, // Set if bActorSelfShadowing == false, checks for it look broken (maybe why the setting doesn't work?)
+        HIGH_DETAIL                                = 1u << 24, // BSFadeNode only; Unused, meant for actors 0x936F75
+        UNK_25                                    = 1u << 25, // ??
+        UNK_26                                    = 1u << 26, // ??
+        PLAYER_BONE                             = 1u << 27,    // Marks player's bones, not read anywhere?
+        IMPOSTER_LOADED                            = 1u << 28, // BSFadeNode only; Marks the imposter state to override fading
+        IS_POINTLIGHT                           = 1u << 29, // Added by JIP
+        DONE_INIT_LIGHTS                        = 1u << 30, // Added by JIP
+        IS_INSERTED                             = 1u << 31  // Added by JIP
+    };
 
-	enum NiFlags : UInt32 {
-		APP_CULLED = 0x1,
-		SELECTIVE_UPDATE = 0x2,
-		SELECTIVE_UPDATE_TRANSFORMS = 0x4,
-		SELECTIVE_UPDATE_CONTROLLER = 0x8,
-		SELECTIVE_UPDATE_RIGID = 0x10,
-		DISPLAY_OBJECT = 0x20,
-		DISABLE_SORTING = 0x40,
-		SELECTIVE_UPDATE_TRANSFORMS_OVERRIDE = 0x80,
-		IS_NODE = 0x100,
-		SAVE_EXTERNAL_GEOM_DATA = 0x200,
-		NO_DECALS = 0x400,
-		ALWAYS_DRAW = 0x800,
-		MESH_LOD = 0x1000,
-		FIXED_BOUND = 0x2000,
-		TOP_FADE_NODE = 0x4000,
-		IGNORE_FADE = 0x8000,
-		NO_ANIM_SYNC_X = 0x10000,
-		NO_ANIM_SYNC_Y = 0x20000,
-		NO_ANIM_SYNC_Z = 0x40000,
-		NO_ANIM_SYNC_S = 0x80000,
-		NO_DISMEMBER = 0x100000,
-		NO_DISMEMBER_VALIDITY = 0x200000,
-		RENDER_USE = 0x400000,
-		MATERIALS_APPLIED = 0x800000,
-		HIGH_DETAIL = 0x1000000,
-		FORCE_UPDATE = 0x2000000,
-		PREPROCESSED_NODE = 0x4000000,
-		UNK_27 = 0x8000000,
-		UNK_28 = 0x10000000,
-		IS_POINTLIGHT = 0x20000000,
-		DONE_INIT_LIGHTS = 0x40000000,
-		IS_INSERTED = 0x80000000,
-	};
-
-	float GetDistance(NiPoint3* Point);
+	float		GetDistance(NiPoint3* Point);
 	NiBound*	GetWorldBound();
 	float		GetWorldBoundRadius();
 	
@@ -2425,18 +2440,31 @@ assert(sizeof(NiShadeProperty) == 0x20);
 
 class BSFadeNode : public NiNode {
 public:
-	float			unkAC;			// AC
-	float			unkB0;			// B0
-	float			unkB4;			// B4
-	float			FadeAlpha;		// B8
+	enum FadeType
+	{
+		kFade_Object = 1,
+		kFade_Item = 2,
+		kFade_Actor = 3,
+		kFade_Unknown6 = 6,
+		kFade_Unknown7 = 7,
+		kFade_Unknown8 = 8,
+		kFade_LODFadeOutMax = 0xA,
+	};
+
+	float			nearDistSqr;	// AC
+	float			farDistSqr;		// B0
+	float			lastFade;		// B4
+	float			FadeAlpha;	// B8	[0.0, 1.0]; Used for fade-in/out
 	float			BoundRadius;	// BC
-	UInt32			unkC0;			// C0
+	float			timeSinceUpdate;// C0
 	UInt32			MultType;		// C4
-	UInt32			unkC8;			// C8
-	TESObjectREFR*	unkCC;			// CC
+	UInt32			frameCounter;	// C8
+	TESObjectREFR*	linkedObj;		// CC 
 	UInt32			unkD0[5];		// D0
+
+	__forceinline static BSFadeNode* Create() { return ThisStdCall<BSFadeNode*>(0xB4E150, CdeclCall<void*>(0xAA13E0, sizeof(BSFadeNode))); }
 };
-assert(sizeof(BSFadeNode) == 0xE4);
+static_assert(sizeof(BSFadeNode) == 0xE4);
 
 class BSTreeModel : public NiRefObject {
 public:
@@ -2568,3 +2596,27 @@ public:
 	UInt8								pad1FD[3];			// 1FD
 };
 assert(sizeof(ShadowSceneNode) == 0x200);
+
+
+class PrimitiveCS
+{
+	UInt32		selfPtr = 0;
+
+public:
+	PrimitiveCS* Enter();
+	__forceinline void Leave() { selfPtr &= 0; }
+};
+
+class LightCS
+{
+	UInt32	owningThread = 0;
+	UInt32	enterCount = 0;
+
+public:
+	void Enter();
+	__forceinline void Leave()
+	{
+		if (!--enterCount)
+			owningThread &= 0;
+	}
+};

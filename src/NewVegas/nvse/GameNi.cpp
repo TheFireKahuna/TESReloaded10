@@ -278,3 +278,66 @@ void NiDX9Renderer::CalculateBoneMatrixes(NiSkinInstance* SkinInstance, NiTransf
 bool BSShaderProperty::IsLightingProperty() {
 	return (type == ShaderDefinitionEnum::kShaderDefinition_ShadowLightShader || type == ShaderDefinitionEnum::kShaderDefinition_Lighting30Shader);
 }	
+
+
+__declspec(naked) PrimitiveCS* PrimitiveCS::Enter()
+{
+	__asm
+	{
+		push	esi
+		push	edi
+		mov		esi, ecx
+		mov		edi, Sleep
+		ALIGN 16
+		spinHead:
+		xor eax, eax
+			lock cmpxchg[ecx], esi
+			jz		done
+			push	0
+			call	edi
+			mov		ecx, esi
+			jmp		spinHead
+			ALIGN 16
+			done:
+		mov		eax, esi
+			pop		edi
+			pop		esi
+			retn
+	}
+}
+
+__declspec(naked) void LightCS::Enter()
+{
+	__asm
+	{
+		push	ebx
+		mov		ebx, ecx
+		call	GetCurrentThreadId
+		cmp[ebx], eax
+		jz		incRefCnt
+		push	esi
+		push	edi
+		mov		esi, eax
+		mov		edi, Sleep
+		ALIGN 16
+		spinHead:
+		xor eax, eax
+			lock cmpxchg[ebx], esi
+			jz		done
+			push	0
+			call	edi
+			jmp		spinHead
+			ALIGN 16
+			done:
+		mov		dword ptr[ebx + 4], 1
+			pop		edi
+			pop		esi
+			pop		ebx
+			retn
+			ALIGN 16
+			incRefCnt:
+		inc		dword ptr[ebx + 4]
+			pop		ebx
+			retn
+	}
+}

@@ -282,3 +282,10 @@ public:
 	UInt32				unk090;
 };
 assert(sizeof(hkRigidBody) == 0x94);
+
+// 18
+class bhkPhantom : public bhkWorldObject
+{
+public:
+	UInt32				unk14;		// 14
+};
