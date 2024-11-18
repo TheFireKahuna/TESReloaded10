@@ -129,6 +129,45 @@ void ShadowManager::AccumObject(std::stack<NiAVObject*>* containersAccum, NiAVOb
 
 	//timelog.LogTime("ShadowManager::AccumObject");
 }
+// go through the Object children and sort the ones that will be rendered based on their properties
+void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, ShadowsExteriorEffect::FormsStruct* Forms, bool isLand = false, UInt32 isLOD = 0) {
+
+	std::stack<NiAVObject*> containers;
+	NiAVObject* child;
+	NiAVObject* object;
+	NiNode* Node;
+
+	if (!NiObject->IsGeometry())
+		containers.push(NiObject);
+	else
+		AccumObject(&containers, NiObject, Forms); //list all objects contained, or sort the object if not a container
+
+	// Gather geometry
+	while (!containers.empty()) {
+		object = containers.top();
+		containers.pop();
+
+		if (!object) continue;
+
+		Node = object->IsNiNode();
+		if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->m_flags & NiAVObject::NiFlags::ACTOR_CULLED) continue; // culling containers
+		if (!isLand && Node->GetWorldBoundRadius() < Forms->MinRadius) continue;
+		if (Node->IsFadeNode() && static_cast<BSFadeNode*>(Node)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
+
+		for (int i = 0; i < Node->m_children.end; i++) {
+			child = Node->m_children.data[i];
+			if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED || child->m_flags & NiAVObject::NiFlags::ACTOR_CULLED) continue; // culling
+			if ((isLOD < 2 || child->IsGeometry()) && !TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, child)) continue;
+			if (!isLand && child->GetWorldBoundRadius() < Forms->MinRadius) continue;
+			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
+
+			if (!child->IsGeometry())
+				containers.push(child);
+			else
+				AccumObject(&containers, child, Forms);
+		}
+	}
+}
 
 
 // go through the Object children and sort the ones that will be rendered based on their properties
@@ -147,18 +186,19 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 
 	// Gather geometry
 	while (!containers.empty()) {
-    	object = containers.top();
-    	containers.pop();
+		object = containers.top();
+		containers.pop();
 
 		if (!object) continue;
 
 		Node = object->IsNiNode();
-    	if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling containers
+		if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->m_flags & NiAVObject::NiFlags::ACTOR_CULLED) continue; // culling containers
 		if (!isLand && Node->GetWorldBoundRadius() < Forms->MinRadius) continue;
+
 
 		for (int i = 0; i < Node->m_children.end; i++) {
 			child = Node->m_children.data[i];
-			if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling children
+			if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED || child->m_flags & NiAVObject::NiFlags::ACTOR_CULLED) continue; // culling children
 			if (!isLand && child->GetWorldBoundRadius() < Forms->MinRadius) continue;
 
 			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
@@ -208,36 +248,43 @@ void ShadowManager::RenderShadowMap(ShadowsExteriorEffect::ShadowMapSettings* Sh
 	RenderState->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE, RenderStateArgs);
 	RenderState->SetRenderState(D3DRS_ALPHABLENDENABLE, 0, RenderStateArgs);
 
+	int isLod = 0;
+	if (ShadowMap->Forms.Lod) {
+		//AccumChildren(Tes->landLOD, ShadowMap, &ShadowMap->Forms, true, 2);
+		AccumChildren(Tes->ObjectLODRoot(), ShadowMap, &ShadowMap->Forms, true, 2);
+		isLod = 1;
+	}
+
 	if (Player->GetWorldSpace()) {
 		GridCellArray* CellArray = Tes->gridCellArray;
 		UInt32 CellArraySize = CellArray->size * CellArray->size;
 
 		for (UInt32 i = 0; i < CellArraySize; i++) {
-			AccumExteriorCell(CellArray->GetCell(i), ShadowMap);
+			AccumExteriorCell(CellArray->GetCell(i), ShadowMap, isLod);
 		}
 	}
 	else {
-		AccumExteriorCell(Player->parentCell, ShadowMap);
+		AccumExteriorCell(Player->parentCell, ShadowMap, isLod);
 	}
 
 	RenderAccums(&ShadowMap->ShadowMapViewPort, ShadowMap->ShadowMapSurface, ShadowMap->ShadowMapDepthSurface);
 }
 
 
-void ShadowManager::AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap) {
+void ShadowManager::AccumExteriorCell(TESObjectCELL* Cell, ShadowsExteriorEffect::ShadowMapSettings* ShadowMap, int isLod) {
 	if (!Cell || Cell->IsInterior())
 		return;
-	
+
 	if (ShadowMap->Forms.Terrain)
-		AccumChildren(Cell->GetChildNode(TESObjectCELL::kCellNode_Land), &ShadowMap->Forms, true);
+		AccumChildren(Cell->GetChildNode(TESObjectCELL::kCellNode_Land), ShadowMap, &ShadowMap->Forms, true, isLod);
 
 	// if (ShadowsExteriors->Forms[ShadowMapType].Lod) RenderLod(Tes->landLOD, ShadowMapType); //Render terrain LOD
 
 	TList<TESObjectREFR>::Entry* Entry = &Cell->objectList.First;
 	while (Entry) {
 		NiNode* RefNode = GetRefNode(Entry->item, &ShadowMap->Forms);
-		if (RefNode && TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode)) 
-			AccumChildren(RefNode, &ShadowMap->Forms, false);
+		if (RefNode && TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, RefNode))
+			AccumChildren(RefNode, ShadowMap, &ShadowMap->Forms, false, isLod);
 
 		Entry = Entry->next;
 	}
@@ -383,7 +430,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 			while (iter) {
 				NiGeometry* geo = iter->data;
 				iter = iter->next;
-				if (!geo || geo->m_flags & NiAVObject::APP_CULLED)
+				if (!geo || geo->m_flags & NiAVObject::APP_CULLED || geo->m_flags & NiAVObject::NiFlags::ACTOR_CULLED)
 					continue;
 
 				NiShadeProperty* shaderProp = static_cast<NiShadeProperty*>(geo->GetProperty(NiProperty::kType_Shade));
