@@ -136,6 +136,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::S
 	NiAVObject* child;
 	NiAVObject* object;
 	NiNode* Node;
+	BSMultiBoundNode* MultiBound;
 
 	if (!NiObject->IsGeometry())
 		containers.push(NiObject);
@@ -153,6 +154,8 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::S
 		if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->m_flags & NiAVObject::NiFlags::ACTOR_CULLED) continue; // culling containers
 		if (!isLand && Node->GetWorldBoundRadius() < Forms->MinRadius) continue;
 		if (Node->IsFadeNode() && static_cast<BSFadeNode*>(Node)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
+		MultiBound = object->IsMultiBoundNode();
+		if (MultiBound && (MultiBound->spMultiBound->spShape->eCullResult == BSMultiBoundShape::BSMBCullResult::BS_CULL_CULLED || MultiBound->spMultiBound->spShape->eCullResult == BSMultiBoundShape::BSMBCullResult::BS_CULL_OCCLUDED)) continue;
 
 		for (int i = 0; i < Node->m_children.end; i++) {
 			child = Node->m_children.data[i];
@@ -160,6 +163,8 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::S
 			if ((isLOD < 2 || child->IsGeometry()) && !TheCameraManager->InFrustum(&ShadowMap->ShadowMapFrustum, child)) continue;
 			if (!isLand && child->GetWorldBoundRadius() < Forms->MinRadius) continue;
 			if (child->IsFadeNode() && static_cast<BSFadeNode*>(child)->FadeAlpha < 0.75f) continue; // stop rendering fadenodes below a certain opacity
+			MultiBound = child->IsMultiBoundNode();
+			if (MultiBound && (MultiBound->spMultiBound->spShape->eCullResult == BSMultiBoundShape::BSMBCullResult::BS_CULL_CULLED || MultiBound->spMultiBound->spShape->eCullResult == BSMultiBoundShape::BSMBCullResult::BS_CULL_OCCLUDED)) continue;
 
 			if (!child->IsGeometry())
 				containers.push(child);

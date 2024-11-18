@@ -58,6 +58,9 @@ class NiDX92DBufferData;
 class BSShaderAccumulator;
 class BSShaderProperty;
 class BSFadeNode;
+class BSMultiBoundAABB;
+class BSMultiBoundShape;
+class BSMultiBound;
 class BSMultiBoundNode;
 class BSSegmentedTriShape;
 class BSResizableTriShape;
@@ -2620,3 +2623,105 @@ public:
 			owningThread &= 0;
 	}
 };
+
+// 0C
+class BSMultiBoundShape : public NiObject {
+public:
+	virtual int		GetType();
+	virtual void	GetRadius();
+	virtual int		CheckBSBound(BSMultiBound* apTargetBound);
+	virtual int		CheckBound(NiBound* apTargetBound);
+	virtual bool	WithinFrustum(NiFrustumPlanes& arPlanes);
+	virtual bool	CompletelyWithinFrustum(NiFrustumPlanes& arPlanes);
+	virtual void	GetNiBound(NiBound& arBound);
+	virtual void	CreateDebugGeometry(NiLines* apLines, NiTriShape* apGoemetry, NiColor akColor);
+	virtual UInt32	GetGeomShapeSize();
+	virtual UInt32	GetDebugGeomShapeSize();
+	virtual bool	GetPointWithin(NiPoint3& arPoint);
+	virtual void	SetCenter(NiPoint3& arCenter);
+
+	struct BoundVertices {
+		NiPoint3 point[8];
+	};
+
+	enum BSMBCullResult {
+		BS_CULL_UNTESTED = 0x0,
+		BS_CULL_VISIBLE = 0x1,
+		BS_CULL_CULLED = 0x2,
+		BS_CULL_OCCLUDED = 0x3,
+	};
+
+	enum BSMBShapeType {
+		BSMB_SHAPE_NONE = 0,
+		BSMB_SHAPE_AABB = 1,
+		BSMB_SHAPE_OBB = 2,
+		BSMB_SHAPE_SPHERE = 3,
+		BSMB_SHAPE_CAPSULE = 4,
+	};
+
+	BSMBCullResult eCullResult;
+
+	inline void ResetCullResult() {
+		eCullResult = BS_CULL_UNTESTED;
+	};
+};
+assert(sizeof(BSMultiBoundShape) == 0xC);
+
+class BSMultiBoundAABB : public BSMultiBoundShape {
+public:
+	BSMultiBoundAABB();
+	virtual ~BSMultiBoundAABB();
+
+	NiPoint3 Center;
+	NiPoint3 HalfExtents;
+
+	CREATE_OBJECT(BSMultiBoundAABB, 0xC381A0);
+
+	virtual void GetVertices(BoundVertices* apVerts);
+};
+assert(sizeof(BSMultiBoundAABB) == 0x24);
+
+
+class BSMultiBound : public NiObject {
+public:
+	BSMultiBound();
+	~BSMultiBound();
+
+	UInt32 uiBoundFrameCount;
+	BSMultiBoundShape* spShape;
+
+	static bool bIgnoreMultiBounds;
+
+	CREATE_OBJECT(BSMultiBound, 0xC361A0);
+
+	virtual BSMultiBoundShape* GetShape() const;
+	virtual void SetShape(BSMultiBoundShape* apShape);
+};
+assert(sizeof(BSMultiBound) == 0x10);
+
+
+class BSMultiBoundNode : public NiNode {
+public:
+	BSMultiBoundNode();
+	virtual ~BSMultiBoundNode();
+
+	virtual void*				GetMultiBoundRoom();
+	virtual bool				GetPointWithin(NiPoint3& akPoint);
+	virtual UInt32				CheckBound(BSMultiBound*);
+	virtual UInt32				CheckBoundAlt(NiBound*);
+
+	BSMultiBound*	spMultiBound;
+	UInt32			uiCullingMode;
+
+	virtual BSMultiBound* GetMultiBound();
+	virtual void SetMultiBound(BSMultiBound* apMultiBound);
+	virtual void SetCullingMode(UInt32 aiMode);
+	virtual void ResetCullResult();
+	virtual bool VisibleAgainstActiveOccluders(NiPoint3 akViewPoint, void* arCuller, void* apOccluder);
+
+	static void __fastcall OnVisibleEx(BSMultiBoundNode* apThis, void*, void* apCuller);
+	static void __fastcall UpdateWorldBoundEx(BSMultiBoundNode* apThis);
+
+};
+
+assert(sizeof(BSMultiBoundNode) == 0xB4);
