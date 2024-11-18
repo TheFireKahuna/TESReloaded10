@@ -190,7 +190,7 @@ void CameraManager::SetFrustum(frustum* Frustum, D3DMATRIX* Matrix) {
 /*
 * Checks wether the given node is in the frustrum using its radius for the current type of Shadow map.
 */
-bool CameraManager::InFrustum(frustum* frustum, NiNode* Node) {
+bool CameraManager::InFrustum(frustum* frustum, NiAVObject* Node) {
 	NiBound* Bound = Node->GetWorldBound();
 	if (!Bound) return false;
 
