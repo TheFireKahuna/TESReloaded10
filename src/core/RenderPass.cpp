@@ -102,6 +102,8 @@ ShadowRenderPass::ShadowRenderPass() {
 
 
 bool ShadowRenderPass::AccumObject(NiGeometry* Geo) {
+	if (!Geo)
+		return false;
 	if (!Geo->geomData || !Geo->geomData->m_pkBuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
@@ -135,6 +137,8 @@ AlphaShadowRenderPass::AlphaShadowRenderPass() {
 
 
 bool AlphaShadowRenderPass::AccumObject(NiGeometry* Geo) {
+	if (!Geo)
+		return false;
 	if (!Geo->geomData || !Geo->geomData->m_pkBuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);
@@ -187,6 +191,8 @@ SkinnedGeoShadowRenderPass::SkinnedGeoShadowRenderPass() {
 
 
 bool SkinnedGeoShadowRenderPass::AccumObject(NiGeometry* Geo) {
+	if (!Geo)
+		return false;
 	// check data for rigged geometry
 	if (!Geo->skinInstance)
 		return false;
@@ -321,6 +327,8 @@ void SpeedTreeShadowRenderPass::RegisterConstants() {
 
 
 bool SpeedTreeShadowRenderPass::AccumObject(NiGeometry* Geo) {
+	if (!Geo)
+		return false;
 
 	NiShadeProperty* shaderProp = static_cast<NiShadeProperty*>(Geo->GetProperty(NiProperty::kType_Shade));
 	if (shaderProp->m_eShaderType != NiShadeProperty::kProp_SpeedTreeLeaf) return false;
@@ -374,6 +382,8 @@ TerrainLODPass::TerrainLODPass() {
 
 
 bool TerrainLODPass::AccumObject(NiGeometry* Geo) {
+	if (!Geo)
+		return false;
 	if (!Geo->geomData || !Geo->geomData->m_pkBuffData) return false; // discard objects without buffer data
 
 	BSShaderProperty* ShaderProperty = (BSShaderProperty*)Geo->GetProperty(NiProperty::PropertyType::kType_Shade);

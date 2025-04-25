@@ -175,7 +175,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 		if (!object) continue;
 
 		Node = object->IsNiNode();
-    	if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling containers
+    	if (!Node || Node->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->m_flags & NiAVObject::NiFlags::ACTOR_CULLED) continue; // culling containers
 		if (!isLand && Node->GetWorldBoundRadius() < Forms->MinRadius) continue;
 
 		if (Node->IsKindOf<NiSwitchNode>()) {
@@ -194,7 +194,7 @@ void ShadowManager::AccumChildren(NiAVObject* NiObject, ShadowsExteriorEffect::F
 
 		for (int i = 0; i < Node->m_children.end; i++) {
 			child = Node->m_children.data[i];
-			if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED) continue; // culling children
+			if (!child || child->m_flags & NiAVObject::NiFlags::APP_CULLED || Node->m_flags & NiAVObject::NiFlags::ACTOR_CULLED) continue; // culling children
 			if (!isLand && child->GetWorldBoundRadius() < Forms->MinRadius) continue;
 
 			// Frustum culling.
@@ -445,7 +445,7 @@ void ShadowManager::RenderShadowCubeMap(ShadowSceneLight** Lights, UInt32 LightI
 			while (iter) {
 				NiGeometry* geo = iter->data;
 				iter = iter->next;
-				if (!geo || geo->m_flags & NiAVObject::APP_CULLED)
+				if (!geo || geo->m_flags & NiAVObject::APP_CULLED || geo->m_flags & NiAVObject::ACTOR_CULLED)
 					continue;
 
 				BSShaderProperty* shaderProp = static_cast<BSShaderProperty*>(geo->GetProperty(NiProperty::kType_Shade));

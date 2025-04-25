@@ -514,6 +514,7 @@ void ShaderManager::GetNearbyLights(ShadowSceneLight* ShadowLightsList[], NiPoin
 		D3DXVECTOR4 LightPosition = Light->m_worldTransform.pos.toD3DXVEC4();
 
 		bool lightCulled = Light->m_flags & NiAVObject::NiFlags::APP_CULLED;
+		lightCulled &= NiAVObject::NiFlags::ACTOR_CULLED;
 		bool lightOn = (Light->Diff.r + Light->Diff.g + Light->Diff.b) * Light->Dimmer > 5.0 / 255.0; // Check for low values in case of human error
 		if (lightCulled || !lightOn) {
 			Entry = Entry->next;

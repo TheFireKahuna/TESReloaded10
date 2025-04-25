@@ -113,6 +113,7 @@ void FlashlightEffect::UpdateConstants() {
 			if (childNode) {
 				if (childNode->GetRTTI() == (void*)0x11F4A98) {
 					childNode->m_flags |= childNode->APP_CULLED;
+					childNode->m_flags |= childNode->ACTOR_CULLED;
 				}
 			}
 		}
