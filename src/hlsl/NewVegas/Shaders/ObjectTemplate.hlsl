@@ -150,6 +150,8 @@
 
 #include "includes/Helpers.hlsl"
 #include "includes/Object.hlsl"
+#include "includes/DirectShadow.hlsl"
+#include "includes/Position.hlsl"
 
 #ifdef SKIN
     #include "includes/SkinHelpers.hlsl"
@@ -166,7 +168,7 @@ struct VS_INPUT {
     float3 tangent : TANGENT;
     float3 binormal : BINORMAL;
     float3 normal : NORMAL;
-    float4 uv : TEXCOORD0;
+    float2 uv : TEXCOORD0;
 #ifndef NO_VERTEX_COLOR
     float4 vertexColor : COLOR0;
 #endif
@@ -199,9 +201,7 @@ struct VS_OUTPUT {
     
     float3 viewDir : TEXCOORD6;
     
-#ifdef PROJ_SHADOW
-    float4 shadowUVs : TEXCOORD7;
-#endif
+    float4 worldPos: TEXCOORD7;
 };
 
 #ifndef NO_FOG
@@ -219,12 +219,6 @@ float4 LightData[10] : register(c25);
 #endif
 
 float4 EyePosition : register(c16);
-
-#ifdef PROJ_SHADOW
-    row_major float4x4 ShadowProj : register(c18);
-    float4 ShadowProjData : register(c22);
-    float4 ShadowProjTransform : register(c23);
-#endif
 
 float4 TESR_DebugVar : register(c40);
 
@@ -291,14 +285,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         OUT.fogColor.rgb = FogColor.rgb;
     #endif
     
-    #ifdef PROJ_SHADOW
-        float shadowParam = dot(ShadowProj[3].xyzw, position.xyzw);
-        float2 shadowUV;
-        shadowUV.x = dot(ShadowProj[0].xyzw, position.xyzw);
-        shadowUV.y = dot(ShadowProj[1].xyzw, position.xyzw);
-        OUT.shadowUVs.xy = ((shadowParam * ShadowProjTransform.xy) + shadowUV) / (shadowParam * ShadowProjTransform.w);
-        OUT.shadowUVs.zw = ((shadowUV.xy - ShadowProjData.xy) / ShadowProjData.w) * float2(1, -1) + float2(0, 1);
-    #endif
+    OUT.worldPos = clipToWorldWithOffset(OUT.sPosition, IN.normal);
 
     return OUT;
 };
@@ -317,7 +304,7 @@ struct VS_OUTPUT {
     float4 vertexColor : COLOR0;
     float4 fogColor : COLOR1;
     float4 sPosition : POSITION;
-    float2 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0;
     float4 lPosition : TEXCOORD1;
     float4 lightDir : TEXCOORD2;  // .w = .x of viewDir
     float4 light2 : TEXCOORD3;   // .w = .y of viewDir
@@ -352,7 +339,7 @@ float4 EyePosition : register(c16);
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
     
-    OUT.uv = IN.uv.xy;
+    OUT.uv.xy = IN.uv.xy;
     
     float4 position = IN.position.xyzw;
     
@@ -430,6 +417,10 @@ VS_OUTPUT main(VS_INPUT IN) {
     fogStrength = log2(fogStrength);
     OUT.fogColor.a = exp2(fogStrength * FogParam.z);
     OUT.fogColor.rgb = FogColor.rgb;
+    float4 worldPos = clipToWorldWithOffset(OUT.sPosition, IN.normal);
+    OUT.uv.z = worldPos.x;
+    OUT.uv.w = worldPos.y;
+    OUT.lPosition.w = worldPos.z;
 
     return OUT;
 };
@@ -444,7 +435,7 @@ struct PS_INPUT {
 #ifndef NO_FOG
     float4 fogColor : COLOR1;
 #endif
-    float2 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0;
     float4 lightDir : TEXCOORD1_centroid;
 #if LIGHTS > 1 || NUM_PT_LIGHTS > 1
     float4 light2Dir : TEXCOORD2_centroid;
@@ -453,9 +444,7 @@ struct PS_INPUT {
     float4 light3Dir : TEXCOORD3_centroid;
 #endif
     float3 viewDir : TEXCOORD6_centroid;
-#ifdef PROJ_SHADOW
-    float4 shadowUVs : TEXCOORD7;
-#endif
+    float4 worldPos : TEXCOORD7;
 };
 
 struct PS_OUTPUT {
@@ -484,25 +473,11 @@ float4 PSLightColor[10] : register(c3);
     float4 EmittanceColor : register(c2);
 #endif
 
-#ifdef PROJ_SHADOW
-    #if defined(ONLY_SPECULAR)
-        sampler2D ShadowMap : register(s4);
-        sampler2D ShadowMaskMap : register(s5);
-    #elif defined(ONLY_LIGHT)
-        sampler2D ShadowMap : register(s5);
-        sampler2D ShadowMaskMap : register(s6);
-    #else
-        sampler2D ShadowMap : register(s6);
-        sampler2D ShadowMaskMap : register(s7);
-    #endif
-#endif
-
 #ifndef OPT
     float4 Toggles : register(c27);
 #endif
 
 float4 TESR_DebugVar : register(c40);
-
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
     
@@ -549,15 +524,8 @@ PS_OUTPUT main(PS_INPUT IN) {
     #endif
     
     // Vanilla shadows.
-    float3 shadowMultiplier = 1.0;
-    #if defined(STBB)
-        shadowMultiplier = 0.85;
-    #elif defined(PROJ_SHADOW)
-        float3 shadow = tex2D(ShadowMap, IN.shadowUVs.xy).xyz;
-        float shadowMask = tex2D(ShadowMaskMap, IN.shadowUVs.zw).x;
-        shadowMultiplier = lerp(1, shadow, shadowMask);
-    #endif
-    
+    float3 shadowMultiplier = GetLightAmount(IN.worldPos);
+
     #if !defined(DIFFUSE) && !defined(POINT)
         float3 lighting = getSunLighting(IN.lightDir.xyz, PSLightColor[0].rgb * shadowMultiplier, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #else
@@ -624,8 +592,8 @@ struct PS_INPUT {
     float4 vertexColor : COLOR0;
     float4 fogColor : COLOR1;
     float4 sPosition : POSITION;
-    float2 uv : TEXCOORD0;
-    float4 lPosition : TEXCOORD1;
+    float4 uv : TEXCOORD0; // .z and .w are .x and .y of worldPos
+    float4 lPosition : TEXCOORD1; // .w is .w of worldPos
     float4 lightDir : TEXCOORD2_centroid;  // .w = .x of viewDir
     float4 light2 : TEXCOORD3_centroid; // .w = .y of viewDir
     float4 light3 : TEXCOORD4_centroid; // .w = .z of viewDir
@@ -668,6 +636,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
 
     float4 baseColor = tex2D(BaseMap, IN.uv.xy);
+    float4 worldPos = float4(IN.uv.z, IN.uv.w, IN.lPosition.w, 1.0f);
     
     #ifndef OPT
         clip(AmbientColor.a >= 1 ? 0 : (baseColor.a - alphaTestRef));
@@ -688,9 +657,10 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 viewDir = { IN.lightDir.w, IN.light2.w, IN.light3.w };
     
     float att;
+    float3 shadowMultiplier = GetLightAmount(worldPos);
     
     #ifndef OPT
-        float3 lighting = getSunLighting(IN.lightDir.xyz, PSLightColor[0].rgb, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        float3 lighting = getSunLighting(IN.lightDir.xyz, PSLightColor[0].rgb * shadowMultiplier, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #else
         att = vanillaAtt(PSLightPosition[0].xyz - IN.lPosition.xyz, PSLightPosition[0].w);
         float3 lighting = getPointLightLightingAtt(IN.lightDir.xyz, att, PSLightColor[0].rgb, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);

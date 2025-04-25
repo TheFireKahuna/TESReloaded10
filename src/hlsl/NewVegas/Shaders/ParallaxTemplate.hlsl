@@ -105,6 +105,8 @@
 #include "includes/Helpers.hlsl"
 #include "includes/Parallax.hlsl"
 #include "includes/Object.hlsl"
+#include "includes/DirectShadow.hlsl"
+#include "includes/Position.hlsl"
 
 struct VS_INPUT
 {
@@ -148,10 +150,8 @@ struct VS_OUTPUT
 #if NUM_PT_LIGHTS > 2
     float4 light3Dir : TEXCOORD5;
 #endif
-#ifdef PROJ_SHADOW
-    float4 shadowUVs : TEXCOORD8;
-#endif
     float4 viewDir : TEXCOORD7;
+    float4 worldPos: TEXCOORD8;
 };
 
 #ifdef VS
@@ -166,12 +166,6 @@ row_major float4x4 ModelViewProj : register(c0);
 #ifndef NO_FOG
     float3 FogColor : register(c15);
     float4 FogParam : register(c14);
-#endif
-
-#ifdef PROJ_SHADOW
-    row_major float4x4 ShadowProj : register(c18);
-    float4 ShadowProjData : register(c22);
-    float4 ShadowProjTransform : register(c23);
 #endif
 
 VS_OUTPUT main(VS_INPUT IN)
@@ -240,15 +234,7 @@ VS_OUTPUT main(VS_INPUT IN)
         OUT.fogColor.a = exp2(fogStrength * FogParam.z);
         OUT.fogColor.rgb = FogColor.rgb;
     #endif
-    
-    #ifdef PROJ_SHADOW
-        float shadowParam = dot(ShadowProj[3].xyzw, IN.position.xyzw);
-        float2 shadowUV;
-        shadowUV.x = dot(ShadowProj[0].xyzw, IN.position.xyzw);
-        shadowUV.y = dot(ShadowProj[1].xyzw, IN.position.xyzw);
-        OUT.shadowUVs.xy = ((shadowParam * ShadowProjTransform.xy) + shadowUV) / (shadowParam * ShadowProjTransform.w);
-        OUT.shadowUVs.zw = ((shadowUV.xy - ShadowProjData.xy) / ShadowProjData.w) * float2(1, -1) + float2(0, 1);
-    #endif
+    OUT.worldPos = clipToWorldWithOffset(OUT.sPosition, IN.normal);
 
     return OUT;
 };
@@ -284,10 +270,8 @@ struct PS_INPUT
 #if NUM_PT_LIGHTS > 2
     float4 light3Dir : TEXCOORD5_centroid;
 #endif
-#ifdef PROJ_SHADOW
-    float4 shadowUVs : TEXCOORD8;
-#endif
     float4 viewDir : TEXCOORD7_centroid;
+    float4 worldPos: TEXCOORD8;
 };
 
 struct PS_OUTPUT {
@@ -329,18 +313,6 @@ float4 EmittanceColor : register(c2);
         sampler2D AttenuationMap : register(s4);
     #else
         sampler2D AttenuationMap : register(s5);
-    #endif
-#endif
-#ifdef PROJ_SHADOW 
-    #if defined(ONLY_SPECULAR)
-        sampler2D ShadowMap : register(s4);
-        sampler2D ShadowMaskMap : register(s5);
-    #elif defined(ONLY_LIGHT)
-        sampler2D ShadowMap : register(s5);
-        sampler2D ShadowMaskMap : register(s6);
-    #else
-        sampler2D ShadowMap : register(s6);
-        sampler2D ShadowMaskMap : register(s7);
     #endif
 #endif
 #if !defined(NO_LIGHT)
@@ -402,12 +374,7 @@ PS_OUTPUT main(PS_INPUT IN)
     #endif
     
     // Shadows.
-    float3 shadowMultiplier = 1.0;
-    #ifdef PROJ_SHADOW
-        float3 shadow = tex2D(ShadowMap, IN.shadowUVs.xy).xyz;
-        float shadowMask = tex2D(ShadowMaskMap, IN.shadowUVs.zw).x;
-        shadowMultiplier = lerp(1, shadow, shadowMask);
-    #endif
+    float3 shadowMultiplier = GetLightAmount(IN.worldPos);
     
     #ifndef NO_LIGHT
         shadowMultiplier *= getParallaxShadowMultipler(distance, offsetUV, dx, dy, normalize(IN.lightDir.xyz), HeightMap);

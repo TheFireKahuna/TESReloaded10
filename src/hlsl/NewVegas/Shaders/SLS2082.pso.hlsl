@@ -1,12 +1,15 @@
 // Shader for LOD terrain during transition with near terrain
 //
 // Parameters:
+#include "includes/DirectShadow.hlsl"
+
 sampler2D BaseMap : register(s0);
 sampler2D NormalMap : register(s1);
 sampler2D LODLandNoise : register(s2);
 
 float4 AmbientColor : register(c1);
 float4 PSLightColor[10] : register(c3);
+//float4 TESR_SmoothedSunDir : register(c67); // x,y,z: center (world space), w: radius
 // float4 TESR_DebugVar;
 
 
@@ -32,6 +35,7 @@ struct VS_INPUT {
     float4 texcoord_5 : TEXCOORD5_centroid;
     float3 lPosition : TEXCOORD6_centroid;
     float3 eyePosition : TEXCOORD7_centroid;
+    float4 worldPos : TEXCOORD8;
 };
 
 struct VS_OUTPUT {
@@ -58,7 +62,14 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float roughness = saturate(TESR_TerrainData.y * (1 - normal.a));
 
-    float3 lighting = getSunLighting(IN.texcoord_3.xyz, PSLightColor[0].rgb, eyeDir, normal.rgb, AmbientColor.rgb, baseColor, roughness);
+    //float NdotL = dot(normal.xyz, TESR_SmoothedSunDir.xyz);
+    //float offsetScale = saturate(1 - NdotL);
+    //float3 normalOffset = offsetScale * NormalBias * normal.xyz;
+    //float4 worldPos = float4(IN.worldPos.xyz + normalOffset, 1.0f);
+
+    //float3 shadowMultiplier = GetLightAmount(worldPos);
+    float3 shadowMultiplier = GetLightAmount(IN.worldPos);
+    float3 lighting = getSunLighting(IN.texcoord_3.xyz, PSLightColor[0].rgb * shadowMultiplier, eyeDir, normal.rgb, AmbientColor.rgb, baseColor, roughness);
 
     float3 final = lighting;
     final = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.z));  // Apply noise.

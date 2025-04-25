@@ -229,6 +229,7 @@ float4 Shadow(VSOUT IN) : COLOR0
 	float4 Shadow = tex2D(TESR_PointShadowBuffer, IN.UVCoord);
     Shadow = pow(Shadow, TESR_ShadowScreenSpaceData.w);
 	if (!TESR_ShadowFade.y) return Shadow; // disable shadow maps if ShadowFade.y == 0 (setting for shadow map disabled)
+	return Shadow; // temporary disable of screen space shadow maps
 
 	// Sample shadows from shadowmaps
     float3 normal = GetWorldNormal(uv);

@@ -1,6 +1,7 @@
 // Vertex Shader for LOD terrain during transition with near terrain
 //
 // Parameters:
+#include "includes/Position.hlsl"
 
 row_major float4x4 ModelViewProj : register(c0);
 float4 FogParam : register(c14);
@@ -40,6 +41,7 @@ struct VS_OUTPUT {
     float4 texcoord_5 : TEXCOORD5;
     float3 lPosition : TEXCOORD6;
     float3 eyePosition : TEXCOORD7;
+    float4 worldPos : TEXCOORD8;
 };
 
 
@@ -75,6 +77,8 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     OUT.lPosition.xyz = r0.xyz;
     OUT.eyePosition.xyz = EyePosition.xyz;
+
+    OUT.worldPos = clipToWorld(OUT.position);
 
     return OUT;
 };

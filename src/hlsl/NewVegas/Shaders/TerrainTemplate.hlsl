@@ -16,6 +16,8 @@
 #include "includes/Helpers.hlsl"
 #include "includes/Terrain.hlsl"
 #include "includes/Parallax.hlsl"
+#include "includes/DirectShadow.hlsl"
+#include "includes/Position.hlsl"
 
 struct VS_INPUT {
     float4 position : POSITION;
@@ -35,9 +37,9 @@ struct VS_OUTPUT {
     float2 uv : TEXCOORD0;
     float3 vertex_color : TEXCOORD1;
     float3 lPosition : TEXCOORD2;
-    float3 tangent : TEXCOORD3;
-    float3 binormal : TEXCOORD4;
-    float3 normal : TEXCOORD5;
+    float4 tangent : TEXCOORD3;
+    float4 binormal : TEXCOORD4;
+    float4 normal : TEXCOORD5;
     float4 fog : TEXCOORD6;
     float3 viewPosition : TEXCOORD7;
 };
@@ -81,6 +83,11 @@ VS_OUTPUT main(VS_INPUT IN) {
     
     OUT.viewPosition.xyz = EyePosition.xyz;
 
+    float4 worldPos = clipToWorldWithOffset(OUT.sPosition, IN.normal.xyz);
+    OUT.tangent.w = worldPos.x;
+    OUT.binormal.w = worldPos.y;
+    OUT.normal.w = worldPos.z;
+
     return OUT;
 };
 
@@ -91,13 +98,13 @@ struct PS_INPUT
     float2 uv : TEXCOORD0;
     float3 vertex_color : TEXCOORD1_centroid;
     float3 lPosition : TEXCOORD2_centroid;
-    float3 tangent : TEXCOORD3_centroid;
-    float3 binormal : TEXCOORD4_centroid;
-    float3 normal : TEXCOORD5_centroid;
+    float4 tangent : TEXCOORD3_centroid; // .w is worldPos.x
+    float4 binormal : TEXCOORD4_centroid; // .w is worldPos.y
+    float4 normal : TEXCOORD5_centroid; // .w is worldPos.z
     float4 blend_0 : COLOR0;
     float4 blend_1 : COLOR1;
     float4 fog : TEXCOORD6_centroid;
-    float3 viewPosition : TEXCOORD7_centroid;
+    float4 viewPosition : TEXCOORD7_centroid;
     float4 sPosition : POSITION1;
 };
 
@@ -125,6 +132,7 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3x3 tbn = float3x3(tangent, binormal, normal);
     float3 eyeDir = normalize(mul(tbn, IN.viewPosition.xyz - IN.lPosition.xyz));
     float dist = length(IN.viewPosition.xyz - IN.lPosition.xyz);
+    float4 worldPos = float4(IN.tangent.w, IN.binormal.w, IN.normal.w, 1.0f);
 
     float2 dx, dy;
     dx = ddx(IN.uv.xy);
@@ -141,7 +149,8 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 lightTS = mul(tbn, PSLightDir.xyz);
     float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, offsetUV, dx, dy, lightTS, texCount, blends, BaseMap);
     
-    float3 lighting = getSunLighting(lightTS, PSLightColor[0].rgb, eyeDir, combinedNormal, AmbientColor.rgb, baseColor, roughness, 1.0, parallaxShadowMultiplier);
+    float3 shadowMultiplier = GetLightAmount(worldPos);
+    float3 lighting = getSunLighting(lightTS, PSLightColor[0].rgb * shadowMultiplier, eyeDir, combinedNormal, AmbientColor.rgb, baseColor, roughness, 1.0, parallaxShadowMultiplier);
 
     #if defined(POINTLIGHT)
         float3 pointlightDir;

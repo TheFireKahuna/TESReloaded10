@@ -1,6 +1,7 @@
 // LOD terrain vertex shader
 //
 // Parameters:
+#include "includes/Position.hlsl"
 
 row_major float4x4 ModelViewProj : register(c0);
 row_major float4x4 ObjToCubeSpace : register(c8);
@@ -44,6 +45,7 @@ struct VS_OUTPUT {
     float3 texcoord_1 : TEXCOORD1;
     float3 lPosition : TEXCOORD2;
     float3 eyePosition : TEXCOORD3;
+    float4 worldPos: TEXCOORD4;
 };
 
 // Code:
@@ -78,6 +80,8 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     OUT.lPosition.xyz = r0.xyz;
     OUT.eyePosition.xyz = EyePosition.xyz;
+
+    OUT.worldPos = clipToWorld(OUT.position);
 
     return OUT;
 };
