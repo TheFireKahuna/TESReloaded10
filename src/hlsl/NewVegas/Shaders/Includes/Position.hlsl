@@ -1,17 +1,15 @@
-row_major float4x4 TESR_ProjectionTransform;
-row_major float4x4 TESR_ViewTransform;
+row_major float4x4 TESR_InvViewProjectionTransform : register(c100);
+float4 TESR_SmoothedSunDir : register(c105); // x,y,z: center (world space), w: radius
+static const float NormalBias = 1.0f;
 
-float3 toWorld(float2 tex)
-{
-    // float4 screenpos = float4(expand(tex), 1.0, 1.0f);
-    // screenpos.y = -screenpos.y;
-    // float4 viewpos = mul(screenpos, TESR_InvWorldViewProjectionTransform);
-    // viewpos.xyz /= viewpos.w;
-    // return viewpos.xyz;
-
-    float2 uv = expand(tex);
-	float3 v = float3(TESR_ViewTransform[0][2], TESR_ViewTransform[1][2], TESR_ViewTransform[2][2]);
-	v += (1 / TESR_ProjectionTransform[0][0] * uv.x) * float3(TESR_ViewTransform[0][0], TESR_ViewTransform[1][0], TESR_ViewTransform[2][0]);
-	v += (-1 / TESR_ProjectionTransform[1][1] * uv.y) * float3(TESR_ViewTransform[0][1], TESR_ViewTransform[1][1], TESR_ViewTransform[2][1]);
-	return v;
+float4 clipToWorld(float4 coord){
+	return mul(coord, TESR_InvViewProjectionTransform);
+}
+float4 clipToWorldWithOffset(float4 coord, float3 normal){
+    float4 worldPos = mul(coord, TESR_InvViewProjectionTransform);
+    float NdotL = dot(normal, TESR_SmoothedSunDir.xyz);
+    float offsetScale = saturate(1 - NdotL);
+    float3 normalOffset = offsetScale * NormalBias * normal;
+    
+    return float4(worldPos.xyz + normalOffset, 1.0f);
 }
