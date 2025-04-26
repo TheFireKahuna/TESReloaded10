@@ -614,6 +614,7 @@ void ShadowManager::RenderShadowMaps() {
 
 	D3DXVECTOR4* ShadowData = &TheShaderManager->Effects.ShadowsExteriors->Constants.Data;
 	D3DXVECTOR4* OrthoData = &TheShaderManager->Effects.ShadowsExteriors->Constants.OrthoData;
+	D3DXVECTOR4* ScreenData = &TheShaderManager->Effects.ShadowsExteriors->Constants.ScreenData;
 	Device->GetDepthStencilSurface(&DepthSurface);
 	Device->GetRenderTarget(0, &RenderSurface);
 	Device->GetViewport(&viewport);	
@@ -746,9 +747,28 @@ void ShadowManager::RenderShadowMaps() {
 
 			OrthoData->x = Shadows->Settings.OrthoMap.Distance * 2;
 			OrthoData->y = ShadowMap->ShadowMapInverseResolution;
-	
+
 			shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Ortho");
 		}
+
+		// render screen space buffer
+		auto shadowMapTimer = TimeLogger();
+
+		ShadowsExteriorEffect::ShadowMapSettings* ShadowMap = &Shadows->ShadowMaps[MapScreen];
+
+		Device->SetRenderTarget(0, Shadows->ShadowMapScreenSurface);
+		Device->SetDepthStencilSurface(Shadows->ShadowMapScreenDepthSurface);
+
+		ShadowData->z = 1; // identify ortho map in shader constant
+		D3DXVECTOR3 ScreenDir = D3DXVECTOR3(0.05f, 0.05f, 1.0f);
+		Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &ScreenDir);
+
+		RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
+
+		ScreenData->x = Shadows->Settings.ScreenMap.Distance * 2;
+		ScreenData->y = ShadowMap->ShadowMapInverseResolution;
+
+		shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Screen");
 	}
 
 	// Render shadow maps for point lights

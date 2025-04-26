@@ -33,6 +33,7 @@ public:
 		MapFar = 2,
 		MapLod = 3,
 		MapOrtho = 4,
+		MapScreen = 5,
 	};
 
 	//Constants
@@ -42,6 +43,7 @@ public:
 		D3DXVECTOR4		FormatData;
 		D3DXVECTOR4		ScreenSpaceData;
 		D3DXVECTOR4		OrthoData;
+		D3DXVECTOR4		ScreenData;
 		D3DXVECTOR4		ShadowFade;
 		D3DXMATRIXA16	ShadowWorld;
 		D3DXMATRIX		ShadowViewProj;
@@ -149,6 +151,7 @@ public:
 	struct SettingsShadowStruct {
 		ShadowMapStruct     ShadowMaps;
 		OrthoStruct			OrthoMap;
+		OrthoStruct			ScreenMap;
 		ScreenSpaceStruct	ScreenSpace;
 		ExteriorsStruct		Exteriors;
 		InteriorsStruct		Interiors;
@@ -181,6 +184,11 @@ public:
 	IDirect3DTexture9* ShadowMapOrthoTexture;
 	IDirect3DSurface9* ShadowMapOrthoSurface;
 	IDirect3DSurface9* ShadowMapOrthoDepthSurface;
+
+	// Screen shadows for various effects.
+	IDirect3DTexture9* ShadowMapScreenTexture;
+	IDirect3DSurface9* ShadowMapScreenSurface;
+	IDirect3DSurface9* ShadowMapScreenDepthSurface;
 
 	void		clearShadowsBuffer();
 	void		UpdateConstants();

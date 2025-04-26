@@ -104,6 +104,9 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 			case MapOrtho:
 				strcat(sectionName, "Ortho");
 				break;
+			case MapScreen:
+				strcat(sectionName, "Screen");
+				break;
 			}
 			ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
 
@@ -143,22 +146,25 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 			case MapOrtho:
 				strcat(sectionName, "Ortho");
 				break;
+			case MapScreen:
+				strcat(sectionName, "Screen");
+				break;
 			}
 			ShadowMapSettings* ShadowMap = &ShadowMaps[shadowType];
 
-			ShadowMap->Forms.AlphaEnabled = (shadowType == MapOrtho) ? 0 : 1;
-			ShadowMap->Forms.Activators = (shadowType < MapLod) ? 1 : 0;
-			ShadowMap->Forms.Actors = (shadowType < MapLod) ? 1 : 0;
-			ShadowMap->Forms.Apparatus = 0;
-			ShadowMap->Forms.Books = (shadowType < MapFar) ? 1 : 0;
-			ShadowMap->Forms.Containers = (shadowType < MapLod) ? 1 : 0;
+			ShadowMap->Forms.AlphaEnabled = (shadowType == MapOrtho || shadowType == MapScreen) ? 0 : 1;
+			ShadowMap->Forms.Activators = (shadowType < MapLod || shadowType == MapScreen) ? 1 : 0;
+			ShadowMap->Forms.Actors = (shadowType < MapLod || shadowType == MapScreen) ? 1 : 0;
+			ShadowMap->Forms.Apparatus = (shadowType == MapScreen) ? 0 : 1;
+			ShadowMap->Forms.Books = (shadowType < MapFar || shadowType == MapScreen) ? 1 : 0;
+			ShadowMap->Forms.Containers = (shadowType < MapLod || shadowType == MapScreen) ? 1 : 0;
 			ShadowMap->Forms.Doors = (shadowType == MapOrtho) ? 0 : 1;
-			ShadowMap->Forms.Furniture = (shadowType < MapLod) ? 1 : 0;
+			ShadowMap->Forms.Furniture = (shadowType < MapLod || shadowType == MapScreen) ? 1 : 0;
 			ShadowMap->Forms.Misc = 1;
 			ShadowMap->Forms.Statics = 1;
 			ShadowMap->Forms.Terrain = 1;
 			ShadowMap->Forms.Trees = 1;
-			ShadowMap->Forms.Lod = quality < 2 ? 0 : 1;
+			ShadowMap->Forms.Lod = (quality < 2 || shadowType == MapScreen) ? 0 : 1;
 			ShadowMap->Forms.MinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
 			ShadowMap->Forms.OrigMinRadius = (MapFar <= shadowType && shadowType <= MapLod) ? 10.0f : 1.0f;
 		};
@@ -224,6 +230,7 @@ bool ShadowsExteriorEffect::UpdateSettingsFromQuality(int quality) {
 		}
 	}
 	ShadowMaps[MapOrtho].CustomClearRequired = false;
+	ShadowMaps[MapScreen].CustomClearRequired = false;
 
 	if (oldFormat != Settings.ShadowMaps.Format)
 		cascadeSettingsChanged = true;
@@ -267,10 +274,15 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	bool orthoSettingsChanged = false;
 
 	int oldOrthoResolution = Settings.OrthoMap.Resolution;
+	int oldScreenResolution = Settings.ScreenMap.Resolution;
 
 	Settings.OrthoMap.Resolution = 128 * pow(2, (std::clamp(TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Ortho", "Resolution"), 0, 4)));
 	Settings.OrthoMap.Distance = max(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Ortho", "Distance"), 100.0f);
 	Settings.OrthoMap.LimitFrequency = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Ortho", "LimitFrequency");
+
+	Settings.ScreenMap.Resolution = 2048;
+	Settings.ScreenMap.Distance = 300000;
+	Settings.ScreenMap.LimitFrequency = 0;
 
 	if (oldOrthoResolution != 0 && oldOrthoResolution != Settings.OrthoMap.Resolution)
 		orthoSettingsChanged = true;
@@ -290,6 +302,22 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	ShadowMaps[MapOrtho].Forms.Lod = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Lod");
 	ShadowMaps[MapOrtho].Forms.MinRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.FormsOrtho", "MinRadius");
 	ShadowMaps[MapOrtho].Forms.OrigMinRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.FormsOrtho", "MinRadius");
+
+	ShadowMaps[MapScreen].Forms.AlphaEnabled = 1;
+	ShadowMaps[MapScreen].Forms.Activators = 1;
+	ShadowMaps[MapScreen].Forms.Actors = 1;
+	ShadowMaps[MapScreen].Forms.Apparatus = 1;
+	ShadowMaps[MapScreen].Forms.Books = 1;
+	ShadowMaps[MapScreen].Forms.Containers = 1;
+	ShadowMaps[MapScreen].Forms.Doors = 1;
+	ShadowMaps[MapScreen].Forms.Furniture = 1;
+	ShadowMaps[MapScreen].Forms.Misc = 1;
+	ShadowMaps[MapScreen].Forms.Statics = 1;
+	ShadowMaps[MapScreen].Forms.Terrain = 1;
+	ShadowMaps[MapScreen].Forms.Trees = 1;
+	ShadowMaps[MapScreen].Forms.Lod = 1;
+	ShadowMaps[MapScreen].Forms.MinRadius = 1;
+	ShadowMaps[MapScreen].Forms.OrigMinRadius = 1;
 
 	// Interiors.
 	Settings.Interiors.Enabled = TheSettingManager->GetSettingI("Shaders.ShadowsInteriors.Main", "Enabled");
@@ -340,6 +368,7 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowBlur", &Constants.ShadowBlur);
 	TheShaderManager->RegisterConstant("TESR_ShadowScreenSpaceData", &Constants.ScreenSpaceData);
 	TheShaderManager->RegisterConstant("TESR_OrthoData", &Constants.OrthoData);
+	TheShaderManager->RegisterConstant("TESR_ScreenData", &Constants.ScreenData);
 	TheShaderManager->RegisterConstant("TESR_ShadowFade", &Constants.ShadowFade);
 	TheShaderManager->RegisterConstant("TESR_ShadowRadius", &Constants.ShadowMapRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowViewProjTransform", (D3DXVECTOR4*)&Constants.ShadowViewProj);
@@ -352,6 +381,7 @@ void ShadowsExteriorEffect::RegisterConstants() {
 	TheShaderManager->RegisterConstant("TESR_ShadowLodCenter", &ShadowMaps[MapLod].ShadowMapCascadeCenterRadius);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformLod", (D3DXVECTOR4*)&ShadowMaps[MapLod].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformOrtho", (D3DXVECTOR4*)&ShadowMaps[MapOrtho].ShadowCameraToLight);
+	TheShaderManager->RegisterConstant("TESR_ShadowCameraToLightTransformScreen", (D3DXVECTOR4*)&ShadowMaps[MapScreen].ShadowCameraToLight);
 	TheShaderManager->RegisterConstant("TESR_ShadowCubeMapLightPosition", &Constants.ShadowCubeMapLightPosition);
 	TheShaderManager->RegisterConstant("TESR_ShadowLightPosition", (D3DXVECTOR4*)&Constants.ShadowLightPosition);
 }
@@ -386,6 +416,18 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	ShadowMaps[MapOrtho].ShadowMapViewPort = { 0, 0, orthoMapRes, orthoMapRes, 0.0f, 1.0f };
 	ShadowMaps[MapOrtho].ShadowMapResolution = (float)orthoMapRes;
 	ShadowMaps[MapOrtho].ShadowMapInverseResolution = 1.0f / (float)orthoMapRes;
+
+	// screen texture
+	ULONG screenMapRes = 2048;
+	int width = screenMapRes;
+	int height = screenMapRes;
+	ULONG widthU = screenMapRes;
+	ULONG heightU = screenMapRes;
+	TheTextureManager->InitTexture("TESR_ScreenMapBuffer", &ShadowMapScreenTexture, &ShadowMapScreenSurface, width, height, D3DFMT_R32F);
+	TheRenderManager->device->CreateDepthStencilSurface(width, height, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMapScreenDepthSurface, NULL);
+	ShadowMaps[MapScreen].ShadowMapViewPort = { 0, 0, widthU, heightU, 0.0f, 1.0f };
+	ShadowMaps[MapScreen].ShadowMapResolution = (float)screenMapRes;
+	ShadowMaps[MapScreen].ShadowMapInverseResolution = 1.0f / (float)screenMapRes;
 
 
 	// initialize spot lights maps
@@ -489,6 +531,24 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 		TheShaderManager->Effects.SnowAccumulation->ClearSampler("TESR_OrthoMapBuffer", 19);
 		TheShaderManager->Effects.WetWorld->ClearSampler("TESR_OrthoMapBuffer", 19);
 	}
+	if (ShadowMapScreenSurface) {
+		ShadowMapScreenSurface->Release();
+		ShadowMapScreenSurface = nullptr;
+	}
+	if (ShadowMapScreenTexture) {
+		ShadowMapScreenTexture->Release();
+		ShadowMapScreenTexture = nullptr;
+	}
+	ULONG screenMapRes = 2048;
+	int width = screenMapRes;
+	int height = screenMapRes;
+	ULONG widthU = screenMapRes;
+	ULONG heightU = screenMapRes;
+	TheTextureManager->InitTexture("TESR_ScreenMapBuffer", &ShadowMapScreenTexture, &ShadowMapScreenSurface, width, height, D3DFMT_R32F);
+	TheRenderManager->device->CreateDepthStencilSurface(width, height, D3DFMT_D24S8, D3DMULTISAMPLE_NONE, 0, true, &ShadowMapScreenDepthSurface, NULL);
+	ShadowMaps[MapScreen].ShadowMapViewPort = { 0, 0, widthU, heightU, 0.0f, 1.0f };
+	ShadowMaps[MapScreen].ShadowMapResolution = (float)screenMapRes;
+	ShadowMaps[MapScreen].ShadowMapInverseResolution = 1.0f / (float)screenMapRes;
 
 	// Reset shadow manager frame counter.
 	TheShadowManager->FrameCounter = 0;
@@ -579,6 +639,8 @@ void ShadowsExteriorEffect::GetCascadeDepths() {
 	// Ortho.
 	ShadowMaps[MapOrtho].ShadowMapNear = 10.0f / clipRange;
 	ShadowMaps[MapOrtho].ShadowMapRadius = Settings.OrthoMap.Distance / clipRange;
+	ShadowMaps[MapScreen].ShadowMapNear = 10.0f / clipRange;
+	ShadowMaps[MapScreen].ShadowMapRadius = Settings.ScreenMap.Distance / clipRange;
 
 	// Store absolute Shadow map splits in Constants to pass to the Shaders
 	Constants.ShadowMapRadius.x = ShadowMaps[MapNear].ShadowMapRadius * clipRange;

@@ -11,6 +11,7 @@ public:
 		MapFar = 2,
 		MapLod = 3,
 		MapOrtho = 4,
+		MapScreen = 5,
 	};
 
 
