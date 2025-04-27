@@ -109,6 +109,12 @@ public:
 		bool				LimitFrequency;
 	};
 
+	struct ScreenStruct {
+		int					Resolution;
+		float				Distance;
+		bool				LimitFrequency;
+	};
+
 	struct ExteriorsStruct {
 		bool				Enabled;
 		bool				UsePointShadowsDay;
@@ -159,7 +165,7 @@ public:
 	};
 	SettingsShadowStruct	Settings;
 	ShadowStruct			Constants;
-	ShadowMapSettings		ShadowMaps[5];
+	ShadowMapSettings		ShadowMaps[6];
 
 	struct ShadowTextures {
 		IDirect3DTexture9* ShadowPassTexture;
@@ -201,6 +207,7 @@ public:
 
 	void		GetCascadeDepths();
 	D3DXMATRIX	GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR3* SunDir);
+	D3DXMATRIX	GetPerspectiveViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR3* SunDir);
 
 private:
 	bool		texturesInitialized;

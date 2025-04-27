@@ -272,6 +272,7 @@ void ShadowsExteriorEffect::UpdateSettings() {
 
 	// Ortho map.
 	bool orthoSettingsChanged = false;
+	bool screenSettingsChanged = false;
 
 	int oldOrthoResolution = Settings.OrthoMap.Resolution;
 	int oldScreenResolution = Settings.ScreenMap.Resolution;
@@ -281,11 +282,13 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	Settings.OrthoMap.LimitFrequency = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Ortho", "LimitFrequency");
 
 	Settings.ScreenMap.Resolution = 2048;
-	Settings.ScreenMap.Distance = 300000;
-	Settings.ScreenMap.LimitFrequency = 0;
+	Settings.ScreenMap.Distance = max(TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.Screen", "Distance"), 100.0f);
+	Settings.ScreenMap.LimitFrequency = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.Screen", "LimitFrequency");
 
 	if (oldOrthoResolution != 0 && oldOrthoResolution != Settings.OrthoMap.Resolution)
 		orthoSettingsChanged = true;
+	if (oldScreenResolution != 0 && oldScreenResolution != Settings.ScreenMap.Resolution)
+		screenSettingsChanged = true;
 
 	ShadowMaps[MapOrtho].Forms.AlphaEnabled = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "AlphaEnabled");
 	ShadowMaps[MapOrtho].Forms.Activators = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsOrtho", "Activators");
@@ -303,21 +306,21 @@ void ShadowsExteriorEffect::UpdateSettings() {
 	ShadowMaps[MapOrtho].Forms.MinRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.FormsOrtho", "MinRadius");
 	ShadowMaps[MapOrtho].Forms.OrigMinRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.FormsOrtho", "MinRadius");
 
-	ShadowMaps[MapScreen].Forms.AlphaEnabled = 1;
-	ShadowMaps[MapScreen].Forms.Activators = 1;
-	ShadowMaps[MapScreen].Forms.Actors = 1;
-	ShadowMaps[MapScreen].Forms.Apparatus = 1;
-	ShadowMaps[MapScreen].Forms.Books = 1;
-	ShadowMaps[MapScreen].Forms.Containers = 1;
-	ShadowMaps[MapScreen].Forms.Doors = 1;
-	ShadowMaps[MapScreen].Forms.Furniture = 1;
-	ShadowMaps[MapScreen].Forms.Misc = 1;
-	ShadowMaps[MapScreen].Forms.Statics = 1;
-	ShadowMaps[MapScreen].Forms.Terrain = 1;
-	ShadowMaps[MapScreen].Forms.Trees = 1;
-	ShadowMaps[MapScreen].Forms.Lod = 1;
-	ShadowMaps[MapScreen].Forms.MinRadius = 1;
-	ShadowMaps[MapScreen].Forms.OrigMinRadius = 1;
+	ShadowMaps[MapScreen].Forms.AlphaEnabled = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "AlphaEnabled");
+	ShadowMaps[MapScreen].Forms.Activators = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Activators");
+	ShadowMaps[MapScreen].Forms.Actors = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Actors");
+	ShadowMaps[MapScreen].Forms.Apparatus = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Apparatus");
+	ShadowMaps[MapScreen].Forms.Books = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Books");
+	ShadowMaps[MapScreen].Forms.Containers = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Containers");
+	ShadowMaps[MapScreen].Forms.Doors = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Doors");
+	ShadowMaps[MapScreen].Forms.Furniture = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Furniture");
+	ShadowMaps[MapScreen].Forms.Misc = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Misc");
+	ShadowMaps[MapScreen].Forms.Statics = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Statics");
+	ShadowMaps[MapScreen].Forms.Terrain = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Terrain");
+	ShadowMaps[MapScreen].Forms.Trees = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Trees");
+	ShadowMaps[MapScreen].Forms.Lod = TheSettingManager->GetSettingI("Shaders.ShadowsExteriors.FormsScreen", "Lod");
+	ShadowMaps[MapScreen].Forms.MinRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.FormsScreen", "MinRadius");
+	ShadowMaps[MapScreen].Forms.OrigMinRadius = TheSettingManager->GetSettingF("Shaders.ShadowsExteriors.FormsScreen", "MinRadius");
 
 	// Interiors.
 	Settings.Interiors.Enabled = TheSettingManager->GetSettingI("Shaders.ShadowsInteriors.Main", "Enabled");
@@ -418,7 +421,7 @@ void ShadowsExteriorEffect::RegisterTextures() {
 	ShadowMaps[MapOrtho].ShadowMapInverseResolution = 1.0f / (float)orthoMapRes;
 
 	// screen texture
-	ULONG screenMapRes = 2048;
+	ULONG screenMapRes = Settings.ScreenMap.Resolution;
 	int width = screenMapRes;
 	int height = screenMapRes;
 	ULONG widthU = screenMapRes;
@@ -539,7 +542,7 @@ void ShadowsExteriorEffect::RecreateTextures(bool cascades, bool ortho, bool cub
 		ShadowMapScreenTexture->Release();
 		ShadowMapScreenTexture = nullptr;
 	}
-	ULONG screenMapRes = 2048;
+	ULONG screenMapRes = Settings.ScreenMap.Resolution;
 	int width = screenMapRes;
 	int height = screenMapRes;
 	ULONG widthU = screenMapRes;
@@ -799,3 +802,124 @@ D3DXMATRIX ShadowsExteriorEffect::GetCascadeViewProj(ShadowMapSettings* ShadowMa
 	return shadowViewProj;
 }
 
+// Generate the ViewProj matrix for a particular shadow cascade.
+// Inspired by MJP's https://mynameismjp.wordpress.com/2013/09/10/shadow-maps/ article and code example.
+D3DXMATRIX ShadowsExteriorEffect::GetPerspectiveViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR3* SunDir) {
+	// Get z-range for this cascade.
+	NiCamera* sceneCamera = WorldSceneGraph->camera;
+	NiPoint3 cameraPosition = sceneCamera->m_worldTransform.pos;
+	float zNear = ShadowMap->ShadowMapNear;
+	float zFar = ShadowMap->ShadowMapRadius;
+
+	// Calculate the frustum corners in world space (from a unit cube in projective space).
+	D3DXMATRIX* invViewProj = &TheRenderManager->InvViewProjMatrix;
+
+	float ndcNear = 1.0f ? TheRenderManager->IsReversedDepth() : 0.0f;
+	float ndcFar = 1.0f - ndcNear;
+	D3DXVECTOR3 frustumCorners[8] = {
+		D3DXVECTOR3(-1.0f,  1.0f, ndcNear), // Near plane.
+		D3DXVECTOR3(1.0f,  1.0f, ndcNear),
+		D3DXVECTOR3(1.0f, -1.0f, ndcNear),
+		D3DXVECTOR3(-1.0f, -1.0f, ndcNear),
+		D3DXVECTOR3(-1.0f,  1.0f, ndcFar),  // Far plane.
+		D3DXVECTOR3(1.0f,  1.0f, ndcFar),
+		D3DXVECTOR3(1.0f, -1.0f, ndcFar),
+		D3DXVECTOR3(-1.0f, -1.0f, ndcFar),
+	};
+	for (auto i = 0; i < 8; ++i) {
+		D3DXVec3TransformCoord(&frustumCorners[i], &frustumCorners[i], invViewProj);
+	}
+
+	// Get the corners of the current cascade slice of the view frustum.
+	for (auto i = 0; i < 4; ++i)
+	{
+		D3DXVECTOR3 cornerRay = frustumCorners[i + 4] - frustumCorners[i];
+		D3DXVECTOR3 nearCornerRay = cornerRay * zNear;
+		D3DXVECTOR3 farCornerRay = cornerRay * zFar;
+		frustumCorners[i + 4] = frustumCorners[i] + farCornerRay;
+		frustumCorners[i] = frustumCorners[i] + nearCornerRay;
+	}
+
+	// Calculate the centroid of the view frustum slice.
+	D3DXVECTOR3 frustumCenter(0.0f, 0.0f, 0.0f);
+	for (auto i = 0; i < 8; ++i)
+		frustumCenter = frustumCenter + frustumCorners[i];
+	frustumCenter *= 1.0f / 8.0f;
+
+	// Must be kept stable.
+	D3DXVECTOR3 upDir(0.0f, 0.0f, 1.0f);
+
+	D3DXVECTOR3 minExtents, maxExtents;
+
+	// Calculate the radius of a bounding sphere surrounding the frustum corners
+	float sphereRadius = 0.0f;
+	for (auto i = 0; i < 8; ++i)
+	{
+		D3DXVECTOR3 centerToCorner = frustumCorners[i] - frustumCenter;
+		float dist = D3DXVec3Length(&centerToCorner);
+		sphereRadius = max(sphereRadius, dist);
+	}
+	sphereRadius = std::ceil(sphereRadius * 16.0f) / 16.0f;
+
+	// Modify sphere radius to compensate for lower than default FOV (aiming, zooming, ...).
+	float defaultWorldFOV = *(float*)(0x120315C + 4);
+	float currentWorldFOV = WorldSceneGraph->cameraFOV;
+	float radiusFOVCompensation = tan(defaultWorldFOV * 0.5f * (3.1416f / 180.0f)) / tan(currentWorldFOV * 0.5f * (3.1416f / 180.0f));
+	sphereRadius *= radiusFOVCompensation;
+
+	maxExtents = D3DXVECTOR3(sphereRadius, sphereRadius, sphereRadius);
+	minExtents = -maxExtents;
+
+	D3DXVECTOR3 cascadeExtents = maxExtents - minExtents;
+
+	// Create a shadow frustum center by moving the view frustum slice center away from the camera.
+	// Should make it so we can more easily use the full resolution, which is mostly wasted due to
+	// stabilization.
+	D3DXVECTOR3 shadowFrustumCenter = frustumCenter;
+	//D3DXVec3Normalize(&shadowFrustumCenter, &frustumCenter);  // Get the direction from camera to the frustum center.
+	//shadowFrustumCenter *= sphereRadius;  // Move the center so that the length is equal to the sphere radius.
+
+	ShadowMap->ShadowMapCascadeCenterRadius.x = shadowFrustumCenter.x;
+	ShadowMap->ShadowMapCascadeCenterRadius.y = shadowFrustumCenter.y;
+	ShadowMap->ShadowMapCascadeCenterRadius.z = shadowFrustumCenter.z;
+	ShadowMap->ShadowMapCascadeCenterRadius.w = sphereRadius;
+
+	// Calculate correct bound size limit for current cascade.
+	ShadowMap->Forms.MinRadius = ShadowMap->Forms.OrigMinRadius * sphereRadius * ShadowMap->ShadowMapInverseResolution;
+
+	float nearPlane = 0.0f;  // Shadow casters are pancaked to near plane in the vertex shader.
+	float farPlane = cascadeExtents.z;
+	D3DXVECTOR3 shadowCameraPos = shadowFrustumCenter + D3DXVECTOR3(*SunDir) * -minExtents.z;
+
+	D3DXMATRIX shadowView, shadowProj, shadowViewProj;
+
+	D3DXMatrixLookAtRH(&shadowView, &shadowCameraPos, &shadowFrustumCenter, &upDir);
+	D3DXMatrixPerspectiveOffCenterRH(&shadowProj, minExtents.x, maxExtents.x, minExtents.y, maxExtents.y, nearPlane, farPlane);
+	shadowViewProj = shadowView * shadowProj;
+
+	// Create the rounding matrix, by projecting the world-space origin and determining
+	// the fractional offset in texel space.
+	float sMapSize = ShadowMap->ShadowMapResolution;
+	// We are working in camera relative world space - camera position is our fixed point for stabilization.
+	D3DXVECTOR4 shadowOrigin(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z, 1.0f);
+	D3DXVec4Transform(&shadowOrigin, &shadowOrigin, &shadowViewProj);
+	D3DXVec4Scale(&shadowOrigin, &shadowOrigin, sMapSize / 2.0f);
+	D3DXVECTOR4 roundedOrigin, roundOffset;
+	Vector4Round(&roundedOrigin, &shadowOrigin);
+	D3DXVec4Subtract(&roundOffset, &roundedOrigin, &shadowOrigin);
+	D3DXVec4Scale(&roundOffset, &roundOffset, 2.0f / sMapSize);
+
+	shadowProj._41 = shadowProj._41 + roundOffset.x;
+	shadowProj._42 = shadowProj._42 + roundOffset.y;
+
+	shadowViewProj = shadowView * shadowProj;
+
+	NiFrustum frustum(minExtents.x, maxExtents.x, maxExtents.y, minExtents.y, nearPlane, farPlane, true);
+	TheCameraManager->SetFrustumPlanes(&ShadowMap->ShadowMapFrustumPlanes, &shadowViewProj, shadowCameraPos, frustum);
+	ShadowMap->ShadowMapFrustumPlanes.SetActivePlaneState(62);
+
+	// Cache the current camera translation. Used to offset against camera movement when using a cached map.
+	ShadowMap->CameraTranslation = D3DXVECTOR3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+	return shadowViewProj;
+}

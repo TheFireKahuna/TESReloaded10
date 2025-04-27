@@ -18,7 +18,7 @@ sampler2D TESR_SourceBuffer : register(s1) = sampler_state { ADDRESSU = CLAMP; A
 sampler2D TESR_DepthBuffer : register(s2) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_NormalsBuffer : register(s3) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 sampler2D TESR_AvgLumaBuffer : register(s4) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
-sampler2D TESR_PointShadowBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
+sampler2D TESR_ScreenMapBuffer : register(s5) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 sampler2D TESR_BloomBuffer : register(s6) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = NONE; MINFILTER = NONE; MIPFILTER = NONE; };
 sampler2D TESR_SMAA_Edges : register(s7) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
 sampler2D TESR_SMAA_Blend : register(s8) = sampler_state { ADDRESSU = CLAMP; ADDRESSV = CLAMP; MAGFILTER = LINEAR; MINFILTER = LINEAR; MIPFILTER = LINEAR; };
@@ -61,8 +61,8 @@ float4 displayDepth(float4 color, float2 uv, float2 bufferPosition, float2 buffe
 float4 displayShadows(float4 color, float2 uv, float2 bufferPosition, float2 bufferSize){
 	float2 lowerCorner = bufferPosition + bufferSize;
 	if ((uv.x < bufferPosition.x || uv.y < bufferPosition.y) || (uv.x > lowerCorner.x || uv.y > lowerCorner.y )) return color;
-	float4 Shadows = tex2D(TESR_PointShadowBuffer, float2(invlerp(bufferPosition, lowerCorner, uv)));
-	return Shadows.rrrr * 0.5 + Shadows.gggg;
+	float4 Shadows = tex2D(TESR_ScreenMapBuffer, float2(invlerp(bufferPosition, lowerCorner, uv)));
+	return Shadows.rrrr;
 }
 
 float4 displayBloom(float4 color, float2 uv, float2 bufferPosition, float2 bufferSize, sampler2D buffer){

@@ -564,6 +564,8 @@ Darkness = 0.75                      # Darkness of shadows.
 NightMinDarkness = 0.35              # Darkness of shadows during dark moon phase. Set to 0 to disable shadows completely when there is no moon.
 OrthoMapResolution = 256             # Resolution of the texture used to store the ortho map.
 OrthoRadius = 8000                   # Max distance for rendering of ortho map.
+ScreenMapResolution = 256             # Resolution of the texture used to store the ortho map.
+ScreenRadius = 8000                   # Max distance for rendering of ortho map.
 UsePointShadowsDay = false           # Whether to cast shadows from point lights. Requires a slight darkening of the entire screen.
 UsePointShadowsNight = false         # Whether to cast shadows from point lights during Nights. Requires a slight darkening of the entire screen.
 
@@ -655,6 +657,22 @@ Statics = true                       # Whether to include objects with "Statics"
 Terrain = true                       # Whether to include Terrain when rendering ortho map.
 Trees = true                         # Whether to include Trees when rendering ortho map.
 
+[_Shaders.ShadowsExteriors.FormsScreen]
+Activators = true                    # Whether to include objects with "Activator" flag when rendering shadowmaps.
+Actors = true                        # Whether to include objects with "Actors" flag when rendering shadowmaps.
+AlphaEnabled = true                  # Whether to take into account alpha of objects when rendering shadowmaps.
+Apparatus = false                    # Whether to include objects with "Apparatus" flag when rendering shadowmaps.
+Books = false                        # Whether to include objects with "Books" flag when rendering shadowmaps.
+Containers = true                    # Whether to include objects with "Containers" flag when rendering shadowmaps.
+Doors = true                         # Whether to include objects with "Doors" flag when rendering shadowmaps.
+Furniture = true                     # Whether to include objects with "Furniture" flag when rendering shadowmaps.
+Lod = false                          # Whether to include objects with "Lod" flag when rendering shadowmaps.
+MinRadius = 1.0                      # Whether to include objects with a radius of less than x pixels on the screen in the shadowmaps.
+Misc = true                          # Whether to include objects with misc flags when rendering shadowmaps.
+Statics = true                       # Whether to include objects with "Statics" flag when rendering shadowmaps.
+Terrain = true                       # Whether to include Terrain when rendering shadowmaps.
+Trees = true                         # Whether to include Trees when rendering shadowmaps.
+
 [_Shaders.ShadowsExteriors.ScreenSpace]
 BlurRadius = 1.0                     # Blur strength for denoising screenspace shadows. Keep low, otherwise a lot of pixelation will occur.
 Enabled = true                       # Wether to render screen space contact/detail shadows
@@ -677,6 +695,11 @@ LimitFrequency = true				 # Limit the update frequency of the furthest cascade (
 Resolution = 2						 # Resolution of the texture used to store the ortho map. 0: 128, 1: 256, 2: 512, 3: 1024, 4: 2048
 Distance = 3000                      # Distance to render ortho for. The unit is the same as the game uses for i.e. fog values.
 LimitFrequency = true				 # Limit the update frequency of the ortho map (one per four frames).
+
+[_Shaders.ShadowsExteriors.Screen]
+Resolution = 2						 # Resolution of the texture used to store the ortho map. 0: 128, 1: 256, 2: 512, 3: 1024, 4: 2048
+Distance = 130000                      # Distance to render ortho for. The unit is the same as the game uses for i.e. fog values.
+LimitFrequency = false				 # Limit the update frequency of the ortho map (one per four frames).
 
 [_Shaders.ShadowsExteriors.Status]
 Enabled = true                       # Post process sun and pointlights shadows in exteriors.

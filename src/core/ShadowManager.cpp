@@ -760,12 +760,18 @@ void ShadowManager::RenderShadowMaps() {
 		Device->SetDepthStencilSurface(Shadows->ShadowMapScreenDepthSurface);
 
 		ShadowData->z = 1; // identify ortho map in shader constant
-		D3DXVECTOR3 ScreenDir = D3DXVECTOR3(0.05f, 0.05f, 1.0f);
+		NiMatrix33* WorldRotate = &WorldSceneGraph->camera->m_worldTransform.rot;
+		NiPoint3* WorldTranslate = &WorldSceneGraph->camera->m_worldTransform.pos;
+
+		D3DXVECTOR3 ScreenDir;
+		ScreenDir.x = WorldRotate->data[0][0];
+		ScreenDir.y = WorldRotate->data[1][0];
+		ScreenDir.z = WorldRotate->data[2][0];
 		Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &ScreenDir);
 
 		RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
 
-		ScreenData->x = Shadows->Settings.ScreenMap.Distance * 2;
+		ScreenData->x = Shadows->Settings.ScreenMap.Distance;
 		ScreenData->y = ShadowMap->ShadowMapInverseResolution;
 
 		shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Screen");
@@ -833,6 +839,7 @@ void ShadowManager::RenderShadowMaps() {
 			if (GetFileAttributesA(Filename) == INVALID_FILE_ATTRIBUTES) CreateDirectoryA(Filename, NULL);
 			D3DXSaveSurfaceToFileA(".\\Test\\shadowmapatlas.jpg", D3DXIFF_JPG, Shadows->ShadowAtlasSurface, NULL, NULL);
 			D3DXSaveSurfaceToFileA(".\\Test\\shadowmaportho.jpg", D3DXIFF_JPG, Shadows->ShadowMapOrthoSurface, NULL, NULL);
+			D3DXSaveSurfaceToFileA(".\\Test\\shadowmapscreen.jpg", D3DXIFF_JPG, Shadows->ShadowMapScreenSurface, NULL, NULL);
 
 			InterfaceManager->ShowMessage("Textures taken!");
 		}
