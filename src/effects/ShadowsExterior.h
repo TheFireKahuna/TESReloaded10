@@ -207,7 +207,6 @@ public:
 
 	void		GetCascadeDepths();
 	D3DXMATRIX	GetCascadeViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR3* SunDir);
-	D3DXMATRIX	GetPerspectiveViewProj(ShadowMapSettings* ShadowMap, D3DXVECTOR3* SunDir);
 
 private:
 	bool		texturesInitialized;

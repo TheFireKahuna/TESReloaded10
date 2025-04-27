@@ -37,6 +37,8 @@ public:
 	NiVector4				BillboardUp;
 	ShaderRecordVertex*		ShadowMapVertex;
 	ShaderRecordPixel*		ShadowMapPixel;
+	ShaderRecordVertex*		ShadowScreenMapVertex;
+	ShaderRecordPixel*		ShadowScreenMapPixel;
 	ShaderRecordVertex*		ShadowCubeMapVertex;
 	ShaderRecordPixel*		ShadowCubeMapPixel;
 	ShaderRecordVertex*		ShadowMapBlurVertex;

@@ -18,6 +18,8 @@ void ShadowManager::Initialize() {
 	// load the shaders
 	TheShadowManager->ShadowMapVertex = (ShaderRecordVertex*)ShaderRecord::LoadShader("ShadowMap.vso", "Shadows\\");
 	TheShadowManager->ShadowMapPixel = (ShaderRecordPixel*)ShaderRecord::LoadShader("ShadowMap.pso", "Shadows\\");
+	TheShadowManager->ShadowScreenMapVertex = (ShaderRecordVertex*)ShaderRecord::LoadShader("ShadowScreenMap.vso", "Shadows\\");
+	TheShadowManager->ShadowScreenMapPixel = (ShaderRecordPixel*)ShaderRecord::LoadShader("ShadowScreenMap.pso", "Shadows\\");
 	TheShadowManager->ShadowCubeMapVertex = (ShaderRecordVertex*)ShaderRecord::LoadShader("ShadowCubeMap.vso", "Shadows\\");
 	TheShadowManager->ShadowCubeMapPixel = (ShaderRecordPixel*)ShaderRecord::LoadShader("ShadowCubeMap.pso", "Shadows\\");
 
@@ -29,6 +31,8 @@ void ShadowManager::Initialize() {
 	// Make sure samplers are not reset on SetCT as that causes errors.
 	TheShadowManager->ShadowMapVertex->ClearSamplers = false;
 	TheShadowManager->ShadowMapPixel->ClearSamplers = false;
+	TheShadowManager->ShadowScreenMapVertex->ClearSamplers = false;
+	TheShadowManager->ShadowScreenMapPixel->ClearSamplers = false;
 	TheShadowManager->ShadowCubeMapVertex->ClearSamplers = false;
 	TheShadowManager->ShadowCubeMapPixel->ClearSamplers = false;
 	TheShadowManager->ShadowMapBlurVertex->ClearSamplers = false;
@@ -36,7 +40,7 @@ void ShadowManager::Initialize() {
 	TheShadowManager->ShadowMapClearPixel->ClearSamplers = false;
 
 	TheShadowManager->ShadowShadersLoaded = true;
-    if (TheShadowManager->ShadowMapVertex == nullptr || TheShadowManager->ShadowMapPixel == nullptr  || TheShadowManager->ShadowMapBlurVertex  == nullptr
+    if (TheShadowManager->ShadowMapVertex == nullptr || TheShadowManager->ShadowMapPixel == nullptr  || TheShadowManager->ShadowScreenMapVertex == nullptr || TheShadowManager->ShadowScreenMapPixel == nullptr || TheShadowManager->ShadowMapBlurVertex  == nullptr
         || TheShadowManager->ShadowCubeMapVertex == nullptr || TheShadowManager->ShadowCubeMapPixel == nullptr || TheShadowManager->ShadowMapBlurPixel  == nullptr ){
 		TheShadowManager->ShadowShadersLoaded = false;
 		Logger::Log("[ERROR]: Could not load one or more of the ShadowMap generation shaders. Reinstall the mod.");
@@ -751,6 +755,17 @@ void ShadowManager::RenderShadowMaps() {
 			shadowMapTimer.LogTime("ShadowManager::RenderShadowMap Ortho");
 		}
 
+		geometryPass->VertexShader = ShadowScreenMapVertex;
+		geometryPass->PixelShader = ShadowScreenMapPixel;
+		alphaPass->VertexShader = ShadowScreenMapVertex;
+		alphaPass->PixelShader = ShadowScreenMapPixel;
+		skinnedGeoPass->VertexShader = ShadowScreenMapVertex;
+		skinnedGeoPass->PixelShader = ShadowScreenMapPixel;
+		speedTreePass->VertexShader = ShadowScreenMapVertex;
+		speedTreePass->PixelShader = ShadowScreenMapPixel;
+		terrainLODPass->VertexShader = ShadowScreenMapVertex;
+		terrainLODPass->PixelShader = ShadowScreenMapPixel;
+
 		// render screen space buffer
 		auto shadowMapTimer = TimeLogger();
 
@@ -762,12 +777,13 @@ void ShadowManager::RenderShadowMaps() {
 		ShadowData->z = 1; // identify ortho map in shader constant
 		NiMatrix33* WorldRotate = &WorldSceneGraph->camera->m_worldTransform.rot;
 		NiPoint3* WorldTranslate = &WorldSceneGraph->camera->m_worldTransform.pos;
+		ShadowMap->CameraTranslation = WorldSceneGraph->camera->m_worldTransform.pos.toD3DXVEC3();
 
 		D3DXVECTOR3 ScreenDir;
 		ScreenDir.x = WorldRotate->data[0][0];
 		ScreenDir.y = WorldRotate->data[1][0];
 		ScreenDir.z = WorldRotate->data[2][0];
-		Shadows->Constants.ShadowViewProj = Shadows->GetCascadeViewProj(ShadowMap, &ScreenDir);
+		Shadows->Constants.ShadowViewProj = TheRenderManager->ViewProjMatrix;
 
 		RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
 
