@@ -2,7 +2,7 @@
 #include "../includes/Speedtree.hlsl"
 
 row_major float4x4 TESR_ShadowWorldTransform : register(c0);
-row_major float4x4 TESR_ShadowViewProjTransform : register(c4);
+row_major float4x4 TESR_ViewProjectionTransform : register(c4);
 float4 TESR_ShadowData : register(c8);
 float4 Bones[54] : register(c9);
 float4 BillboardRight : register(c63);
@@ -85,7 +85,7 @@ VS_OUTPUT main(VS_INPUT IN) {
         r0.z = r1.z - ((q0.x * q1.x) * LODLandParams.y);
     }
     if (TESR_ShadowData.x != 1.0f) r0 = mul(r0, TESR_ShadowWorldTransform);
-	r0 = mul(r0, TESR_ShadowViewProjTransform);
+	r0 = mul(r0, TESR_ViewProjectionTransform);
 	
 	// Pancaking to ensure geometry outside of near plane is not culled.
     r0.z = max(r0.z, 0.0f);

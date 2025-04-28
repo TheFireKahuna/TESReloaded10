@@ -95,8 +95,6 @@ void RenderPass::DrawSkinnedGeometryBuffer(NiGeometry* Geo, NiGeometryBufferData
 
 
 ShadowRenderPass::ShadowRenderPass() {
-	PixelShader = TheShadowManager->ShadowMapPixel;
-	VertexShader = TheShadowManager->ShadowMapVertex;
 	RegisterConstants();
 }
 
@@ -130,8 +128,6 @@ void ShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 
 
 AlphaShadowRenderPass::AlphaShadowRenderPass() {
-	PixelShader = TheShadowManager->ShadowMapPixel;
-	VertexShader = TheShadowManager->ShadowMapVertex;
 	RegisterConstants();
 }
 
@@ -184,8 +180,6 @@ void AlphaShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 
 
 SkinnedGeoShadowRenderPass::SkinnedGeoShadowRenderPass() {
-	PixelShader = TheShadowManager->ShadowMapPixel;
-	VertexShader = TheShadowManager->ShadowMapVertex;
 	RegisterConstants();
 }
 
@@ -309,8 +303,6 @@ void SkinnedGeoShadowRenderPass::RenderGeometry(NiGeometry* Geo) {
 
 
 SpeedTreeShadowRenderPass::SpeedTreeShadowRenderPass() {
-	PixelShader = TheShadowManager->ShadowMapPixel;
-	VertexShader = TheShadowManager->ShadowMapVertex;
 	RegisterConstants();
 }
 
@@ -375,8 +367,6 @@ void SpeedTreeShadowRenderPass::UpdateConstants(NiGeometry* Geo) {
 
 
 TerrainLODPass::TerrainLODPass() {
-	PixelShader = TheShadowManager->ShadowMapPixel;
-	VertexShader = TheShadowManager->ShadowMapVertex;
 	RegisterConstants();
 }
 

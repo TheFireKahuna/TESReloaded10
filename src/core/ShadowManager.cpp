@@ -774,16 +774,19 @@ void ShadowManager::RenderShadowMaps() {
 		Device->SetRenderTarget(0, Shadows->ShadowMapScreenSurface);
 		Device->SetDepthStencilSurface(Shadows->ShadowMapScreenDepthSurface);
 
+		NiCamera* Camera = WorldSceneGraph->camera;
 		ShadowData->z = 1; // identify ortho map in shader constant
-		NiMatrix33* WorldRotate = &WorldSceneGraph->camera->m_worldTransform.rot;
-		NiPoint3* WorldTranslate = &WorldSceneGraph->camera->m_worldTransform.pos;
-		ShadowMap->CameraTranslation = WorldSceneGraph->camera->m_worldTransform.pos.toD3DXVEC3();
+		NiMatrix33* WorldRotate = &Camera->m_worldTransform.rot;
+		NiPoint3* WorldTranslate = &Camera->m_worldTransform.pos;
+		ShadowMap->CameraTranslation = Camera->m_worldTransform.pos.toD3DXVEC3();
+		Shadows->Constants.ShadowViewProj = TheRenderManager->ViewProjMatrix;
+		//TheCameraManager->SetFrustumPlanes(&ShadowMap->ShadowMapFrustumPlanes, &Shadows->Constants.ShadowViewProj, ShadowMap->CameraTranslation, Camera->Frustum);
+		//ShadowMap->ShadowMapFrustumPlanes.SetActivePlaneState(63);
 
 		D3DXVECTOR3 ScreenDir;
 		ScreenDir.x = WorldRotate->data[0][0];
 		ScreenDir.y = WorldRotate->data[1][0];
 		ScreenDir.z = WorldRotate->data[2][0];
-		Shadows->Constants.ShadowViewProj = TheRenderManager->ViewProjMatrix;
 
 		RenderShadowMap(ShadowMap, &Shadows->Constants.ShadowViewProj);
 

@@ -27,16 +27,31 @@ float packDepth(float viewZ, float nearZ, float farZ){
 
 PS_OUTPUT main(VS_OUTPUT IN) {
     PS_OUTPUT OUT;
-	float depth = IN.texcoord_0.z;
+	if (TESR_ShadowData.y == 1.0f) { // Leaves (Speedtrees) or alpha is required
+		float4 diffuse = tex2D(DiffuseMap, IN.texcoord_1.xy);
+        if (diffuse.a < 0.5f)
+            discard;
+    }
 
-    float x = IN.texcoord_1.x * 2 - 1;
-    float y = (1 - IN.texcoord_1.y) * 2 - 1;
-    float4 clipSpace = float4(x, y, depth, 1.0f);
+    float depthValue = IN.texcoord_0.z / IN.texcoord_0.w;
 
-    float4 viewSpace = mul(clipSpace, TESR_InvProjectionTransform);
+    // First 10% of the depth buffer color red.
+    if(depthValue < 0.9f)
+    {
+        OUT.color_0 = float4(depthValue, 0.0f, 0.0f, 1.0f);
+    }
 	
-    viewSpace /= viewSpace.w;
+    // The next 0.025% portion of the depth buffer color green.
+    if(depthValue > 0.9f)
+    {
+        OUT.color_0 = float4(depthValue, 1.0f, 0.0f, 1.0f);
+    }
 
-	OUT.color_0 = float4(viewSpace.z / farZ, depth, 1.0, 1.0); // scale values back to 0 - 1 to avoid overflow
+    // The remainder of the depth buffer color blue.
+    if(depthValue > 0.925f)
+    {
+        OUT.color_0 = float4(depthValue, 0.0f, 1.0f, 1.0f);
+    }
+
     return OUT;
 };

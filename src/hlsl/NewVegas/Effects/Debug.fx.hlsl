@@ -62,7 +62,7 @@ float4 displayShadows(float4 color, float2 uv, float2 bufferPosition, float2 buf
 	float2 lowerCorner = bufferPosition + bufferSize;
 	if ((uv.x < bufferPosition.x || uv.y < bufferPosition.y) || (uv.x > lowerCorner.x || uv.y > lowerCorner.y )) return color;
 	float4 Shadows = tex2D(TESR_ScreenMapBuffer, float2(invlerp(bufferPosition, lowerCorner, uv)));
-	return pows(Shadows.rrrr, 0.3);
+	return pows(float4(Shadows.rrr,1.0f),0.15);
 }
 
 float4 displayBloom(float4 color, float2 uv, float2 bufferPosition, float2 bufferSize, sampler2D buffer){
