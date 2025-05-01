@@ -98,5 +98,9 @@ void AttachHooks() {
 		SafeWriteJump(Jumpers::FlyCam::UpdateRightFlyCamHook, (UInt32)UpdateRightFlyCamHook);
 		SafeWriteJump(Jumpers::FlyCam::UpdateLeftFlyCamHook, (UInt32)UpdateLeftFlyCamHook);
 	}
+	if (SettingManager::DisableCulling)
+	{
+		SafeWriteCall(0xC51887, (UInt32)BSCullingProcessCreateHook);
+	}
 
 }

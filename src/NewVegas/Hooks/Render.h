@@ -54,3 +54,5 @@ void DetectorWindowSetNodeName(char* Buffer, int Size, char* Format, char* Class
 //__forceinline NiColorAlpha* GetLightConstant(int index);
 //__forceinline void ScaleColor(NiColorAlpha* Color, float scale);
 //void __fastcall ShadowLightShader__UpdateLights(void* apThis, void*, void* apShaderProp, void* apRenderPass, D3DXMATRIX aMatrix, void* apTransform, UInt32 aeRenderPassType, void* apSkinInstance);
+
+BSCullingProcess* __fastcall BSCullingProcessCreateHook(BSCullingProcess* apThis, void*, void* apVisibleSet);

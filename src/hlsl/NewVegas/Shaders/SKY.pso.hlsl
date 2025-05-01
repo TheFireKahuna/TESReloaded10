@@ -64,9 +64,6 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     OUT.color_0 = delinearize(float4(skyColor * TESR_SunsetColor.w, 1)) ; // multiply sky strength for HDR
 
-    // dithering
-	OUT.color_0.rgb += ditherMat[ (IN.screen.x)%4 ][ (IN.screen.y)%4 ] / 255;
-
     // OUT.color_0.rgb = lerp(green, red, sunDir);
 
     return OUT;

@@ -190,16 +190,12 @@ struct VS_OUTPUT {
     float4 sPosition : POSITION;
     float2 uv : TEXCOORD0;
     float4 lightDir : TEXCOORD1;
-
-#if LIGHTS > 1 || NUM_PT_LIGHTS > 1
-    float4 light2Dir : TEXCOORD2;
-#endif
+    float4 normal : TEXCOORD2;
+    float4 tangent : TEXCOORD3;
+    float4 binormal : TEXCOORD4;
+    float4 lPosition : TEXCOORD5;
     
-#if LIGHTS > 2 || NUM_PT_LIGHTS > 2
-    float4 light3Dir : TEXCOORD3;
-#endif
-    
-    float3 viewDir : TEXCOORD6;
+    float3 viewPosition : TEXCOORD6;
     
     float4 worldPos: TEXCOORD7;
 };
@@ -220,7 +216,6 @@ float4 LightData[10] : register(c25);
 
 float4 EyePosition : register(c16);
 
-float4 TESR_DebugVar : register(c40);
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
@@ -244,29 +239,24 @@ VS_OUTPUT main(VS_INPUT IN) {
     
         OUT.sPosition.xyzw = mul(SkinModelViewProj, position.xyzw);
     #endif
+    OUT.tangent.xyz = IN.tangent.xyz;
+    OUT.binormal.xyz = IN.binormal.xyz;
+    OUT.normal.xyz = IN.normal.xyz;
+    float3 viewDir = mul(tbn, EyePosition.xyz - position.xyz);
+    OUT.tangent.w = viewDir.x;
+    OUT.binormal.w = viewDir.y;
+    OUT.normal.w = viewDir.z;
     
-    #if defined(DIFFUSE) || defined(POINT)
-        float3 light = LightData[0].xyz - position.xyz;
+    #if !defined(DIFFUSE) && !defined(POINT)
+        OUT.lightDir.xyz = mul(tbn, sunDirection());
+        OUT.lightDir.w = LightData[0].w;
     #else
-        float3 light = LightData[0].xyz;
+        OUT.lightDir = position;
     #endif
     
-    OUT.lightDir.w = LightData[0].w;
-    OUT.lightDir.xyz = mul(tbn, light);
+    OUT.viewPosition.xyz = EyePosition.xyz;
     
-    OUT.viewDir.xyz = mul(tbn, EyePosition.xyz - position.xyz);
-    
-    #if LIGHTS > 1 || NUM_PT_LIGHTS > 1
-        light = LightData[1].xyz - position.xyz;
-        OUT.light2Dir.w = LightData[1].w;
-        OUT.light2Dir.xyz = mul(tbn, light);
-    #endif
-    
-    #if LIGHTS > 2 || NUM_PT_LIGHTS > 2
-        light = LightData[2].xyz - position.xyz;
-        OUT.light3Dir.w = LightData[2].w;
-        OUT.light3Dir.xyz = mul(tbn, light);
-    #endif
+    OUT.lPosition = position;
     
     #ifndef NO_VERTEX_COLOR
         OUT.vertexColor = clamp(IN.vertexColor, 0.0f, 1.0f);
@@ -306,16 +296,11 @@ struct VS_OUTPUT {
     float4 sPosition : POSITION;
     float4 uv : TEXCOORD0;
     float4 lPosition : TEXCOORD1;
-    float4 lightDir : TEXCOORD2;  // .w = .x of viewDir
-    float4 light2 : TEXCOORD3;   // .w = .y of viewDir
-    float4 light3 : TEXCOORD4;  // .w = .z of viewDir
-#if MAX_LIGHTS > 3
-    float4 light4 : TEXCOORD5;
-#endif
-#if MAX_LIGHTS > 4
-    float4 light5 : TEXCOORD6;
-    float4 light6 : TEXCOORD7;
-#endif
+    float4 lightDir : TEXCOORD2;
+    float4 tangent : TEXCOORD3;
+    float4 binormal : TEXCOORD4;
+    float4 normal : TEXCOORD5;
+    float3 viewPosition : TEXCOORD6;
 };
 
 float3 FogColor : register(c15);
@@ -330,10 +315,6 @@ row_major float4x4 ModelViewProj : register(c0);
 float4 EyePosition : register(c16);
 #ifndef OPT
     float4 fvars0 : register(c17);
-
-    #define lightOffset 0
-#else
-    #define lightOffset 1
 #endif
 
 VS_OUTPUT main(VS_INPUT IN) {
@@ -344,9 +325,9 @@ VS_OUTPUT main(VS_INPUT IN) {
     float4 position = IN.position.xyzw;
     
     #ifndef SKIN
-    float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
-    
-    OUT.sPosition.xyzw = mul(ModelViewProj, position.xyzw);
+        float3x3 tbn = float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz);
+        
+        OUT.sPosition.xyzw = mul(ModelViewProj, position.xyzw);
     #else
         float4 offset = IN.blendIndices.zyxw * 765.01001;
         float4 blend = IN.blendWeight.xyzz;
@@ -357,54 +338,23 @@ VS_OUTPUT main(VS_INPUT IN) {
         position.xyz = BonesTransformPosition(Bones, offset, blend, position);
         OUT.sPosition.xyzw = mul(SkinModelViewProj, position.xyzw);
     #endif
-    
+    OUT.tangent.xyz = IN.tangent.xyz;
+    OUT.binormal.xyz = IN.binormal.xyz;
+    OUT.normal.xyz = IN.normal.xyz;
     float3 viewDir = mul(tbn, EyePosition.xyz - position.xyz);
+    OUT.tangent.w = viewDir.x;
+    OUT.binormal.w = viewDir.y;
+    OUT.normal.w = viewDir.z;
+    
+    OUT.viewPosition.xyz = EyePosition.xyz;
     
     OUT.lPosition.xyz = position.xyz;
-    OUT.lPosition.w = LightData[0].w;
     
     #ifndef OPT
-        float lights = min(MAX_LIGHTS, fvars0.z);
-    #elif defined(SPECULAR)
-        float lights = min(MAX_LIGHTS, EyePosition.w);
+        OUT.lightDir.xyz = mul(tbn, sunDirection());
+        OUT.lightDir.w = LightData[0].w;
     #else
-        float lights = min(MAX_LIGHTS, LightData[0].w);
-    #endif
-    float lightsFrac = frac(lights);
-    float lightsThreshold = (lights < 0.0 ? (-lightsFrac < lightsFrac ? 1.0 : 0.0) : 0) + (lights - lightsFrac);
-    float lightUsed;
-    
-    #ifndef OPT
-        OUT.lightDir.w = viewDir.x;
-        OUT.lightDir.xyz = mul(tbn, LightData[0].xyz);
-    #else
-        lightUsed = 0 < lightsThreshold ? 1.0 : 0.0;
-        OUT.lightDir.xyz = lightUsed * mul(tbn, LightData[lightOffset + 0].xyz - position.xyz);
-        OUT.lightDir.w = viewDir.x;
-    #endif
-    
-    lightUsed = 1 < lightsThreshold ? 1.0 : 0.0;
-    OUT.light2.xyz = lightUsed * mul(tbn, LightData[lightOffset + 1].xyz - position.xyz);
-    OUT.light2.w = viewDir.y;
-    
-    lightUsed = 2 < lightsThreshold ? 1.0 : 0.0;
-    OUT.light3.xyz = lightUsed * mul(tbn, LightData[lightOffset + 2].xyz - position.xyz);
-    OUT.light3.w = viewDir.z;
-    
-    #if MAX_LIGHTS > 3
-        lightUsed = 3 < lightsThreshold ? 1.0 : 0.0;
-        OUT.light4.xyz = lightUsed * mul(tbn, LightData[lightOffset + 3].xyz - position.xyz);
-        OUT.light4.w = lightUsed * LightData[lightOffset + 3].w;
-    #endif
-    
-    #if MAX_LIGHTS > 4
-        lightUsed = 4 < lightsThreshold ? 1.0 : 0.0;
-        OUT.light5.xyz = lightUsed * mul(tbn, LightData[lightOffset + 4].xyz - position.xyz);
-        OUT.light5.w = lightUsed * LightData[lightOffset + 4].w;
-        
-        lightUsed = 5 < lightsThreshold ? 1.0 : 0.0;
-        OUT.light6.xyz = lightUsed * mul(tbn, LightData[lightOffset + 5].xyz - position.xyz);
-        OUT.light6.w = lightUsed * LightData[lightOffset + 5].w;
+        OUT.lightDir = position;
     #endif
     
     OUT.vertexColor = clamp(IN.vertexColor, 0.0f, 1.0f);
@@ -436,14 +386,12 @@ struct PS_INPUT {
     float4 fogColor : COLOR1;
 #endif
     float4 uv : TEXCOORD0;
-    float4 lightDir : TEXCOORD1_centroid;
-#if LIGHTS > 1 || NUM_PT_LIGHTS > 1
-    float4 light2Dir : TEXCOORD2_centroid;
-#endif
-#if LIGHTS > 2 || NUM_PT_LIGHTS > 2
-    float4 light3Dir : TEXCOORD3_centroid;
-#endif
-    float3 viewDir : TEXCOORD6_centroid;
+    float4 lightDir : TEXCOORD1;
+    float4 normal : TEXCOORD2;
+    float4 tangent : TEXCOORD3;
+    float4 binormal : TEXCOORD4;
+    float4 lPosition : TEXCOORD5;
+    float3 viewPosition : TEXCOORD6_centroid;
     float4 worldPos : TEXCOORD7;
 };
 
@@ -463,6 +411,10 @@ struct PS_OUTPUT {
 #endif
 
 float4 PSLightColor[10] : register(c3);
+float4 TESR_SunAmount : register(c147);
+float4 TESR_SunColor : register(c149);
+float4 TESR_ShadowLightPosition[12] : register(c150);
+float4 TESR_LightColor[24] : register(c162);
 
 #if (defined(SI) || defined(HAIR)) && !defined(ONLY_SPECULAR)
     #ifdef ONLY_LIGHT
@@ -477,9 +429,12 @@ float4 PSLightColor[10] : register(c3);
     float4 Toggles : register(c27);
 #endif
 
-float4 TESR_DebugVar : register(c40);
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
+    float4 worldPos = IN.worldPos;
+    float3x3 tbn = float3x3(normalize(IN.tangent.xyz), normalize(IN.binormal.xyz), normalize(IN.normal.xyz));
+    float3 eyeDir = normalize(mul(tbn, IN.viewPosition.xyz - IN.lPosition.xyz));
+    float3 viewDir = float3(IN.tangent.w, IN.binormal.w, IN.normal.w);
     
     #if !defined(DIFFUSE) && !defined(ONLY_SPECULAR)
         float4 baseColor = tex2D(BaseMap, IN.uv.xy);
@@ -500,17 +455,6 @@ PS_OUTPUT main(PS_INPUT IN) {
     
     float roughness = getRoughness(normal.a);
     
-    //if (TESR_DebugVar.x > 0.0)
-    //    roughness = SpecularAA(normal.xyz, roughness, TESR_DebugVar.z, TESR_DebugVar.w);
-    
-    //if (TESR_DebugVar.y > 0.0) {
-    //    OUT.color.a = 1;
-    //    if (TESR_DebugVar.y > 0.1)
-    //        OUT.color.rgb = roughness.xxx;
-    //    else
-    //        OUT.color.rgb = normal.aaa;
-    //    return OUT;
-    //}
     
     #ifndef NO_VERTEX_COLOR
         #if defined(HAIR)
@@ -524,13 +468,19 @@ PS_OUTPUT main(PS_INPUT IN) {
     #endif
     
     // Vanilla shadows.
-    float3 shadowMultiplier = GetLightAmount(IN.worldPos);
+    float3 shadowMultiplier = GetLightAmount(worldPos);
+    float3 pointlightDir;
+    float3 pointlightPosition;
 
     #if !defined(DIFFUSE) && !defined(POINT)
-        float3 lighting = getSunLighting(IN.lightDir.xyz, PSLightColor[0].rgb * shadowMultiplier, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        float3 sunPosition = sunToCamera(TESR_SunDirection);
+        float3 sunDir = mul(tbn, sunDirection());
+        float3 lighting = getSunLighting(sunDir, PSLightColor[0].xyz * shadowMultiplier, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #else
         // Pointlights only.
-        float3 lighting = getPointLightLighting(IN.lightDir.xyz, IN.lightDir.w, PSLightColor[0].rgb * shadowMultiplier, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        pointlightPosition = worldToCamera(TESR_ShadowLightPosition[0]);
+        pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+        float3 lighting = getPointLightLighting(pointlightDir, TESR_ShadowLightPosition[0].w, TESR_LightColor[0].rgb * shadowMultiplier, eyeDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #endif
     
     // Self emmitance.
@@ -545,11 +495,15 @@ PS_OUTPUT main(PS_INPUT IN) {
     
     // Other light sources.
     #if LIGHTS > 1 || NUM_PT_LIGHTS > 1
-        lighting += getPointLightLighting(IN.light2Dir.xyz, IN.light2Dir.w, PSLightColor[1].rgb, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        pointlightPosition = worldToCamera(TESR_ShadowLightPosition[1]);
+        pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+        lighting += getPointLightLighting(pointlightDir, TESR_ShadowLightPosition[1].w, TESR_LightColor[1].rgb, eyeDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #endif
     
     #if LIGHTS > 2 || NUM_PT_LIGHTS > 2
-        lighting += getPointLightLighting(IN.light3Dir.xyz, IN.light3Dir.w, PSLightColor[2].rgb, IN.viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        pointlightPosition = worldToCamera(TESR_ShadowLightPosition[2]);
+        pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+        lighting += getPointLightLighting(pointlightDir, TESR_ShadowLightPosition[2].w, TESR_LightColor[2].rgb, eyeDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #endif
     
     float3 finalColor = lighting.rgb;
@@ -594,16 +548,11 @@ struct PS_INPUT {
     float4 sPosition : POSITION;
     float4 uv : TEXCOORD0; // .z and .w are .x and .y of worldPos
     float4 lPosition : TEXCOORD1; // .w is .w of worldPos
-    float4 lightDir : TEXCOORD2_centroid;  // .w = .x of viewDir
-    float4 light2 : TEXCOORD3_centroid; // .w = .y of viewDir
-    float4 light3 : TEXCOORD4_centroid; // .w = .z of viewDir
-#if MAX_LIGHTS > 3
-    float4 light4 : TEXCOORD5_centroid;
-#endif
-#if MAX_LIGHTS > 4
-    float4 light5 : TEXCOORD6_centroid;
-    float4 light6 : TEXCOORD7_centroid;
-#endif
+    float4 lightDir : TEXCOORD2;
+    float4 tangent : TEXCOORD3;
+    float4 binormal : TEXCOORD4;
+    float4 normal : TEXCOORD5;
+    float3 viewPosition : TEXCOORD6;
 };
 
 struct PS_OUTPUT {
@@ -617,6 +566,10 @@ float4 AmbientColor : register(c1);
 
 float4 PSLightColor[10] : register(c3);
 float4 PSLightPosition[8] : register(c19);
+float4 TESR_SunAmount : register(c147);
+float4 TESR_SunColor : register(c149);
+float4 TESR_ShadowLightPosition[12] : register(c150);
+float4 TESR_LightColor[24] : register(c162);
 
 #ifndef OPT
     float4 EmittanceColor : register(c2);
@@ -634,9 +587,12 @@ float4 PSLightPosition[8] : register(c19);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
+    float3x3 tbn = float3x3(normalize(IN.tangent.xyz), normalize(IN.binormal.xyz), normalize(IN.normal.xyz));
+    float3 eyeDir = normalize(mul(tbn, IN.viewPosition.xyz - IN.lPosition.xyz));
+    float4 worldPos = float4(IN.uv.z, IN.uv.w, IN.lPosition.w, 1.0f);
+    float3 viewDir = float3(IN.tangent.w, IN.binormal.w, IN.normal.w);
 
     float4 baseColor = tex2D(BaseMap, IN.uv.xy);
-    float4 worldPos = float4(IN.uv.z, IN.uv.w, IN.lPosition.w, 1.0f);
     
     #ifndef OPT
         clip(AmbientColor.a >= 1 ? 0 : (baseColor.a - alphaTestRef));
@@ -652,37 +608,52 @@ PS_OUTPUT main(PS_INPUT IN) {
     normal.xyz = normalize(expand(normal.xyz));
     
     float roughness = getRoughness(normal.a);
-    
+        
     // Lighting.
-    float3 viewDir = { IN.lightDir.w, IN.light2.w, IN.light3.w };
     
     float att;
     float3 shadowMultiplier = GetLightAmount(worldPos);
     
+    float3 pointlightDir;
+    float3 pointlightPosition;
     #ifndef OPT
-        float3 lighting = getSunLighting(IN.lightDir.xyz, PSLightColor[0].rgb * shadowMultiplier, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        float3 sunPosition = sunToCamera(TESR_SunDirection);
+        float3 sunDir = mul(tbn, sunDirection());
+        float3 lighting = getSunLighting(sunDir, PSLightColor[0].xyz * shadowMultiplier, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #else
-        att = vanillaAtt(PSLightPosition[0].xyz - IN.lPosition.xyz, PSLightPosition[0].w);
-        float3 lighting = getPointLightLightingAtt(IN.lightDir.xyz, att, PSLightColor[0].rgb, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        pointlightPosition = worldToCamera(TESR_ShadowLightPosition[0]);
+        pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+        att = vanillaAtt(pointlightDir, TESR_ShadowLightPosition[0].w);
+        float3 lighting = getPointLightLightingAtt(pointlightDir, att, TESR_LightColor[0].rgb, eyeDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #endif
     
-    att = vanillaAtt(PSLightPosition[lightOffset + 0].xyz - IN.lPosition.xyz, PSLightPosition[lightOffset + 0].w);
-    lighting += (1 >= lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(IN.light2.xyz, att, PSLightColor[1].rgb, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+    pointlightPosition = worldToCamera(TESR_ShadowLightPosition[lightOffset + 0]);
+    pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+    att = vanillaAtt(pointlightDir, TESR_ShadowLightPosition[lightOffset + 0].w);
+    lighting += (1 >= lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(pointlightDir, att, TESR_LightColor[lightOffset + 0].rgb, eyeDir.xyz, normal.xyz, baseColor.rgb, roughness);
     
-    att = vanillaAtt(PSLightPosition[lightOffset + 1].xyz - IN.lPosition.xyz, PSLightPosition[lightOffset + 1].w);
-    lighting += (2 > lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(IN.light3.xyz, att, PSLightColor[2].rgb, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+    pointlightPosition = worldToCamera(TESR_ShadowLightPosition[lightOffset + 1]);
+    pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+    att = vanillaAtt(pointlightDir, TESR_ShadowLightPosition[lightOffset + 1].w);
+    lighting += (2 > lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(pointlightDir, att, TESR_LightColor[lightOffset + 1].rgb, eyeDir.xyz, normal.xyz, baseColor.rgb, roughness);
     
     #if MAX_LIGHTS > 3
-        att = vanillaAtt(PSLightPosition[lightOffset + 2].xyz - IN.lPosition.xyz, PSLightPosition[lightOffset + 2].w);
-        lighting += (3 > lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(IN.light4.xyz, att, PSLightColor[3].rgb, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        pointlightPosition = worldToCamera(TESR_ShadowLightPosition[lightOffset + 2]);
+        pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+        att = vanillaAtt(pointlightDir, TESR_ShadowLightPosition[lightOffset + 2].w);
+        lighting += (3 > lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(pointlightDir, att, TESR_LightColor[lightOffset + 2].rgb, eyeDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #endif
     
     #if MAX_LIGHTS > 4
-        att = vanillaAtt(PSLightPosition[3].xyz - IN.lPosition.xyz, PSLightPosition[3].w);
-        lighting += (4 > lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(IN.light5.xyz, att, PSLightColor[4].rgb, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        pointlightPosition = worldToCamera(TESR_ShadowLightPosition[lightOffset + 3]);
+        pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+        att = vanillaAtt(pointlightDir, TESR_ShadowLightPosition[lightOffset + 3].w);
+        lighting += (4 > lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(pointlightDir, att, TESR_LightColor[lightOffset + 3].rgb, eyeDir.xyz, normal.xyz, baseColor.rgb, roughness);
     
-        att = vanillaAtt(PSLightPosition[4].xyz - IN.lPosition.xyz, PSLightPosition[4].w);
-        lighting += (5 > lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(IN.light6.xyz, att, PSLightColor[5].rgb, viewDir.xyz, normal.xyz, baseColor.rgb, roughness);
+        pointlightPosition = worldToCamera(TESR_ShadowLightPosition[lightOffset + 4]);
+        pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+        att = vanillaAtt(pointlightDir, TESR_ShadowLightPosition[lightOffset + 4].w);
+        lighting += (5 > lightsUsed ? 0.0 : 1.0) * getPointLightLightingAtt(pointlightDir, att, TESR_LightColor[lightOffset + 4].rgb, eyeDir.xyz, normal.xyz, baseColor.rgb, roughness);
     #endif
     
     lighting += getAmbientLighting(AmbientColor.rgb, baseColor.rgb);

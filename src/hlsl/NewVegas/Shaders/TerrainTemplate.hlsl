@@ -95,8 +95,8 @@ VS_OUTPUT main(VS_INPUT IN) {
 
 struct PS_INPUT
 {
-    float2 uv : TEXCOORD0;
-    float3 vertex_color : TEXCOORD1_centroid;
+    float4 uv : TEXCOORD0;
+    float4 vertex_color : TEXCOORD1_centroid;
     float3 lPosition : TEXCOORD2_centroid;
     float4 tangent : TEXCOORD3_centroid; // .w is worldPos.x
     float4 binormal : TEXCOORD4_centroid; // .w is worldPos.y
@@ -121,6 +121,11 @@ float4 AmbientColor : register(c1);
 float4 PSLightColor[13] : register(c3);
 float4 PSLightDir : register(c18);
 float4 PSLightPosition[12] : register(c19);
+float4 TESR_SunDiskColor : register(c146);
+float4 TESR_SunAmount : register(c147);
+float4 TESR_SunColor : register(c149);
+float4 TESR_ShadowLightPosition[12] : register(c150);
+float4 TESR_LightColor[24] : register(c162);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
@@ -146,17 +151,20 @@ PS_OUTPUT main(PS_INPUT IN) {
     float3 baseColor = blendDiffuseMaps(IN.vertex_color, offsetUV, texCount, BaseMap, weights);
     float3 combinedNormal = blendNormalMaps(offsetUV, texCount, NormalMap, weights, roughness);
 
-    float3 lightTS = mul(tbn, PSLightDir.xyz);
+    float3 sunVector = sunToCamera(TESR_SunDirection);
+    float3 lightTS = mul(tbn, sunDirection());
     float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, offsetUV, dx, dy, lightTS, texCount, blends, BaseMap);
     
     float3 shadowMultiplier = GetLightAmount(worldPos);
-    float3 lighting = getSunLighting(lightTS, PSLightColor[0].rgb * shadowMultiplier, eyeDir, combinedNormal, AmbientColor.rgb, baseColor, roughness, 1.0, parallaxShadowMultiplier);
+    float3 lighting = getSunLighting(lightTS, PSLightColor[0].xyz * shadowMultiplier, eyeDir, combinedNormal, AmbientColor.rgb, baseColor, roughness, 1.0, parallaxShadowMultiplier);
 
     #if defined(POINTLIGHT)
         float3 pointlightDir;
+        float3 pointlightPosition;
         [unroll] for (int i = 0; i < NUM_PT_LIGHTS; i++) {
-            pointlightDir = mul(tbn, PSLightPosition[i].xyz - IN.lPosition.xyz);
-            lighting += getPointLightLighting(pointlightDir, PSLightPosition[i].w, PSLightColor[i + 1].rgb, eyeDir, combinedNormal, baseColor, roughness, 1.0);
+        pointlightPosition = worldToCamera(TESR_ShadowLightPosition[i]);
+        pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+            lighting += getPointLightLighting(pointlightDir, TESR_ShadowLightPosition[i].w, TESR_LightColor[i].rgb, eyeDir, combinedNormal, baseColor, roughness, 1.0);
         }
     #endif
     

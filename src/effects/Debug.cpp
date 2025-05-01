@@ -3,10 +3,10 @@
 void DebugEffect::UpdateConstants() {}
 
 void DebugEffect::UpdateSettings() {
-	Constants.DebugVar.x = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar1");
-	Constants.DebugVar.y = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar2");
-	Constants.DebugVar.z = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar3");
-	Constants.DebugVar.w = TheSettingManager->GetSettingF("Main.Develop.Main", "DebugVar4");
+	Constants.DebugVar.x = TheSettingManager->GetSettingI("Main.Develop.Main", "DebugVar1");
+	Constants.DebugVar.y = TheSettingManager->GetSettingI("Main.Develop.Main", "DebugVar2");
+	Constants.DebugVar.z = TheSettingManager->GetSettingI("Main.Develop.Main", "DebugVar3");
+	Constants.DebugVar.w = TheSettingManager->GetSettingI("Main.Develop.Main", "DebugVar4");
 }
 
 void DebugEffect::RegisterConstants() {

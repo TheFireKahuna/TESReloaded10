@@ -7,8 +7,9 @@ sampler2D AttenuationMap : register(s4);
 sampler2D BaseMap : register(s0);
 sampler2D GlowMap : register(s3);
 sampler2D NormalMap : register(s1);
-float4 PSLightColor[10];
+float4 PSLightColor[10] : register(c3);
 
+float4 TESR_PBRData : register(c28);
 
 // Registers:
 //
@@ -46,7 +47,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 #define	compress(v)		(((v) * 0.5) + 0.5)
 #define	shade(n, l)		max(dot(n, l), 0)
 #define	shades(n, l)		saturate(dot(n, l))
-#define	weight(v)		dot(v, 1)
+#define	weight(v)		dot(v, 1.0)
 #define	sqr(v)			((v) * (v))
 
     float1 att11;

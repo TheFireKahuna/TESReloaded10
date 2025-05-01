@@ -8,10 +8,11 @@ float4 EmittanceColor : register(c2);
 sampler2D FaceGenMap0 : register(s2);
 sampler2D FaceGenMap1 : register(s3);
 sampler2D NormalMap : register(s1);
-float4 PSLightColor[10];
+float4 PSLightColor[10] : register(c3);
 float4 PSLightPosition[8] : register(c19);
 float4 Toggles : register(c27);
 
+float4 TESR_PBRData : register(c28);
 
 // Registers:
 //
@@ -57,7 +58,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 #define	compress(v)		(((v) * 0.5) + 0.5)
 #define	shade(n, l)		max(dot(n, l), 0)
 #define	shades(n, l)		saturate(dot(n, l))
-#define	weight(v)		dot(v, 1)
+#define	weight(v)		dot(v, 1.0)
 #define	sqr(v)			((v) * (v))
 
     const float4 const_0 = {-0.5, 2, 1, 0.3};

@@ -9,15 +9,17 @@ sampler2D FaceGenMap0 : register(s2);
 sampler2D FaceGenMap1 : register(s3);
 sampler2D GlowMap : register(s4);
 sampler2D NormalMap : register(s1);
-float4 PSLightColor[10];
+float4 PSLightColor[10] : register(c3);
 sampler2D ShadowMap : register(s6);
 sampler2D ShadowMaskMap : register(s7);
 float4 Toggles : register(c27);
 
-float4 TESR_ReciprocalResolution;
-float4 TESR_SkinData;
-float4 TESR_SkinColor;
-float4 TESR_DebugVar;
+float4 TESR_ReciprocalResolution : register(c28);
+float4 TESR_SkinData : register(c29);
+float4 TESR_SkinColor : register(c30);
+float4 TESR_DebugVar : register(c31);
+
+float4 TESR_PBRData : register(c32);
 
 // Registers:
 //

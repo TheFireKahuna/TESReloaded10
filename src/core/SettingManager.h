@@ -383,6 +383,10 @@ public:
 	SettingsColoringMap				SettingsColoring;
 	SettingsWeatherMap				SettingsWeather;
 
+	static int		LightRangeMode;
+	static bool		DisableCulling;
+	static bool		SunLight;
+
 private:
 	void					FilterMenuSections(StringList* Sections, const char* ParentSection);
 };

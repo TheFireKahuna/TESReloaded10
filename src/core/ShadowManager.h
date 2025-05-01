@@ -25,6 +25,7 @@ public:
 	void					RenderShadowMaps();
 	void					ClearShadowCascade(D3DVIEWPORT9* ViewPort, D3DXVECTOR4* ClearColor);
 	void                    BlurShadowAtlas();
+	static void				FixedFunctionLighting();
 
 	ShadowRenderPass*				geometryPass;
 	AlphaShadowRenderPass*			alphaPass;

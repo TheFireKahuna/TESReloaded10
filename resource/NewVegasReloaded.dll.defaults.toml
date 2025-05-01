@@ -20,10 +20,10 @@ OffsetZ = 5.0
 
 [_Main.Develop.Main]
 DebugMode = false       # Enables debug features like capture shaders and print shadowmaps.
-DebugVar1 = 0.0         # Custom variable used when developing shaders.
-DebugVar2 = 0.0         # Custom variable used when developing shaders.
-DebugVar3 = 0.0         # Custom variable used when developing shaders.
-DebugVar4 = 0.0         # Custom variable used when developing shaders.
+DebugVar1 = 0        # Custom variable used when developing shaders.
+DebugVar2 = 0         # Custom variable used when developing shaders.
+DebugVar3 = 0         # Custom variable used when developing shaders.
+DebugVar4 = 0         # Custom variable used when developing shaders.
 TraceShaders = 25       # Keyboard shortcut to print used shaders list to the log.
 
 [_Main.FlyCam.Main]

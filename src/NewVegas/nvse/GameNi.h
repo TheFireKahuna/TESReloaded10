@@ -3224,3 +3224,26 @@ public:
 	UInt8								pad1FD[3];			// 1FD
 };
 assert(sizeof(ShadowSceneNode) == 0x200);
+
+class NiCullingProcess {
+public:
+	void* vftable;
+	bool m_bUseVirtualAppend;
+	NiVisibleArray* m_pkVisibleSet;
+	NiCamera* m_pkCamera;
+	NiFrustum m_kFrustum;
+	NiFrustumPlanes m_kPlanes;
+};
+
+class BSCompoundFrustum;
+
+class BSCullingProcess : public NiCullingProcess {
+public:
+	UInt32 kCullMode;
+	UInt32 eTypeStack[10];
+	UInt32 uiStackIndex;
+	BSCompoundFrustum* pCompoundFrustum;
+	BSShaderAccumulator* spAccumulator;
+	bool bRecurseToGeometry;
+};
+static_assert(offsetof(BSCullingProcess, kCullMode) == 0x90);

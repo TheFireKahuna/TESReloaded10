@@ -298,6 +298,7 @@ void ShaderManager::UpdateConstants() {
 	}
 	else {
 		ShaderConst.sunDiskColor = ShaderConst.sunColor; // override with the color of the lighting
+		ShaderConst.sunDiskColor.w = currentWeather ? currentWeather->hdrInfo[11] : 1.0f; // SunlightDimmer
 	}
 
 	ShaderConst.windSpeed = WorldSky->windSpeed;
@@ -401,11 +402,11 @@ float ShaderManager::GetTransitionValue(float Day, float Night, float Interior) 
 
 ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 
-	if (!memcmp(Name, "WATER", 5)) return Shaders.Water;
+	if (!memcmp(Name, "WATER", 5) || !memcmp(Name, "ISWATER", 7)) return Shaders.Water;
 	if (!memcmp(Name, "GRASS", 5)) return Shaders.Grass;
-	if (!memcmp(Name, "ISHDR", 5) || !memcmp(Name, "HDR", 3)) return Shaders.Tonemapping; // tonemapping shaders have different names between New vegas and Oblivion
+	if (!memcmp(Name, "ISHDR", 5) || !memcmp(Name, "HDR", 3) || !memcmp(Name, "ISSTEN", 6) || !memcmp(Name, "ISR", 3) || !memcmp(Name, "ISB", 3) || !memcmp(Name, "ISIF", 4) || !memcmp(Name, "ISC", 3) || !memcmp(Name, "ISALPHA", 7)) return Shaders.Tonemapping; // tonemapping shaders have different names between New vegas and Oblivion
 	if (!memcmp(Name, "PAR", 3)) return Shaders.POM;
-	//if (!memcmp(Name, "SKIN", 4)) return Shaders.Skin; // temporarily disabled, the shaders are half broken
+	if (strstr(SkinShadersNames, Name) || !memcmp(Name, "SKIN", 4)) return Shaders.Skin;
 	if (!memcmp(Name, "SKY", 3)) return Shaders.Sky;
 	if (strstr(TerrainShadersNames, Name)) return Shaders.Terrain;
 	if (strstr(ObjectShadersNames, Name)) return Shaders.PBR;

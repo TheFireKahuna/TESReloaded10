@@ -399,3 +399,10 @@ bool __fastcall NiDX9Renderer__Do_EndFrame(NiDX9Renderer* apThis, void*) {
 	// emittance color is index 27
 	//ScaleColor(GetLightConstant(27), TheShaderManager->ShaderConst.HDR.PointLightMult);
 //}
+
+BSCullingProcess* __fastcall BSCullingProcessCreateHook(BSCullingProcess* apThis, void*, void* apVisibleSet) {
+
+	ThisCall(0x4A0EB0, apThis, apVisibleSet);
+	apThis->kCullMode = 1; // ALLPASS 
+	return apThis;
+}

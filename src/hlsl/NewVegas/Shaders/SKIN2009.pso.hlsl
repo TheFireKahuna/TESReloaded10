@@ -4,7 +4,9 @@
 
 sampler2D AttenuationMap : register(s3);
 sampler2D NormalMap : register(s0);
-float4 PSLightColor[10];
+float4 PSLightColor[10] : register(c3);
+
+float4 TESR_PBRData : register(c28);
 
 
 // Registers:
@@ -41,7 +43,7 @@ VS_OUTPUT main(VS_INPUT IN) {
 
 #define	shade(n, l)		max(dot(n, l), 0)
 #define	shades(n, l)		saturate(dot(n, l))
-#define	weight(v)		dot(v, 1)
+#define	weight(v)		dot(v, 1.0)
 #define	sqr(v)			((v) * (v))
 
     const float4 const_2 = {0.3, 0, 0, 0};

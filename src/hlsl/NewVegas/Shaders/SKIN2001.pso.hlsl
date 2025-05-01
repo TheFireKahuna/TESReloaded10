@@ -12,10 +12,12 @@ sampler2D ShadowMap : register(s6);
 sampler2D ShadowMaskMap : register(s7);
 float4 Toggles : register(c27);
 
-float4 TESR_ReciprocalResolution;
-float4 TESR_SkinData;
-float4 TESR_SkinColor;
-float4 TESR_DebugVar;
+float4 TESR_ReciprocalResolution : register(c28);
+float4 TESR_SkinData : register(c29);
+float4 TESR_SkinColor : register(c30);
+float4 TESR_DebugVar : register(c31);
+
+float4 TESR_PBRData : register(c32);
 
 
 // Registers:

@@ -1377,3 +1377,7 @@ void SettingManager::FilterMenuSections(StringList* Sections, const char* Parent
 		}
 	}
 }
+
+ int SettingManager::LightRangeMode = 0;
+ bool SettingManager::DisableCulling = false;
+ bool SettingManager::SunLight = true;
