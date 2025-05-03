@@ -29,7 +29,7 @@ struct VS_INPUT {
 
 struct VS_OUTPUT {
     float4 position : POSITION;
-    float3 eye : TEXCOORD0_centroid;
+    float3 eye : TEXCOORD0;
     float4 color_0 : COLOR0;
 };
 

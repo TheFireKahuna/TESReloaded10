@@ -263,6 +263,10 @@ void ShaderManager::UpdateConstants() {
 	ShaderConst.SunDir.w = 0.0f;
 	D3DXVec4Normalize(&ShaderConst.SunDir, &ShaderConst.SunDir);
 	ShaderConst.SunDir.w = 1.0f;
+	NiDirectionalLight* sunLight = Tes->directionalLight;
+	ShaderConst.SunDir.x = sunLight->direction.x;
+	ShaderConst.SunDir.y = sunLight->direction.y;
+	ShaderConst.SunDir.z = sunLight->direction.z;
 
 	// during the day, track the sun mesh position instead of the lighting direction in exteriors
 	if (GameState.isExterior && GameState.dayLight > 0.5)
@@ -284,9 +288,9 @@ void ShaderManager::UpdateConstants() {
 	GameState.isDayTime = smoothStep(0, 1, GameState.dayLight); // smooth daytime progression -- more accurate to light changes
 	ShaderConst.SunAmount.x = GameState.isDayTime;
 
-	ShaderConst.sunColor.x = WorldSky->sunDirectional.r;
-	ShaderConst.sunColor.y = WorldSky->sunDirectional.g;
-	ShaderConst.sunColor.z = WorldSky->sunDirectional.b;
+	ShaderConst.sunColor.x = sunLight->Diff.r;
+	ShaderConst.sunColor.y = sunLight->Diff.g;
+	ShaderConst.sunColor.z = sunLight->Diff.b;
 	ShaderConst.sunColor.w = ShaderConst.sunGlare;
 
 	if (Shaders.Sky->useSunDiskColor) {
@@ -403,13 +407,13 @@ float ShaderManager::GetTransitionValue(float Day, float Night, float Interior) 
 ShaderCollection* ShaderManager::GetShaderCollection(const char* Name) {
 
 	if (!memcmp(Name, "WATER", 5) || !memcmp(Name, "ISWATER", 7)) return Shaders.Water;
-	if (!memcmp(Name, "GRASS", 5)) return Shaders.Grass;
-	if (!memcmp(Name, "ISHDR", 5) || !memcmp(Name, "HDR", 3) || !memcmp(Name, "ISSTEN", 6) || !memcmp(Name, "ISR", 3) || !memcmp(Name, "ISB", 3) || !memcmp(Name, "ISIF", 4) || !memcmp(Name, "ISC", 3) || !memcmp(Name, "ISALPHA", 7)) return Shaders.Tonemapping; // tonemapping shaders have different names between New vegas and Oblivion
+	//if (!memcmp(Name, "GRASS", 5)) return Shaders.Grass;
+	if (!memcmp(Name, "ISHDR", 5) || !memcmp(Name, "ISTEX", 5) || !memcmp(Name, "HDR", 3) || !memcmp(Name, "ISNULL", 6) || !memcmp(Name, "ISSTEN", 6) || !memcmp(Name, "ISR", 3) || !memcmp(Name, "ISB", 3) || !memcmp(Name, "ISIF", 4) || !memcmp(Name, "ISC", 3) || !memcmp(Name, "ISALPHA", 7)) return Shaders.Tonemapping; // tonemapping shaders have different names between New vegas and Oblivion
 	if (!memcmp(Name, "PAR", 3)) return Shaders.POM;
 	if (strstr(SkinShadersNames, Name) || !memcmp(Name, "SKIN", 4)) return Shaders.Skin;
 	if (!memcmp(Name, "SKY", 3)) return Shaders.Sky;
 	if (strstr(TerrainShadersNames, Name)) return Shaders.Terrain;
-	if (strstr(ObjectShadersNames, Name)) return Shaders.PBR;
+	if (!memcmp(Name, "GRASS", 5) || !memcmp(Name, "STLEAF", 5) || !memcmp(Name, "NOLIGHT", 7) || !memcmp(Name, "GDECAL", 6) || !memcmp(Name, "DISTTREE", 8) || strstr(ObjectShadersNames, Name)) return Shaders.PBR;
 	if (strstr(BloodShaders, Name)) return Shaders.Blood;
 
 	if (Shaders.PBR->GetTemplate(Name).Name != NULL) return Shaders.PBR;

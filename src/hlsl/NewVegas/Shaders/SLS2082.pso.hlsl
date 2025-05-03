@@ -30,11 +30,11 @@ float4 PSLightColor[10] : register(c3);
 struct VS_INPUT {
     
     float2 BaseUV : TEXCOORD0;
-    float3 texcoord_3 : TEXCOORD3_centroid;
-    float texcoord_4 : TEXCOORD4_centroid;
-    float4 texcoord_5 : TEXCOORD5_centroid;
-    float3 lPosition : TEXCOORD6_centroid;
-    float3 eyePosition : TEXCOORD7_centroid;
+    float3 texcoord_3 : TEXCOORD3;
+    float texcoord_4 : TEXCOORD4;
+    float4 texcoord_5 : TEXCOORD5;
+    float3 lPosition : TEXCOORD6;
+    float3 eyePosition : TEXCOORD7;
     float4 worldPos : TEXCOORD8;
 };
 

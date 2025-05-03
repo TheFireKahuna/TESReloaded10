@@ -36,7 +36,7 @@ static const float SUNINFLUENCE = 1/TESR_SkyData.y;
 struct VS_INPUT {
     float4 color_0 : COLOR0;
     float2 screen : VPOS;
-    float3 eye : TEXCOORD0_centroid;
+    float3 eye : TEXCOORD0;
 };
 
 struct VS_OUTPUT {

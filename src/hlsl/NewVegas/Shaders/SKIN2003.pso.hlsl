@@ -47,10 +47,10 @@ struct VS_INPUT {
     float2 BaseUV : TEXCOORD0;			
     float3 color_0 : COLOR0;                        // vertex color?
     float4 color_1 : COLOR1;                        // fog contribution?
-    float3 texcoord_1 : TEXCOORD1_centroid;			// light data in tangent space
-    float3 texcoord_2 : TEXCOORD2_centroid;			
+    float3 texcoord_1 : TEXCOORD1;			// light data in tangent space
+    float3 texcoord_2 : TEXCOORD2;			
     float4 texcoord_4 : TEXCOORD4;			        
-    float3 texcoord_6 : TEXCOORD6_centroid;			// eye data in tangent space
+    float3 texcoord_6 : TEXCOORD6;			// eye data in tangent space
     float4 texcoord_7 : TEXCOORD7;			        // shadowmask/shadowmap uv
 };
 

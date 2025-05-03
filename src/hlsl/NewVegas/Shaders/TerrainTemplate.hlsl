@@ -36,12 +36,11 @@ struct VS_OUTPUT {
     float4 sPosition : POSITION;
     float2 uv : TEXCOORD0;
     float3 vertex_color : TEXCOORD1;
-    float3 lPosition : TEXCOORD2;
-    float4 tangent : TEXCOORD3;
-    float4 binormal : TEXCOORD4;
-    float4 normal : TEXCOORD5;
+    float4 worldPos : TEXCOORD2;
+    float3 tangent : TEXCOORD3;
+    float3 binormal : TEXCOORD4;
+    float3 normal : TEXCOORD5;
     float4 fog : TEXCOORD6;
-    float3 viewPosition : TEXCOORD7;
 };
 
 #ifdef VS
@@ -54,22 +53,23 @@ float4 EyePosition : register(c16);
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
+    float4 position = IN.position;
 
-    float3 mdl0;
-
-    mdl0.xyz = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), IN.position.xyzw);
+    OUT.sPosition = mul(ModelViewProj, position);
+    float4x4 modelMatrix = mul(TESR_ViewProjectionTransform, ModelViewProj);
+    float3x3 worldMatrix = (float3x3)modelMatrix;
+    float4 worldPos = clipToWorld(OUT.sPosition);
+    float3x3 normalMatrix = transpose(inverse3x3(worldMatrix)); // correct normal transform as learned 
+    // Calculate the normal vector against the world matrix only and then normalize the final value.
+    OUT.normal = mul(normalMatrix, IN.normal.xyz);
+    OUT.tangent = mul(worldMatrix, IN.tangent.xyz);
+    OUT.binormal = mul(worldMatrix, IN.binormal.xyz);
 
     OUT.blend_0 = IN.blend_0;
     OUT.blend_1 = IN.blend_1;
 
-    OUT.sPosition.w = dot(ModelViewProj[3].xyzw, IN.position.xyzw);
-    OUT.sPosition.xyz = mdl0.xyz;
     OUT.uv.xy = IN.uv.xy;
     OUT.vertex_color.xyz = clamp(IN.vertex_color.rgb, 0.0f, 1.0f);
-    OUT.lPosition.xyz = IN.position.xyz;
-    OUT.tangent.xyz = IN.tangent.xyz;
-    OUT.binormal.xyz = IN.binormal.xyz;
-    OUT.normal.xyz = IN.normal.xyz;
     
     // Fog.
     float3 fogPos = OUT.sPosition.xyz;
@@ -80,13 +80,16 @@ VS_OUTPUT main(VS_INPUT IN) {
     fogStrength = log2(fogStrength);
     OUT.fog.a = exp2(fogStrength * FogParam.z);
     OUT.fog.rgb = FogColor.rgb;
-    
-    OUT.viewPosition.xyz = EyePosition.xyz;
 
-    float4 worldPos = clipToWorldWithOffset(OUT.sPosition, IN.normal.xyz);
-    OUT.tangent.w = worldPos.x;
-    OUT.binormal.w = worldPos.y;
-    OUT.normal.w = worldPos.z;
+    if (TESR_DebugVar.z == 2.0) {
+        OUT.worldPos = clipToWorldWithOffset(OUT.sPosition, IN.normal.xyz);
+    }
+    else if (TESR_DebugVar.z == 1.0) {
+        OUT.worldPos = clipToWorldWithOffset(OUT.sPosition, OUT.normal.xyz);
+    }
+    else {
+        OUT.worldPos = clipToWorld(OUT.sPosition);
+    }
 
     return OUT;
 };
@@ -96,15 +99,14 @@ VS_OUTPUT main(VS_INPUT IN) {
 struct PS_INPUT
 {
     float4 uv : TEXCOORD0;
-    float4 vertex_color : TEXCOORD1_centroid;
-    float3 lPosition : TEXCOORD2_centroid;
-    float4 tangent : TEXCOORD3_centroid; // .w is worldPos.x
-    float4 binormal : TEXCOORD4_centroid; // .w is worldPos.y
-    float4 normal : TEXCOORD5_centroid; // .w is worldPos.z
+    float3 vertex_color : TEXCOORD1;
+    float4 worldPos : TEXCOORD2;
+    float3 tangent : TEXCOORD3;
+    float3 binormal : TEXCOORD4;
+    float3 normal : TEXCOORD5;
     float4 blend_0 : COLOR0;
     float4 blend_1 : COLOR1;
-    float4 fog : TEXCOORD6_centroid;
-    float4 viewPosition : TEXCOORD7_centroid;
+    float4 fog : TEXCOORD6;
     float4 sPosition : POSITION1;
 };
 
@@ -129,15 +131,11 @@ float4 TESR_LightColor[24] : register(c162);
 
 PS_OUTPUT main(PS_INPUT IN) {
     PS_OUTPUT OUT;
-    
+    float4 worldPos = IN.worldPos;
     int texCount = TEX_COUNT;  // Macro.
-    float3 tangent = normalize(IN.tangent.xyz);
-    float3 binormal = normalize(IN.binormal.xyz);
-    float3 normal = normalize(IN.normal.xyz);
-    float3x3 tbn = float3x3(tangent, binormal, normal);
-    float3 eyeDir = normalize(mul(tbn, IN.viewPosition.xyz - IN.lPosition.xyz));
-    float dist = length(IN.viewPosition.xyz - IN.lPosition.xyz);
-    float4 worldPos = float4(IN.tangent.w, IN.binormal.w, IN.normal.w, 1.0f);
+    float3x3 tbn = float3x3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
+    float3 eyeDir = normalize(TESR_CameraPosition.xyz - worldPos.xyz);
+    float dist = length(TESR_CameraPosition.xyz - worldPos.xyz);
 
     float2 dx, dy;
     dx = ddx(IN.uv.xy);
@@ -150,9 +148,9 @@ PS_OUTPUT main(PS_INPUT IN) {
     float roughness = 1.f;
     float3 baseColor = blendDiffuseMaps(IN.vertex_color, offsetUV, texCount, BaseMap, weights);
     float3 combinedNormal = blendNormalMaps(offsetUV, texCount, NormalMap, weights, roughness);
+    combinedNormal.xyz = normalize(mul(combinedNormal.xyz,tbn));
 
-    float3 sunVector = sunToCamera(TESR_SunDirection);
-    float3 lightTS = mul(tbn, sunDirection());
+    float3 lightTS = sunDirection();
     float parallaxShadowMultiplier = getParallaxShadowMultipler(dist, offsetUV, dx, dy, lightTS, texCount, blends, BaseMap);
     
     float3 shadowMultiplier = GetLightAmount(worldPos);
@@ -163,7 +161,7 @@ PS_OUTPUT main(PS_INPUT IN) {
         float3 pointlightPosition;
         [unroll] for (int i = 0; i < NUM_PT_LIGHTS; i++) {
         pointlightPosition = worldToCamera(TESR_ShadowLightPosition[i]);
-        pointlightDir = mul(tbn, pointlightPosition - worldPos.xyz);
+        pointlightDir = pointlightPosition - worldPos.xyz;
             lighting += getPointLightLighting(pointlightDir, TESR_ShadowLightPosition[i].w, TESR_LightColor[i].rgb, eyeDir, combinedNormal, baseColor, roughness, 1.0);
         }
     #endif

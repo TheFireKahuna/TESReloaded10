@@ -32,7 +32,7 @@ float4 PSLightColor[10] : register(c3);
 struct VS_INPUT {
     float2 NormalUV : TEXCOORD0;
     float4 color_1 : COLOR1;
-    float3 texcoord_1 : TEXCOORD1_centroid;
+    float3 texcoord_1 : TEXCOORD1;
 };
 
 struct VS_OUTPUT {

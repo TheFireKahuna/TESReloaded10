@@ -41,11 +41,11 @@ float4 TESR_PBRData : register(c32);
 
 struct VS_INPUT {
     float2 BaseUV : TEXCOORD0;			
-    float3 texcoord_6 : TEXCOORD6_centroid;			
+    float3 texcoord_6 : TEXCOORD6;			
     float4 texcoord_7 : TEXCOORD7;			
     float3 color_0 : COLOR0;
     float4 color_1 : COLOR1;
-    float3 texcoord_1 : TEXCOORD1_centroid;			
+    float3 texcoord_1 : TEXCOORD1;			
 };
 
 struct VS_OUTPUT {

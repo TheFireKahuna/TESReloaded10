@@ -80,3 +80,58 @@ float3 selectColor(float selector, float3 color0, float3 color1, float3 color2, 
     if (selector >= 0.9 && selector < 1.0) return color9;
     return black.rgb;
 }
+
+float3x3 inverse3x3( float3x3 M ) {
+    // The original was written in HLSL, but this is GLSL, 
+    // therefore 
+    // - the array index selects columns, so M_t[0] is the 
+    // first column of M_t, etc. 
+    // - the float3x3 constructor assembles columns, so 
+    // cross( M_t[1], M_t[2] ) becomes the first column 
+    // of the adjugate, etc. 
+    // - for the determinant, it does not matter whether it is 
+    // computed with M or with M_t; but using M_t makes it 
+    // easier to follow the derivation in the text
+    float3x3 M_t = transpose( M ); 
+    float det = dot( cross( M_t[0], M_t[1] ), M_t[2] ); 
+    float3x3 adjugate = float3x3( cross( M_t[1], M_t[2] ), 
+    cross( M_t[2], M_t[0] ), cross( M_t[0], M_t[1] ) ); 
+    return adjugate / det;
+}
+float3x3 cotangent_frame( float3 N, float3 p, float2 uv )
+{
+    // get edge vectors of the pixel triangle
+    float3 dp1 = ddx( p );
+    float3 dp2 = ddy( p );
+    float2 duv1 = ddx( uv );
+    float2 duv2 = ddy( uv );
+ 
+    // solve the linear system
+    float3 dp2perp = cross( dp2, N );
+    float3 dp1perp = cross( N, dp1 );
+    float3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+    float3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+ 
+    // construct a scale-invariant frame 
+    float invmax = rsqrt( max( dot(T,T), dot(B,B) ) );
+    return float3x3( T * invmax, B * invmax, N );
+}
+float3 perturb_normal( float3 N, float3 V, float2 texcoord, float3 normalMap )
+{
+    // assume N, the interpolated vertex normal and 
+    // V, the view vector (vertex to eye)
+    float3 map = normalize(expand(normalMap));
+    /*
+#ifdef WITH_NORMALMAP_UNSIGNED
+    map = map * 255.0f/127.0f - 128.0f/127.0f;
+#endif
+#ifdef WITH_NORMALMAP_2CHANNEL
+    map.z = sqrt( 1.0f - dot( map.xy, map.xy ) );
+#endif
+#ifdef WITH_NORMALMAP_GREEN_UP
+    map.y = -map.y;
+#endif
+*/
+    float3x3 TBN = cotangent_frame( N, -V, texcoord );
+    return normalize( mul(TBN, map) );
+}

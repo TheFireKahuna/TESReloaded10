@@ -37,9 +37,9 @@ float4 LODTexParams : register(c31);
 struct VS_INPUT {
     float2 NormalUV : TEXCOORD0;
     float4 color_1 : COLOR1;
-    float3 texcoord_1 : TEXCOORD1_centroid;
-    float3 lPosition : TEXCOORD2_centroid;
-    float3 eyePosition : TEXCOORD3_centroid;
+    float3 texcoord_1 : TEXCOORD1;
+    float3 lPosition : TEXCOORD2;
+    float3 eyePosition : TEXCOORD3;
     float4 worldPos : TEXCOORD4;
 };
 

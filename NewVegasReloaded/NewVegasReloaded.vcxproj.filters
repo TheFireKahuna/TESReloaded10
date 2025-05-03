@@ -307,6 +307,18 @@
     <ClInclude Include="..\src\effects\PBR.h">
       <Filter>Effects</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\effects\ExtraShaders.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\effects\SMAA.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\NewVegas\Hooks\Shaders.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hlsl\Oblivion\Effects\SMAA.h">
+      <Filter>Core</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -531,6 +543,9 @@
     <ClCompile Include="..\src\effects\PBR.cpp">
       <Filter>Effects</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\effects\SMAA.cpp" />
+    <ClCompile Include="..\src\effects\SunShadows.cpp" />
+    <ClCompile Include="..\src\NewVegas\Hooks\Shaders.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Exports.def">

@@ -60,7 +60,6 @@ float noise( float3 x )
 }
 
 #include "Includes/Helpers.hlsl"
-#include "Includes/Position.hlsl"
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;

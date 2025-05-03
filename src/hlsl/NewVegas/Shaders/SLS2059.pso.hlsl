@@ -24,8 +24,8 @@ float4 TESR_PBRExtraData : register(c33);
 // Structures:
 
 struct VS_INPUT {
-    float4 texcoord_1 : TEXCOORD1_centroid;			// partial precision
-    float3 texcoord_2 : TEXCOORD2_centroid;			// partial precision
+    float4 texcoord_1 : TEXCOORD1;			// partial precision
+    float3 texcoord_2 : TEXCOORD2;			// partial precision
     float3 color_0 : COLOR0;
     float texcoord_4 : TEXCOORD4;
     float4 worldPos : TEXCOORD5;

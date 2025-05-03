@@ -29,6 +29,8 @@ float3 sunToCamera(float4 coord){
 }
 float3 sunDirection(){
     float4 direction = TESR_SunDirection;
+    return direction.xyz;
+    direction.w = 1.0f;
     if (TESR_DebugVar.y == 1.0) {
         direction = TESR_SunPosition;
     }
@@ -39,28 +41,43 @@ float3 sunDirection(){
         direction = TESR_SmoothedSunDir;
     }
     if (TESR_DebugVar.z == 1.0) {
+        direction.x = -(direction.x);
+    }
+    if (TESR_DebugVar.z == 2.0) {
+        direction.y = -(direction.y);
+    }
+    if (TESR_DebugVar.z == 3.0) {
+        direction.z = -(direction.z);
+    }
+    if (TESR_DebugVar.z == 4.0) {
+        direction.xy = -(direction.xy);
+    }
+    if (TESR_DebugVar.z == 5.0) {
+        direction.xz = -(direction.xz);
+    }
+    if (TESR_DebugVar.z == 6.0) {
+        direction.yz = -(direction.yz);
+    }
+    if (TESR_DebugVar.z == 7.0) {
         direction.xyz = -(direction.xyz);
     }
-    if (TESR_DebugVar.w == 1.0) {
-        direction = mul(direction,TESR_WorldTransform);
-    }
     if (TESR_DebugVar.x == 1.0) {
-        return (mul(direction,TESR_ViewTransform).xyz);
+        direction = (mul(direction,TESR_ViewTransform));
     }
     if (TESR_DebugVar.x == 2.0) {
-        return (mul(direction,TESR_InvViewTransform).xyz);
+        direction = (mul(direction,TESR_InvViewTransform));
     }
     if (TESR_DebugVar.x == 3.0) {
-        return (mul(direction,TESR_ViewProjectionTransform).xyz);
+        direction = (mul(direction,TESR_ViewProjectionTransform));
     }
     if (TESR_DebugVar.x == 4.0) {
-        return (mul(direction,TESR_InvViewProjectionTransform).xyz);
+        direction = (mul(direction,TESR_InvViewProjectionTransform));
     }
     if (TESR_DebugVar.x == 5.0) {
-        return (mul(direction,TESR_ProjectionTransform).xyz);
+        direction = (mul(direction,TESR_ProjectionTransform));
     }
     if (TESR_DebugVar.x == 6.0) {
-        return (mul(direction,TESR_InvProjectionTransform).xyz);
+        direction = (mul(direction,TESR_InvProjectionTransform));
     }
     return direction.xyz;
 }

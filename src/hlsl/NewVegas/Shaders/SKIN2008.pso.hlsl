@@ -24,12 +24,12 @@ float4 TESR_PBRData : register(c28);
 // Structures:
 
 struct VS_INPUT {
-    float3 texcoord_1 : TEXCOORD1_centroid;			// partial precision
-    float3 texcoord_2 : TEXCOORD2_centroid;			// partial precision
+    float3 texcoord_1 : TEXCOORD1;			// partial precision
+    float3 texcoord_2 : TEXCOORD2;			// partial precision
     float4 texcoord_4 : TEXCOORD4;			// partial precision
     float4 texcoord_5 : TEXCOORD5;			// partial precision
     float2 texcoord_0 : TEXCOORD0;			// partial precision
-    float3 texcoord_7 : TEXCOORD7_centroid;			// partial precision
+    float3 texcoord_7 : TEXCOORD7;			// partial precision
 };
 
 struct VS_OUTPUT {

@@ -32,10 +32,10 @@ float4 TESR_PBRData : register(c28);
 
 struct VS_INPUT {
     float2 BaseUV : TEXCOORD0;			// partial precision
-    float3 texcoord_7 : TEXCOORD7_centroid;			// partial precision
+    float3 texcoord_7 : TEXCOORD7;			// partial precision
     float4 texcoord_6 : TEXCOORD6;			// partial precision
-    float3 texcoord_1 : TEXCOORD1_centroid;			// partial precision
-    float3 texcoord_2 : TEXCOORD2_centroid;			// partial precision
+    float3 texcoord_1 : TEXCOORD1;			// partial precision
+    float3 texcoord_2 : TEXCOORD2;			// partial precision
     float4 texcoord_4 : TEXCOORD4;			// partial precision
 };
 

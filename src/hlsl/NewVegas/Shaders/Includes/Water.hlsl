@@ -31,12 +31,12 @@
 
 
 struct PS_INPUT {
-    float4 LTEXCOORD_0 : TEXCOORD0_centroid;     // world position of underwater points
-    float4 LTEXCOORD_1 : TEXCOORD1_centroid;     // local position on plane object surface
-    float4 LTEXCOORD_2 : TEXCOORD2_centroid;     // modelviewproj matrix 1st row 
-    float4 LTEXCOORD_3 : TEXCOORD3_centroid;     // modelviewproj matrix 2nd row 
-    float4 LTEXCOORD_4 : TEXCOORD4_centroid;     // modelviewproj matrix 3rd row 
-    float4 LTEXCOORD_5 : TEXCOORD5_centroid;     // modelviewproj matrix 4th row 
+    float4 LTEXCOORD_0 : TEXCOORD0;     // world position of underwater points
+    float4 LTEXCOORD_1 : TEXCOORD1;     // local position on plane object surface
+    float4 LTEXCOORD_2 : TEXCOORD2;     // modelviewproj matrix 1st row 
+    float4 LTEXCOORD_3 : TEXCOORD3;     // modelviewproj matrix 2nd row 
+    float4 LTEXCOORD_4 : TEXCOORD4;     // modelviewproj matrix 3rd row 
+    float4 LTEXCOORD_5 : TEXCOORD5;     // modelviewproj matrix 4th row 
     float4 LTEXCOORD_6 : TEXCOORD6;              // displacement sampling position
     float2 LTEXCOORD_7 : TEXCOORD7;              // waves sampling position
     float4 WorldPosition : TEXCOORD8;
