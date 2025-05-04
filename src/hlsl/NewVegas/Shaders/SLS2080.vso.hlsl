@@ -36,11 +36,11 @@ struct VS_INPUT {
 struct VS_OUTPUT {
     float4 position : POSITION;
     float2 texcoord_0 : TEXCOORD0;
-    float3 texcoord_3 : TEXCOORD3;
+    float3 worldMatrix_0: TEXCOORD1;
+    float3 worldMatrix_1: TEXCOORD2;
+    float3 worldMatrix_2: TEXCOORD3;
     float texcoord_4 : TEXCOORD4;
     float4 texcoord_5 : TEXCOORD5;
-    float3 lPosition : TEXCOORD6;
-    float3 eyePosition : TEXCOORD7;
     float4 worldPos : TEXCOORD8;
 };
 
@@ -53,16 +53,14 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     float4 r0;
 
-    float3 mdl4 = mul(float3x4(ModelViewProj[0].xyzw, ModelViewProj[1].xyzw, ModelViewProj[2].xyzw), IN.position.xyzw);
+    float4 position = IN.position;
 
-    OUT.position.w = dot(ModelViewProj[3].xyzw, IN.position.xyzw);
-    OUT.position.xyz = mdl4.xyz;
+    OUT.position = mul(ModelViewProj, position);
 
     r0.xy = (IN.texcoord_0.xy * 0.015625) + LandBlendParams.xy;
     r0.z = 1 - r0.x;
     
     OUT.texcoord_0.xy = (r0.zy * 0.9921875) + (1.0 / 256);
-    OUT.texcoord_3.xyz = LightData[0].xyz;
     OUT.texcoord_4.x = 1 - saturate((9625.59961 - sqrt(r0.y + r0.x)) * 0.000375600968);
     
     // Fog.
@@ -75,10 +73,12 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.texcoord_5.a = exp2(fogStrength * FogParam.z);
     OUT.texcoord_5.rgb = FogColor.rgb;
 
-    OUT.lPosition.xyz = r0.xyz;
-    OUT.eyePosition.xyz = EyePosition.xyz;
-
     OUT.worldPos = clipToWorld(OUT.position);
+    
+    float3x3 worldMatrix = (float3x3)mul(TESR_InvViewProjectionTransform, ModelViewProj);
+    OUT.worldMatrix_0 = worldMatrix[0];
+    OUT.worldMatrix_1 = worldMatrix[1];
+    OUT.worldMatrix_2 = worldMatrix[2];
 
     return OUT;
 };

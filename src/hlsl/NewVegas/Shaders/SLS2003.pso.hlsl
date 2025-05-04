@@ -2,6 +2,7 @@
 //
 // Parameters:
 #include "includes/DirectShadow.hlsl"
+#include "includes/Position.hlsl"
 
 sampler2D BaseMap : register(s0);
 sampler2D NormalMap : register(s1);
@@ -37,10 +38,10 @@ float4 LODTexParams : register(c31);
 struct VS_INPUT {
     float2 NormalUV : TEXCOORD0;
     float4 color_1 : COLOR1;
-    float3 texcoord_1 : TEXCOORD1;
-    float3 lPosition : TEXCOORD2;
-    float3 eyePosition : TEXCOORD3;
     float4 worldPos : TEXCOORD4;
+    float3 worldMatrix_0: TEXCOORD5;
+    float3 worldMatrix_1: TEXCOORD6;
+    float3 worldMatrix_2: TEXCOORD7;
 };
 
 struct VS_OUTPUT {
@@ -54,6 +55,9 @@ struct VS_OUTPUT {
 
 VS_OUTPUT main(VS_INPUT IN) {
     VS_OUTPUT OUT;
+    float4 worldPos = IN.worldPos;
+
+    float3x3 worldMatrix = float3x3(IN.worldMatrix_0, IN.worldMatrix_1, IN.worldMatrix_2);
 
     float3 r0 = LODTexParams.xyw;
 
@@ -65,25 +69,22 @@ VS_OUTPUT main(VS_INPUT IN) {
     normal.xyz = r0.z >= 1 ? normal.xyz : lerp(parentNormal, normal.xyz, LODTexParams.w);
     normal.xyz = expand(normal.xyz);
     normal.xyz = normalize(normal.xyz);
+    normal.xyz = normalize( mul( normal.xyz, worldMatrix ) );
 
     float2 uv = (IN.NormalUV * 0.9921875) + (1.0 / 256);
     float3 blendColor = tex2D(LODParentTex, (0.5 * uv) + lerp(r0.xy, 0.25, (1.0 / 128))).rgb;
     float3 baseColor = tex2D(BaseMap, uv).rgb;
-    float3 eyeDir = normalize(IN.eyePosition.xyz - IN.lPosition.xyz);
+    float3 eyeDir = normalize(TESR_CameraPosition.xyz - worldPos.xyz);
 
     // blending between parent tex and basemap + apply noise
     baseColor = r0.z >= 1 ? baseColor : lerp(blendColor, baseColor, LODTexParams.w);
     
     float roughness = saturate(TESR_TerrainData.y * (1 - normal.a));
 
-    //float NdotL = dot(normal.xyz, TESR_SmoothedSunDir.xyz);
-    //float offsetScale = saturate(1 - NdotL);
-    //float3 normalOffset = offsetScale * NormalBias * normal.xyz;
-    //float4 worldPos = float4(IN.worldPos.xyz + normalOffset, 1.0f);
-
-    //float3 shadowMultiplier = GetLightAmount(worldPos);
-    float3 shadowMultiplier = GetLightAmount(IN.worldPos);
-    float3 lighting = getSunLighting(IN.texcoord_1.xyz, PSLightColor[0].rgb * shadowMultiplier, eyeDir, normal.xyz, AmbientColor.rgb, baseColor.rgb, roughness);
+    float3 sunDir = sunDirection();
+    float3 shadowMultiplier = GetLightAmount(worldPos);
+    float3 lighting = getSunLighting(sunDir, PSLightColor[0].rgb * shadowMultiplier, eyeDir, normal.xyz, AmbientColor.rgb, baseColor.rgb, roughness);
+    float distance = length(TESR_CameraPosition.xyz);
 
     float3 final = lighting;
     final = lerp(final, final * (0.8 * noise + 0.55), saturate(TESR_TerrainExtraData.z));  // Apply noise.
@@ -91,6 +92,16 @@ VS_OUTPUT main(VS_INPUT IN) {
 
     OUT.color_0.rgb = final;
     OUT.color_0.a = 1;
+    if (TESR_DebugVar.x >= 1 && TESR_DebugVar.x <= 8) {
+        OUT.color_0.rgb = normal.xyz * 0.5 + 0.5;
+    }
+    else if (TESR_DebugVar.x == 9)   // coherence check
+    {
+        OUT.color_0.rgb = saturate(distance / 2048.0).xxx; // should fade smoothly
+    }
+    else if (TESR_DebugVar.x == 10) {
+        OUT.color_0.rgb = lighting;
+    }
 
     return OUT;
 };

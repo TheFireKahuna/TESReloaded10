@@ -46,6 +46,9 @@ struct VS_OUTPUT {
     float3 lPosition : TEXCOORD2;
     float3 eyePosition : TEXCOORD3;
     float4 worldPos: TEXCOORD4;
+    float3 worldMatrix_0: TEXCOORD5;
+    float3 worldMatrix_1: TEXCOORD6;
+    float3 worldMatrix_2: TEXCOORD7;
 };
 
 // Code:
@@ -82,6 +85,11 @@ VS_OUTPUT main(VS_INPUT IN) {
     OUT.eyePosition.xyz = EyePosition.xyz;
 
     OUT.worldPos = clipToWorld(OUT.position);
+    
+    float3x3 worldMatrix = (float3x3)mul(TESR_InvViewProjectionTransform, ModelViewProj);
+    OUT.worldMatrix_0 = worldMatrix[0];
+    OUT.worldMatrix_1 = worldMatrix[1];
+    OUT.worldMatrix_2 = worldMatrix[2];
 
     return OUT;
 };
