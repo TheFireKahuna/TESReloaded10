@@ -158,55 +158,19 @@ VS_OUTPUT main(VS_INPUT IN)
     OUT.uv = IN.uv.xy;
     OUT.sPosition = mul(ModelViewProj, position);
     float4x4 modelMatrix;
-    if (TESR_DebugVar.z >= 1) {
-        modelMatrix =  mul(ModelViewProj, TESR_InvViewProjectionTransform);
-    }
-    else {
-        modelMatrix =  mul(TESR_InvViewProjectionTransform, ModelViewProj);
-    }
+    modelMatrix =  mul(TESR_InvViewProjectionTransform, ModelViewProj);
     float3x3 worldMatrix = (float3x3)modelMatrix;
     float3x3 normalMatrix = transpose(inverse3x3(worldMatrix)); // correct normal transform as learned 
     // Calculate the normal vector against the world matrix only and then normalize the final value.
     float3 T = IN.tangent;
     float3 B = IN.binormal;
     float3 N = IN.normal;
-    if (TESR_DebugVar.w == 1) {
-        if (dot(cross(N, T) * -1, B) < 0.0) {
-            T *= -1.0;
-        }
+    if (dot(cross(N, T) * -1, B) < 0.0) {
+        T *= -1.0;
     }
-    if (TESR_DebugVar.z >= 2) {
-        if (TESR_DebugVar.y >= 2) {
-            T = normalize(mul(normalMatrix, T));   // world-space tangent
-            B = normalize(mul(normalMatrix, B));   // world-space binormal
-        }
-        else {
-            T = normalize(mul(worldMatrix, T));   // world-space tangent
-            B = normalize(mul(worldMatrix, B));   // world-space binormal
-        }
-        if (TESR_DebugVar.y >= 1) {
-            N = normalize(mul(normalMatrix, N));   // world-space normal
-        }
-        else {
-            N = normalize(mul(worldMatrix, N));   // world-space normal
-        }
-    }
-    else {
-        if (TESR_DebugVar.y >= 2) {
-            T = normalize(mul(T, normalMatrix));   // world-space tangent
-            B = normalize(mul(B, normalMatrix));   // world-space binormal
-        }
-        else {
-            T = normalize(mul(T, worldMatrix));   // world-space tangent
-            B = normalize(mul(B, worldMatrix));   // world-space binormal
-        }
-        if (TESR_DebugVar.y == 1) {
-            N = normalize(mul(N, normalMatrix));   // world-space normal
-        }
-        else {
-            N = normalize(mul(N, worldMatrix));   // world-space normal
-        }
-    }
+    T = normalize(mul(T, worldMatrix));   // world-space tangent
+    B = normalize(mul(B, worldMatrix));   // world-space binormal
+    N = normalize(mul(N, normalMatrix));   // world-space normal
     float sign = step(0.0f, dot(cross(N, T), B));   // 0 if −1, 1 if +1
     OUT.tangent = float4(T, sign);          // keep sign
     OUT.normal = N;                 // binormal no longer needed
@@ -336,9 +300,6 @@ PS_OUTPUT main(PS_INPUT IN)
 
     float3x3 tbn = float3x3(T, B, N);                 // columns
     float3 eyeDir = normalize(TESR_CameraPosition.xyz - worldPos.xyz);
-    if (TESR_DebugVar.z >= 5) {
-        eyeDir = normalize(mul(TESR_CameraPosition.xyz - worldPos.xyz,tbn));
-    }
     float  distance = length(TESR_CameraPosition.xyz - worldPos.xyz);
 
     // eye dir in tangent space
@@ -371,9 +332,6 @@ PS_OUTPUT main(PS_INPUT IN)
     // Shadows.
     float3 shadowMultiplier = GetLightAmount(worldPos);
     float3 sunDir = sunDirection();
-    if (TESR_DebugVar.z >= 5) {
-        eyeDir = normalize(mul(sunDir,tbn));
-    }
     
     #ifndef NO_LIGHT
         shadowMultiplier *= getParallaxShadowMultipler(distance, offsetUV, dx, dy, sunDir, HeightMap);
@@ -391,15 +349,7 @@ PS_OUTPUT main(PS_INPUT IN)
     #else
         float4 normal = tex2D(NormalMap, offsetUV.xy);
         normal.xyz = normalize(normal.xyz * 2.0 - 1.0);
-        if (TESR_DebugVar.z >= 5) {
-            normal.xyz = normalize(normal.xyz);
-        }
-        if (TESR_DebugVar.z >= 3) {
-            normal.xyz = normalize(mul(tbn, normal.xyz));
-        }
-        else {
-            normal.xyz = normalize(mul(normal.xyz, tbn));
-        }
+        normal.xyz = normalize(mul(normal.xyz, tbn));
 
         float roughness = getRoughness(normal.a);
     
