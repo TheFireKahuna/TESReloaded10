@@ -264,9 +264,6 @@ void ShaderManager::UpdateConstants() {
 	D3DXVec4Normalize(&ShaderConst.SunDir, &ShaderConst.SunDir);
 	ShaderConst.SunDir.w = 1.0f;
 	NiDirectionalLight* sunLight = Tes->directionalLight;
-	ShaderConst.SunDir.x = sunLight->direction.x;
-	ShaderConst.SunDir.y = sunLight->direction.y;
-	ShaderConst.SunDir.z = sunLight->direction.z;
 
 	// during the day, track the sun mesh position instead of the lighting direction in exteriors
 	if (GameState.isExterior && GameState.dayLight > 0.5)

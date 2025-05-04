@@ -1,4 +1,4 @@
-#define RESZ_CODE 0x7FA05000
+﻿#define RESZ_CODE 0x7FA05000
 
 void RenderManager::CreateD3DMatrix(D3DMATRIX* Matrix, NiTransform* Transform) {
 
@@ -117,6 +117,10 @@ void RenderManager::SetupSceneCamera() {
 		Right.x = WorldRotate->data[0][2];
 		Right.y = WorldRotate->data[1][2];
 		Right.z = WorldRotate->data[2][2];
+		D3DXVECTOR3 RightD3D = Right.toD3DXVEC3();
+		D3DXVECTOR3 UpD3D = Up.toD3DXVEC3();
+		D3DXVECTOR3 ForwardD3D = Forward.toD3DXVEC3();
+		D3DXVECTOR3 LocD3D = Loc.toD3DXVEC3();
 
 		// world translation
 		worldMatrix._11 = 1.0f;
@@ -131,44 +135,26 @@ void RenderManager::SetupSceneCamera() {
 		worldMatrix._32 = 0.0f;
 		worldMatrix._33 = 1.0f;
 		worldMatrix._34 = 0.0f;
-		worldMatrix._41 = -WorldTranslate->x;
-		worldMatrix._42 = -WorldTranslate->y;
-		worldMatrix._43 = -WorldTranslate->z;
+		worldMatrix._41 = 0.0f;
+		worldMatrix._42 = 0.0f;
+		worldMatrix._43 = 0.0f;
 		worldMatrix._44 = 1.0f;
 
-		viewMatrix._11 = Right.x;
-		viewMatrix._12 = Up.x;
-		viewMatrix._13 = Forward.x;
-		viewMatrix._14 = 0.0f;
-		viewMatrix._21 = Right.y;
-		viewMatrix._22 = Up.y;
-		viewMatrix._23 = Forward.y;
-		viewMatrix._24 = 0.0f;
-		viewMatrix._31 = Right.z;
-		viewMatrix._32 = Up.z;
-		viewMatrix._33 = Forward.z;
-		viewMatrix._34 = 0.0f;
-		viewMatrix._41 = -(Right * Loc);
-		viewMatrix._42 = -(Up * Loc);
-		viewMatrix._43 = -(Forward * Loc);
+
+		viewMatrix._11 = Right.x;     viewMatrix._12 = Up.x;     viewMatrix._13 = Forward.x;     viewMatrix._14 = 0.0f;
+		viewMatrix._21 = Right.y;     viewMatrix._22 = Up.y;     viewMatrix._23 = Forward.y;     viewMatrix._24 = 0.0f;
+		viewMatrix._31 = Right.z;     viewMatrix._32 = Up.z;     viewMatrix._33 = Forward.z;     viewMatrix._34 = 0.0f;
+
+		viewMatrix._41 = -D3DXVec3Dot(&RightD3D, &LocD3D);   // −dot(R, p)
+		viewMatrix._42 = -D3DXVec3Dot(&UpD3D, &LocD3D);   // −dot(U, p)
+		viewMatrix._43 = -D3DXVec3Dot(&ForwardD3D, &LocD3D);   // −dot(F, p)
 		viewMatrix._44 = 1.0f;
 
-		invViewMatrix._11 = Right.x;
-		invViewMatrix._12 = Right.y;
-		invViewMatrix._13 = Right.z;
-		invViewMatrix._14 = 0.0f;
-		invViewMatrix._21 = Up.x;
-		invViewMatrix._22 = Up.y;
-		invViewMatrix._23 = Up.z;
-		invViewMatrix._24 = 0.0f;
-		invViewMatrix._31 = Forward.x;
-		invViewMatrix._32 = Forward.y;
-		invViewMatrix._33 = Forward.z;
-		invViewMatrix._34 = 0.0f;
-		invViewMatrix._41 = Loc.x;
-		invViewMatrix._42 = Loc.y;
-		invViewMatrix._43 = Loc.z;
-		invViewMatrix._44 = 1.0f;
+		invViewMatrix._11 = Right.x;  invViewMatrix._12 = Right.y;  invViewMatrix._13 = Right.z;  invViewMatrix._14 = 0.0f;
+		invViewMatrix._21 = Up.x;  invViewMatrix._22 = Up.y;  invViewMatrix._23 = Up.z;  invViewMatrix._24 = 0.0f;
+		invViewMatrix._31 = Forward.x; invViewMatrix._32 = Forward.y; invViewMatrix._33 = Forward.z; invViewMatrix._34 = 0.0f;
+
+		invViewMatrix._41 = Loc.x; invViewMatrix._42 = Loc.y; invViewMatrix._43 = Loc.z; invViewMatrix._44 = 1.0f;
 
 		InvViewMatrix = invViewMatrix;
 		ViewMatrix = viewMatrix;

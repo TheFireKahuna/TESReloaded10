@@ -131,9 +131,9 @@ struct VS_OUTPUT
     float4 sPosition : POSITION;
     float2 uv : TEXCOORD0;
     float3 normal : TEXCOORD1;
-    float3 tangent : TEXCOORD2;
-    float3 binormal : TEXCOORD3;
-    float4 worldPos: TEXCOORD6;
+    float4 tangent : TEXCOORD2;
+    float4 worldPos: TEXCOORD3;
+    float4 viewDir: TEXCOORD4;
 };
 
 #ifdef VS
@@ -157,15 +157,64 @@ VS_OUTPUT main(VS_INPUT IN)
     
     OUT.uv = IN.uv.xy;
     OUT.sPosition = mul(ModelViewProj, position);
-    float4x4 modelMatrix = mul(TESR_ViewProjectionTransform, ModelViewProj);
+    float4x4 modelMatrix;
+    if (TESR_DebugVar.z >= 1) {
+        modelMatrix =  mul(ModelViewProj, TESR_InvViewProjectionTransform);
+    }
+    else {
+        modelMatrix =  mul(TESR_InvViewProjectionTransform, ModelViewProj);
+    }
     float3x3 worldMatrix = (float3x3)modelMatrix;
-    float4 worldPos = clipToWorld(OUT.sPosition);
     float3x3 normalMatrix = transpose(inverse3x3(worldMatrix)); // correct normal transform as learned 
     // Calculate the normal vector against the world matrix only and then normalize the final value.
-    OUT.normal = mul(normalMatrix, IN.normal);
-    OUT.tangent = mul(worldMatrix, IN.tangent);
-    OUT.binormal = mul(worldMatrix, IN.binormal);
-    OUT.worldPos = worldPos;
+    float3 T = IN.tangent;
+    float3 B = IN.binormal;
+    float3 N = IN.normal;
+    if (TESR_DebugVar.w == 1) {
+        if (dot(cross(N, T) * -1, B) < 0.0) {
+            T *= -1.0;
+        }
+    }
+    if (TESR_DebugVar.z >= 2) {
+        if (TESR_DebugVar.y >= 2) {
+            T = normalize(mul(normalMatrix, T));   // world-space tangent
+            B = normalize(mul(normalMatrix, B));   // world-space binormal
+        }
+        else {
+            T = normalize(mul(worldMatrix, T));   // world-space tangent
+            B = normalize(mul(worldMatrix, B));   // world-space binormal
+        }
+        if (TESR_DebugVar.y >= 1) {
+            N = normalize(mul(normalMatrix, N));   // world-space normal
+        }
+        else {
+            N = normalize(mul(worldMatrix, N));   // world-space normal
+        }
+    }
+    else {
+        if (TESR_DebugVar.y >= 2) {
+            T = normalize(mul(T, normalMatrix));   // world-space tangent
+            B = normalize(mul(B, normalMatrix));   // world-space binormal
+        }
+        else {
+            T = normalize(mul(T, worldMatrix));   // world-space tangent
+            B = normalize(mul(B, worldMatrix));   // world-space binormal
+        }
+        if (TESR_DebugVar.y == 1) {
+            N = normalize(mul(N, normalMatrix));   // world-space normal
+        }
+        else {
+            N = normalize(mul(N, worldMatrix));   // world-space normal
+        }
+    }
+    float sign = step(0.0f, dot(cross(N, T), B));   // 0 if −1, 1 if +1
+    OUT.tangent = float4(T, sign);          // keep sign
+    OUT.normal = N;                 // binormal no longer needed
+    OUT.worldPos = clipToWorld(OUT.sPosition);
+    
+    float3 eye = EyePosition.xyz - IN.position.xyz;
+    OUT.viewDir.xyz = mul(float3x3(IN.tangent.xyz, IN.binormal.xyz, IN.normal.xyz), eye);
+    OUT.viewDir.w = length(eye);
     
     #ifndef NO_VERTEX_COLOR
         OUT.vertexColor = clamp(IN.vertex_color, 0.0f, 1.0f);
@@ -189,6 +238,7 @@ VS_OUTPUT main(VS_INPUT IN)
 
 struct PS_INPUT
 {
+    float4 sPosition : POSITION1;
 #ifndef NO_VERTEX_COLOR
     float3 vertexColor : COLOR0;
 #endif
@@ -197,9 +247,9 @@ struct PS_INPUT
 #endif
     float2 uv : TEXCOORD0;
     float3 normal : TEXCOORD1;
-    float3 tangent : TEXCOORD2;
-    float3 binormal : TEXCOORD3;
-    float4 worldPos: TEXCOORD6;
+    float4 tangent : TEXCOORD2;
+    float4 worldPos: TEXCOORD3;
+    float4 viewDir: TEXCOORD4;
 };
 
 struct PS_OUTPUT {
@@ -277,15 +327,26 @@ PS_OUTPUT main(PS_INPUT IN)
     
     // Parallax.
     float4 worldPos = IN.worldPos;
-    float3 eyeDir = normalize(TESR_CameraPosition.xyz - worldPos.xyz);
-    float3x3 tbn = float3x3(normalize(IN.tangent), normalize(IN.binormal), normalize(IN.normal));
+    float3 T = normalize(IN.tangent.xyz);
+    float3 N = normalize(IN.normal);
+    T = normalize(T - N * dot(T, N));
 
-    float2 dx, dy;
-    dx = ddx(IN.uv.xy);
-    dy = ddy(IN.uv.xy);
+    float sign = IN.tangent.w * 2.0f - 1.0f;          // 0/1 → −1/+1
+    float3 B = sign * cross(N, T);                    // correct orientation
+
+    float3x3 tbn = float3x3(T, B, N);                 // columns
+    float3 eyeDir = normalize(TESR_CameraPosition.xyz - worldPos.xyz);
+    if (TESR_DebugVar.z >= 5) {
+        eyeDir = normalize(mul(TESR_CameraPosition.xyz - worldPos.xyz,tbn));
+    }
+    float  distance = length(TESR_CameraPosition.xyz - worldPos.xyz);
+
+    // eye dir in tangent space
+
+    float2 dx = ddx(IN.uv);
+    float2 dy = ddy(IN.uv);
     
-    float distance = length(TESR_CameraPosition.xyz - worldPos.xyz);
-    float2 offsetUV = getParallaxCoords(distance, IN.uv.xy, dx, dy, eyeDir.xyz, HeightMap);
+    float2 offsetUV = getParallaxCoords(distance, IN.uv, dx, dy, eyeDir, HeightMap);
 
     #if !defined(DIFFUSE) && !defined(ONLY_SPECULAR)
         float4 baseColor = tex2D(BaseMap, offsetUV.xy);
@@ -310,11 +371,15 @@ PS_OUTPUT main(PS_INPUT IN)
     // Shadows.
     float3 shadowMultiplier = GetLightAmount(worldPos);
     float3 sunDir = sunDirection();
+    if (TESR_DebugVar.z >= 5) {
+        eyeDir = normalize(mul(sunDir,tbn));
+    }
     
     #ifndef NO_LIGHT
-        shadowMultiplier *= getParallaxShadowMultipler(distance, offsetUV, dx, dy, normalize(sunDir), HeightMap);
+        shadowMultiplier *= getParallaxShadowMultipler(distance, offsetUV, dx, dy, sunDir, HeightMap);
     #endif
     
+    shadowMultiplier = normalize(shadowMultiplier);
     // Lighting.
     float3 lighting;
     float finalAtt;
@@ -326,14 +391,22 @@ PS_OUTPUT main(PS_INPUT IN)
     #else
         float4 normal = tex2D(NormalMap, offsetUV.xy);
         normal.xyz = normalize(normal.xyz * 2.0 - 1.0);
-        normal.xyz = normalize(mul(normal.xyz,tbn));
+        if (TESR_DebugVar.z >= 5) {
+            normal.xyz = normalize(normal.xyz);
+        }
+        if (TESR_DebugVar.z >= 3) {
+            normal.xyz = normalize(mul(tbn, normal.xyz));
+        }
+        else {
+            normal.xyz = normalize(mul(normal.xyz, tbn));
+        }
 
         float roughness = getRoughness(normal.a);
     
         #if !defined(DIFFUSE) && !defined(POINT)
             lighting = getSunLighting(sunDir, PSLightColor[0].rgb * shadowMultiplier, eyeDir, normal.xyz, baseColor.rgb, roughness);
         #elif defined(DIFFUSE)
-            pointlightPosition = worldToCamera(TESR_ShadowLightPosition[0]);
+            pointlightPosition = worldVector(TESR_ShadowLightPosition[0], worldPos);
             pointlightDir = pointlightPosition - worldPos.xyz;
             // Pointlight vanilla att.
             if (TESR_ParallaxData.y)
@@ -342,7 +415,7 @@ PS_OUTPUT main(PS_INPUT IN)
                 lighting = getVanillaLightingAtt(pointlightDir, TESR_ShadowLightPosition[0].w, TESR_LightColor[0].rgb, eyeDir, normal.xyz, baseColor.rgb, normal.a, glossPower);
             }
         #else
-            pointlightPosition = worldToCamera(TESR_ShadowLightPosition[0]);
+            pointlightPosition = worldVector(TESR_ShadowLightPosition[0], worldPos);
             pointlightDir = pointlightPosition - worldPos.xyz;
             if (TESR_ParallaxData.y)
                 lighting = getPointLightLighting(pointlightDir, TESR_ShadowLightPosition[0].w, TESR_LightColor[0].rgb, eyeDir, normal.xyz, baseColor.rgb, roughness);
@@ -365,7 +438,7 @@ PS_OUTPUT main(PS_INPUT IN)
     
         // Other light sources.
         #if LIGHTS > 1
-            pointlightPosition = worldToCamera(TESR_ShadowLightPosition[1]);
+            pointlightPosition = worldVector(TESR_ShadowLightPosition[1], worldPos);
             pointlightDir = pointlightPosition - worldPos.xyz;
         
             if (TESR_ParallaxData.y)
@@ -375,7 +448,7 @@ PS_OUTPUT main(PS_INPUT IN)
         #endif
     
         #if LIGHTS > 2
-            pointlightPosition = worldToCamera(TESR_ShadowLightPosition[2]);
+            pointlightPosition = worldVector(TESR_ShadowLightPosition[2], worldPos);
             pointlightDir = pointlightPosition - worldPos.xyz;
         
             if (TESR_ParallaxData.y)
@@ -385,7 +458,7 @@ PS_OUTPUT main(PS_INPUT IN)
         #endif
     
         #if NUM_PT_LIGHTS > 1
-            pointlightPosition = worldToCamera(TESR_ShadowLightPosition[1]);
+            pointlightPosition = worldVector(TESR_ShadowLightPosition[1], worldPos);
             pointlightDir = pointlightPosition - worldPos.xyz;
             if (TESR_ParallaxData.y)
                 lighting += getPointLightLighting(pointlightDir, TESR_ShadowLightPosition[1].w, TESR_LightColor[1].rgb, eyeDir, normal.xyz, baseColor.rgb, roughness);
@@ -394,7 +467,7 @@ PS_OUTPUT main(PS_INPUT IN)
         #endif
     
         #if NUM_PT_LIGHTS > 2
-            pointlightPosition = worldToCamera(TESR_ShadowLightPosition[2]);
+            pointlightPosition = worldVector(TESR_ShadowLightPosition[2], worldPos);
             pointlightDir = pointlightPosition - worldPos.xyz;
             if (TESR_ParallaxData.y)
                 lighting += getPointLightLighting(pointlightDir, TESR_ShadowLightPosition[2].w, TESR_LightColor[2].rgb, eyeDir, normal.xyz, baseColor.rgb, roughness);
@@ -425,6 +498,54 @@ PS_OUTPUT main(PS_INPUT IN)
     #else
         OUT.color.a = alpha * AmbientColor.a;
     #endif
+    //OUT.color.rgb = normal.xyz * 0.5 + 0.5;
+    if (TESR_DebugVar.x == 1) {
+        float3 col  = N * 0.5 + 0.5;             // base = normal
+
+        // tint magenta when sign = –1 so mirrored parts pop
+        col = lerp(col, float3(1,0,1), step(0.0, -sign));
+
+        OUT.color.rgb = col;
+    }
+    else if (TESR_DebugVar.x == 2) {
+        #ifndef NO_LIGHT
+            OUT.color.rgb = normal.xyz * 0.5 + 0.5;
+        #else
+            OUT.color.rgb = N.xyz * 0.5 + 0.5;
+        #endif
+    }
+    else if (TESR_DebugVar.x == 3) {
+        float3 outRGB =
+            abs(T) * float3(1,0,0) +   // red shows |T|
+            abs(B) * float3(0,1,0) +   // green shows |B|
+            abs(N) * float3(0,0,1);    // blue shows |N|
+
+        OUT.color.rgb = saturate(outRGB);
+    }
+    else if (TESR_DebugVar.x == 4) {
+        OUT.color.rgb = T.xyz * 0.5 + 0.5;
+    }
+    else if (TESR_DebugVar.x == 5) {
+        OUT.color.rgb = B.xyz * 0.5 + 0.5;
+    }
+    else if (TESR_DebugVar.x == 6) {
+        OUT.color.rgb = N.xyz * 0.5 + 0.5;
+    }
+    else if (TESR_DebugVar.x == 7) {
+        float3 pos = clipToWorld(IN.sPosition).xyz - IN.worldPos.xyz;
+        OUT.color.rgb = saturate(abs(pos) * 0.1);   // magenta if mismatch
+    }
+    else if (TESR_DebugVar.x == 8) {
+        float2 test = ddx(IN.uv) * sign;
+        OUT.color.rgb = float3(test.x, test.y, 0) * 10 + 0.5;
+    }
+    else if (TESR_DebugVar.x == 9)   // coherence check
+    {
+        OUT.color.rgb = saturate(distance / 2048.0).xxx; // should fade smoothly
+    }
+    else if (TESR_DebugVar.x == 10) {
+        OUT.color.rgb = lighting;
+    }
 
     return OUT;
 };
